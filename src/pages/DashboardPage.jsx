@@ -73,7 +73,7 @@ const AddSubjectForm = ({ onSubmit, onCancel }) => {
             </div>
             <div className="flex justify-end gap-4 mt-4">
                 <button type="button" onClick={onCancel} className="btn btn-ghost">Cancelar</button>
-                <button type="submit" className="btn btn-primary">Añadir Materia</button>
+                <button type="submit" className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary">Añadir Materia</button>
             </div>
         </form>
     );
@@ -186,7 +186,9 @@ const DashboardPage = () => {
             
             <form onSubmit={handleSubmitYear(handleAddYear)} className="flex gap-2 mb-8">
                 <input {...registerYear("yearName", { required: true })} placeholder="Ej: Primer Año, 2024..." className="input input-bordered w-full max-w-xs dark:bg-gray-700" />
-                <button type="submit" className="btn btn-primary">Añadir Año</button>
+                <button type="submit" className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary">
+        Añadir Año
+    </button>
             </form>
 
             <div className="space-y-12">
@@ -200,9 +202,9 @@ const DashboardPage = () => {
                                       <FaTrash />
                                     </button>
                                 </div>
-                                <button onClick={() => handleOpenAddSubjectModal(year.id)} className="btn btn-outline btn-sm mt-2">
-                                    Añadir Materia
-                                </button>
+                                <button onClick={() => handleOpenAddSubjectModal(year.id)} className="btn btn-secondary bg-secondary border-secondary text-text-accent btn-sm mt-2">
+    Añadir Materia
+</button>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                 {subjects[year.id]?.map(subject => (

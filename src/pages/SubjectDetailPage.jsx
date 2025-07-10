@@ -55,7 +55,7 @@ const SubjectForm = ({ onSubmit, onCancel, defaultValues = {}, isEditing = false
             <div><div className="text-sm font-semibold mb-2">Días de Cursada:</div><div className="grid grid-cols-3 gap-x-4 gap-y-2">{daysOfWeek.map(day => (<label key={day} className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" {...register(`days.${day}`)} className="checkbox checkbox-sm" /><span>{day}</span></label>))}</div></div>
             <div className="flex gap-4"><div className="w-1/2"><label className="text-sm block mb-1">Desde:</label><input type="time" {...register("startTime")} className="input input-bordered w-full text-sm dark:bg-gray-700" /></div><div className="w-1/2"><label className="text-sm block mb-1">Hasta:</label><input type="time" {...register("endTime")} className="input input-bordered w-full text-sm dark:bg-gray-700" /></div></div>
             <div><label className="text-sm font-semibold block mb-2">Color de la Materia</label><div className="flex flex-wrap gap-3">{subjectColors.map(color => (<div key={color.value} onClick={() => setSelectedColor(color.value)} className="w-8 h-8 rounded-full transition-all duration-200 transform cursor-pointer" style={{ backgroundColor: color.value }}>{selectedColor === color.value && (<div className="w-full h-full rounded-full flex items-center justify-center bg-black/30"><svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg></div>)}</div>))}</div><input {...register('color')} type="hidden" /></div>
-            <div className="flex justify-end gap-4 mt-4"><button type="button" onClick={onCancel} className="btn btn-ghost">Cancelar</button><button type="submit" className="btn btn-primary">{isEditing ? 'Guardar Cambios' : 'Añadir Materia'}</button></div>
+            <div className="flex justify-end gap-4 mt-4"><button type="button" onClick={onCancel} className="btn btn-ghost">Cancelar</button><button type="submit" className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary">{isEditing ? 'Guardar Cambios' : 'Añadir Materia'}</button></div>
         </form>
     );
 };
@@ -89,7 +89,7 @@ const AddEventForm = ({ subject, onEventAdded }) => {
                 <div className="flex-grow"><label className="text-xs font-semibold">Fecha*</label><input type="date" {...register("date", { required: "La fecha es obligatoria" })} className="input input-bordered w-full dark:bg-gray-700" />{errors.date && <p className="text-red-500 text-xs mt-1">{errors.date.message}</p>}</div>
                 <div className="w-1/3"><label className="text-xs font-semibold">Hora (Opcional)</label><input type="time" {...register("startTime")} className="input input-bordered w-full dark:bg-gray-700" /></div>
             </div>
-            <button type="submit" className="btn btn-primary w-full" disabled={isSubmitting}>{isSubmitting ? "Añadiendo..." : "Añadir al Calendario"}</button>
+            <button type="submit" className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary w-full" disabled={isSubmitting}>{isSubmitting ? "Añadiendo..." : "Añadir al Calendario"}</button>
         </form>
     );
 };
@@ -132,7 +132,7 @@ const GradesManager = ({ subject, grades, onAddGrade, onDeleteGrade }) => {
             <form onSubmit={handleSubmit(handleFormSubmit)} className="flex items-start gap-2 mb-6">
                 <div className="flex-grow"><input {...register("gradeTitle", { required: true })} placeholder="Ej: Primer Parcial" className="input input-sm input-bordered w-full dark:bg-gray-700"/></div>
                 <div className="w-20"><input type="number" step="0.01" {...register("gradeScore", { required: true })} placeholder="Nota" className="input input-sm input-bordered w-full dark:bg-gray-700"/></div>
-                <button type="submit" className="btn btn-sm btn-primary btn-circle"><FaPlusCircle /></button>
+                <button type="submit" className="btn btn-sm btn-primary btn-circle bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary"><FaPlusCircle /></button>
             </form>
             <div className="space-y-2 mb-6 max-h-48 overflow-y-auto pr-2">
                 {grades && grades.length > 0 ? (grades.map(grade => (<div key={grade.id} className="flex justify-between items-center bg-surface-200 p-2 rounded"><span className="truncate pr-2">{grade.title}</span><div className="flex items-center gap-2"><span className="font-bold">{grade.score}</span><button onClick={() => onDeleteGrade(grade)} className="text-red-500 hover:text-red-700"><FaTrash size={12} /></button></div></div>))) : (<p className="text-sm text-center text-text-secondary py-4">Aún no has cargado ninguna nota.</p>)}
@@ -308,7 +308,7 @@ const SubjectDetailPage = () => {
                                 <FileList files={subject.files} onPreview={handlePreviewFile} onDelete={handleFileDelete}/>
                             </div>
                         </AccordionItem>
-                        <AccordionItem title="Notas Personales" icon={IoNewspaperOutline} defaultOpen={true}>
+                        <AccordionItem title="Notas Personales" icon={IoNewspaperOutline} >
                            <NotesEditor content={subject.personalNotes} onContentChange={handleNotesChange}/>
                         </AccordionItem>
                     </div>

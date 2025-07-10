@@ -1,4 +1,3 @@
-// src/contexts/ThemeContext.jsx (COMPLETO Y MEJORADO)
 import { createContext, useState, useEffect, useMemo, useContext } from 'react';
 
 // Lista de temas disponibles
@@ -28,12 +27,21 @@ export const ThemeProvider = ({ children }) => {
     root.classList.remove('dark');
     
     // Añadimos la clase del tema actual
-    root.classList.add(`theme-${theme}`);
+    if (theme) {
+        root.classList.add(`theme-${theme}`);
+    }
     
-    // Si es el tema oscuro, añadimos también la clase 'dark' para compatibilidad
+    // Si es el tema oscuro, añadimos también la clase 'dark' para compatibilidad con Tailwind
     if (theme === 'oscuro') {
       root.classList.add('dark');
     }
+
+    if (theme === 'oscuro') {
+      root.style.colorScheme = 'dark';
+    } else {
+      root.style.colorScheme = 'light';
+    }
+    // ------------------------------------------
     
     // Guardamos la selección en localStorage
     localStorage.setItem('theme', theme);

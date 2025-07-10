@@ -121,7 +121,7 @@ const ProfilePage = () => {
                                 ))}
                             </div>
                         </div>
-                        <button type="submit" className="btn btn-primary w-full" disabled={loading}>{loading ? 'Guardando...' : 'Guardar Cambios'}</button>
+                        <button type="submit" className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary w-full" disabled={loading}>{loading ? 'Guardando...' : 'Guardar Cambios'}</button>
                     </form>
                 </div>
 
@@ -143,7 +143,7 @@ const ProfilePage = () => {
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirmar Nueva Contraseña</label>
                                 <input type="password" {...register('confirmPassword')} className="input input-bordered w-full mt-1 dark:bg-gray-700" />
                             </div>
-                            <button type="submit" className="btn btn-secondary w-full" disabled={loading}>{loading ? 'Cambiando...' : 'Cambiar Contraseña'}</button>
+                            <button type="submit" className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary hover:border-primary w-full" disabled={loading}>{loading ? 'Cambiando...' : 'Cambiar Contraseña'}</button>
                         </form>
                     </div>
                      <div className="bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-500/30 p-6 rounded-lg shadow-md">

@@ -47,7 +47,7 @@ const FileUpload = ({ subject, onUploadSuccess }) => {
         <div>
             <form onSubmit={handleSubmit(handleFileUpload)}>
                 <input type="file" {...register("file", { required: true })} className="file-input file-input-bordered w-full mb-2" />
-                <button type="submit" className="btn btn-primary w-full" disabled={isUploading}>
+                <button type="submit" className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary w-full" disabled={isUploading}>
                     {isUploading ? "Subiendo..." : "Subir Archivo"}
                 </button>
             </form>
