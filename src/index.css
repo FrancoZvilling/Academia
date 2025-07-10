@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+
+:root {
+  /* Por defecto, le decimos al navegador que la página es CLARA. */
+  color-scheme: light;
+}
+
+.dark {
+  /* SOLO cuando NUESTRA clase 'dark' está presente, le decimos que es OSCURA. */
+  color-scheme: dark;
+}
+
 /* Paletas de colores pastel con mejor contraste */
 
 /* --- TEMA CELESTE PASTEL (CORREGIDO) --- */
