@@ -46,10 +46,8 @@ const CalendarPage = () => {
                         extendedProps: { ...event.extendedProps, hasTime, originalStart: event.start }
                     };
                 };
-
                 const singleEventsPromise = getAllEventsForUser(currentUser.uid).then(events => events.map(processEventsForBlockDisplay));
                 const generalEventsPromise = getGeneralEvents(currentUser.uid).then(events => events.map(processEventsForBlockDisplay));
-                
                 const classEventsPromise = getYearsForUser(currentUser.uid).then(async (yearsSnap) => {
                     let allClassEvents = [];
                     for (const yearDoc of yearsSnap.docs) {
@@ -62,15 +60,8 @@ const CalendarPage = () => {
                     }
                     return allClassEvents;
                 });
-
-                const [singleEvents, classEvents, generalEvents] = await Promise.all([
-                    singleEventsPromise, 
-                    classEventsPromise, 
-                    generalEventsPromise
-                ]);
-
+                const [singleEvents, classEvents, generalEvents] = await Promise.all([singleEventsPromise, classEventsPromise, generalEventsPromise]);
                 setEvents([...singleEvents, ...classEvents, ...generalEvents]);
-
             } catch (error) {
                 console.error("Error al cargar datos del calendario:", error);
                 toast.error("Hubo un error al cargar el calendario.");
@@ -84,23 +75,19 @@ const CalendarPage = () => {
     const handleEventClick = async (clickInfo) => {
         const { extendedProps, title } = clickInfo.event;
         const eventType = extendedProps.type;
-
         if (eventType === 'class') {
             toast.info(`Clase: ${title}\nAula: ${extendedProps.classroom || 'No especificada'}`, { autoClose: 2000 });
             return;
         }
-
         let message = `Evento: ${title}`;
         if (extendedProps.hasTime) {
             const time = new Date(extendedProps.originalStart).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
             message += `\nHora: ${time} hs`;
         }
-
         if (eventType === 'general') {
             toast.info(message + `\n(Gestionar desde la página de Eventos Generales)`);
             return;
         }
-
         if (eventType === 'event') {
             const result = await confirm('Eliminar Evento', `${message}\n\n¿Quieres eliminar este evento?`);
             if (result) {
@@ -124,10 +111,13 @@ const CalendarPage = () => {
     if (loading) return <div className="flex justify-center items-center h-full pt-20"><span className="loading loading-spinner loading-lg text-primary"></span></div>;
 
     return (
-        <div>
+        // --- CONTENEDOR PRINCIPAL MODIFICADO ---
+        <div className="flex flex-col h-full">
             <ConfirmationDialog />
-            <h1 className="text-3xl font-bold mb-6">Calendario General</h1>
-            <div className="p-4 bg-surface-100 rounded-lg shadow-md" key={isMobile ? 'mobile' : 'desktop'}>
+            <h1 className="text-3xl font-bold mb-6 flex-shrink-0">Calendario General</h1>
+            
+            {/* --- CONTENEDOR DEL CALENDARIO MODIFICADO --- */}
+            <div className="flex-grow overflow-hidden bg-surface-100 rounded-lg shadow-md" key={isMobile ? 'mobile' : 'desktop'}>
                 <FullCalendar
                     plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
                     initialView={calendarView}
@@ -137,8 +127,9 @@ const CalendarPage = () => {
                     eventClick={handleEventClick}
                     locale="es"
                     buttonText={{ today: 'Hoy', month: 'Mes', week: 'Semana', day: 'Día', list: 'Lista' }}
-                    allDayText="Eventos" // <-- Punto 1 solucionado
-                    height="auto"
+                    allDayText="Eventos"
+                    // --- PROPIEDAD DE ALTURA MODIFICADA ---
+                    height="100%"
                     weekends={true}
                     dayMaxEventRows={true}
                     listDayFormat={{ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }}

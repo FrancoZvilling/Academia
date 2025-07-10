@@ -129,7 +129,7 @@ const GeneralEventsPage = () => {
 
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold">Eventos Generales</h1>
-                <button onClick={openAddModal} className="btn btn-primary"><FaPlus className="mr-2"/>Añadir Evento</button>
+                <button onClick={openAddModal} className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary"><FaPlus className="mr-2"/>Añadir Evento</button>
             </div>
 
             <div className="bg-surface-100 p-4 sm:p-6 rounded-lg shadow-md">
