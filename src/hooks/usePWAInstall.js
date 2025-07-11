@@ -1,51 +1,59 @@
-// src/hooks/usePWAInstall.js
 import { useState, useEffect } from 'react';
 
+// Guardamos el evento fuera del componente para que persista entre re-renderizados
+let deferredPrompt;
+
 const usePWAInstall = () => {
-  const [installPromptEvent, setInstallPromptEvent] = useState(null);
-  const [isAppInstalled, setIsAppInstalled] = useState(false);
+  const [canInstall, setCanInstall] = useState(false);
 
   useEffect(() => {
-    // Detecta si la app ya está instalada
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsAppInstalled(true);
-    }
-
-    const handleBeforeInstallPrompt = (event) => {
-      // Previene que el navegador muestre su propio popup de instalación
-      event.preventDefault();
-      // Guarda el evento para que podamos dispararlo más tarde
-      setInstallPromptEvent(event);
+    const handleBeforeInstallPrompt = (e) => {
+      // Prevenimos el mini-infobar de Chrome en móvil
+      e.preventDefault();
+      // Guardamos el evento para poder dispararlo más tarde
+      deferredPrompt = e;
+      // Actualizamos el estado para que nuestro botón aparezca
+      setCanInstall(true);
+      console.log('`beforeinstallprompt` fue disparado y atrapado.');
     };
 
+    // Si el evento ya se disparó y lo tenemos, actualizamos el estado
+    if (deferredPrompt) {
+        setCanInstall(true);
+    }
+    
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Limpia el listener cuando el componente se desmonta
+    // Listener para cuando la app ya está instalada
+    const handleAppInstalled = () => {
+      // Ocultamos el botón de instalación si el usuario acepta
+      deferredPrompt = null;
+      setCanInstall(false);
+      console.log('PWA fue instalada.');
+    };
+
+    window.addEventListener('appinstalled', handleAppInstalled);
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
-  const handleInstallClick = async () => {
-    if (!installPromptEvent) {
-      // Si no hay evento, no se puede instalar (ya se instaló, o el navegador no es compatible)
+  const onInstall = async () => {
+    if (!deferredPrompt) {
       return;
     }
-    // Muestra el prompt de instalación nativo del navegador
-    installPromptEvent.prompt();
-    // Espera a que el usuario responda
-    const { outcome } = await installPromptEvent.userChoice;
-    if (outcome === 'accepted') {
-      console.log('El usuario aceptó la instalación');
-    } else {
-      console.log('El usuario rechazó la instalación');
-    }
-    // El prompt solo se puede usar una vez, así que lo limpiamos
-    setInstallPromptEvent(null);
+    // Mostramos el prompt al usuario
+    deferredPrompt.prompt();
+    // Esperamos a la elección del usuario
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`Elección del usuario: ${outcome}`);
+    // Solo podemos usar el prompt una vez. Lo reseteamos.
+    deferredPrompt = null;
   };
 
-  // Devolvemos la capacidad de instalar y la función para hacerlo
-  return { canInstall: !isAppInstalled && installPromptEvent !== null, onInstall: handleInstallClick };
+  return { canInstall, onInstall };
 };
 
 export default usePWAInstall;
