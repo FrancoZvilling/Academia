@@ -32,6 +32,7 @@ export default {
   plugins: [
     require('@tailwindcss/forms'), // Plugin para mejorar estilos de formularios
     require('daisyui'), // Plugin para componentes de UI pre-estilizados
+    require('@tailwindcss/typography'), // Plugin para mejorar la tipografía
   ],
 
   // Configuración de DaisyUI (opcional pero muy útil)

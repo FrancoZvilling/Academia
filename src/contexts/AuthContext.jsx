@@ -10,7 +10,8 @@ import {
   updatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
-  deleteUser
+  deleteUser,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth } from '../config/firebase-config';
 
@@ -84,6 +85,10 @@ export const AuthProvider = ({ children }) => {
     return Promise.reject(new Error("No hay usuario autenticado."));
   };
 
+  const resetPassword = (email) => {
+    return sendPasswordResetEmail(auth, email);
+  };
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -100,6 +105,7 @@ export const AuthProvider = ({ children }) => {
     login,
     loginWithGoogle,
     logout,
+    resetPassword,
     updateUserProfile,
     changeUserPassword,
     deleteCurrentUserAccount
