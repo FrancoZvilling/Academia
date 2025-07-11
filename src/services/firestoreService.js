@@ -62,6 +62,18 @@ export const deleteYear = (userId, yearId) => {
   return deleteDoc(yearDocRef);
 };
 
+/**
+ * [NUEVA FUNCIÓN] Actualiza el nombre de un año existente.
+ * @param {string} userId
+ * @param {string} yearId
+ * @param {string} newName - El nuevo nombre para el año.
+ */
+export const updateYearName = (userId, yearId, newName) => {
+  const yearDocRef = doc(db, 'users', userId, 'years', yearId);
+  return updateDoc(yearDocRef, {
+    name: newName
+  });
+};
 
 // --- GESTIÓN DE MATERIAS ---
 export const addSubjectToYear = (userId, yearId, subjectData) => {
