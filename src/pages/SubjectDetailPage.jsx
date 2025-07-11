@@ -48,19 +48,19 @@ const SubjectForm = ({ onSubmit, onCancel, defaultValues = {}, isEditing = false
 
     return (
         <form onSubmit={handleSubmit(handleFormSubmit)} className="p-1 flex flex-col gap-4">
-            <input {...register("name", { required: true })} placeholder="* Nombre de la materia" className="input input-bordered w-full dark:bg-gray-700" />
-            <input {...register("professor")} placeholder="Profesor" className="input input-bordered w-full dark:bg-gray-700" />
+            <input {...register("name", { required: true })} placeholder="* Nombre de la materia" className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
+            <input {...register("professor")} placeholder="Profesor" className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
             <div className="flex gap-4">
                 <div className="w-1/2">
-                    <input {...register("classroom")} placeholder="Aula (ej: 204)" className="input input-bordered w-full dark:bg-gray-700" />
+                    <input {...register("classroom")} placeholder="Aula (ej: 204)" className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
                 </div>
                 <div className="w-1/2">
-                    <input {...register("commission")} placeholder="Comisión (ej: 1K1)" className="input input-bordered w-full dark:bg-gray-700" />
+                    <input {...register("commission")} placeholder="Comisión (ej: 1K1)" className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
                 </div>
             </div>
-            <div className="flex gap-4"><div className="w-1/2"><label className="text-sm font-semibold block mb-1">Inicio Cursada*:</label><input type="date" {...register("startDate", { required: true })} className="input input-bordered w-full text-sm dark:bg-gray-700" /></div><div className="w-1/2"><label className="text-sm font-semibold block mb-1">Fin Cursada:</label><input type="date" {...register("endDate")} className="input input-bordered w-full text-sm dark:bg-gray-700" /></div></div>
+            <div className="flex gap-4"><div className="w-1/2"><label className="text-sm font-semibold block mb-1">Inicio Cursada*:</label><input type="date" {...register("startDate", { required: true })} className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div><div className="w-1/2"><label className="text-sm font-semibold block mb-1">Fin Cursada:</label><input type="date" {...register("endDate")} className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div></div>
             <div><div className="text-sm font-semibold mb-2">Días de Cursada:</div><div className="grid grid-cols-3 gap-x-4 gap-y-2">{daysOfWeek.map(day => (<label key={day} className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" {...register(`days.${day}`)} className="checkbox checkbox-sm" /><span>{day}</span></label>))}</div></div>
-            <div className="flex gap-4"><div className="w-1/2"><label className="text-sm block mb-1">Desde:</label><input type="time" {...register("startTime")} className="input input-bordered w-full text-sm dark:bg-gray-700" /></div><div className="w-1/2"><label className="text-sm block mb-1">Hasta:</label><input type="time" {...register("endTime")} className="input input-bordered w-full text-sm dark:bg-gray-700" /></div></div>
+            <div className="flex gap-4"><div className="w-1/2"><label className="text-sm block mb-1">Desde:</label><input type="time" {...register("startTime")} className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div><div className="w-1/2"><label className="text-sm block mb-1">Hasta:</label><input type="time" {...register("endTime")} className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div></div>
             <div><label className="text-sm font-semibold block mb-2">Color de la Materia</label><div className="flex flex-wrap gap-3">{subjectColors.map(color => (<div key={color.value} onClick={() => setSelectedColor(color.value)} className="w-8 h-8 rounded-full transition-all duration-200 transform cursor-pointer" style={{ backgroundColor: color.value }}>{selectedColor === color.value && (<div className="w-full h-full rounded-full flex items-center justify-center bg-black/30"><svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg></div>)}</div>))}</div><input {...register('color')} type="hidden" /></div>
             <div className="flex justify-end gap-4 mt-4"><button type="button" onClick={onCancel} className="btn btn-ghost">Cancelar</button><button type="submit" className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary">{isEditing ? 'Guardar Cambios' : 'Añadir Materia'}</button></div>
         </form>
@@ -89,12 +89,12 @@ const AddEventForm = ({ subject, onEventAdded }) => {
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-3 p-2">
             <h4 className="font-semibold text-lg mb-2">Añadir Nuevo Evento</h4>
             <div>
-                <input {...register("title", { required: "El título es obligatorio" })} placeholder="Título (ej: Parcial)" className="input input-bordered w-full dark:bg-gray-700" />
+                <input {...register("title", { required: "El título es obligatorio" })} placeholder="Título (ej: Parcial)" className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
                 {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>}
             </div>
             <div className="flex gap-4">
-                <div className="flex-grow"><label className="text-xs font-semibold">Fecha*</label><input type="date" {...register("date", { required: "La fecha es obligatoria" })} className="input input-bordered w-full dark:bg-gray-700" />{errors.date && <p className="text-red-500 text-xs mt-1">{errors.date.message}</p>}</div>
-                <div className="w-1/3"><label className="text-xs font-semibold">Hora (Opcional)</label><input type="time" {...register("startTime")} className="input input-bordered w-full dark:bg-gray-700" /></div>
+                <div className="flex-grow"><label className="text-xs font-semibold">Fecha*</label><input type="date" {...register("date", { required: "La fecha es obligatoria" })} className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" />{errors.date && <p className="text-red-500 text-xs mt-1">{errors.date.message}</p>}</div>
+                <div className="w-1/3"><label className="text-xs font-semibold">Hora (Opcional)</label><input type="time" {...register("startTime")} className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div>
             </div>
             <button type="submit" className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary w-full" disabled={isSubmitting}>{isSubmitting ? "Añadiendo..." : "Añadir al Calendario"}</button>
         </form>
@@ -137,8 +137,8 @@ const GradesManager = ({ subject, grades, onAddGrade, onDeleteGrade }) => {
         <div className="bg-surface-100 p-6 rounded-lg shadow-md sticky top-8">
             <h3 className="font-bold text-lg mb-4">Notas de la Cursada</h3>
             <form onSubmit={handleSubmit(handleFormSubmit)} className="flex items-start gap-2 mb-6">
-                <div className="flex-grow"><input {...register("gradeTitle", { required: true })} placeholder="Ej: Primer Parcial" className="input input-sm input-bordered w-full dark:bg-gray-700"/></div>
-                <div className="w-20"><input type="number" step="0.01" {...register("gradeScore", { required: true })} placeholder="Nota" className="input input-sm input-bordered w-full dark:bg-gray-700"/></div>
+                <div className="flex-grow"><input {...register("gradeTitle", { required: true })} placeholder="Ej: Primer Parcial" className="input input-sm input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300"/></div>
+                <div className="w-20"><input type="number" step="0.01" {...register("gradeScore", { required: true })} placeholder="Nota" className="input input-sm input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300"/></div>
                 <button type="submit" className="btn btn-sm btn-primary btn-circle bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary"><FaPlusCircle /></button>
             </form>
             <div className="space-y-2 mb-6 max-h-48 overflow-y-auto pr-2">

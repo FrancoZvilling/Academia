@@ -101,11 +101,11 @@ const ProfilePage = () => {
                     <form onSubmit={handleSubmit(onSubmitProfile)} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre y Apellido</label>
-                            <input {...register('displayName', { required: true })} className="input input-bordered w-full mt-1 dark:bg-gray-700" />
+                            <input {...register('displayName', { required: true })} className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email (no se puede cambiar)</label>
-                            <input type="email" value={currentUser?.email} disabled className="input input-bordered w-full mt-1 bg-gray-100 dark:bg-gray-900" />
+                            <input type="email" value={currentUser?.email} disabled className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Elegir Avatar</label>
@@ -133,15 +133,15 @@ const ProfilePage = () => {
                         <form onSubmit={handleSubmit(onSubmitPassword)} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña Actual</label>
-                                <input type="password" {...register('oldPassword')} className="input input-bordered w-full mt-1 dark:bg-gray-700" />
+                                <input type="password" {...register('oldPassword')} className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nueva Contraseña</label>
-                                <input type="password" {...register('newPassword', { minLength: 6 })} className="input input-bordered w-full mt-1 dark:bg-gray-700" />
+                                <input type="password" {...register('newPassword', { minLength: 6 })} className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
                             </div>
                              <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirmar Nueva Contraseña</label>
-                                <input type="password" {...register('confirmPassword')} className="input input-bordered w-full mt-1 dark:bg-gray-700" />
+                                <input type="password" {...register('confirmPassword')} className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
                             </div>
                             <button type="submit" className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary hover:border-primary w-full" disabled={loading}>{loading ? 'Cambiando...' : 'Cambiar Contraseña'}</button>
                         </form>
