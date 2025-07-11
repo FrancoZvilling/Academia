@@ -9,6 +9,7 @@ import ProtectedRoute from './ProtectedRoute';
 import MainLayout from '../components/layout/MainLayout';
 import GeneralEventsPage from '../pages/GeneralEventsPage';
 import NotebookPage from '../pages/NotebookPage';
+import ContactPage from '../pages/ContactPage';
 
 const AppRouter = () => {
   return (
@@ -20,6 +21,7 @@ const AppRouter = () => {
         <Route path="calendario" element={<CalendarPage />} />
         <Route path="eventos" element={<GeneralEventsPage />} />
         <Route path="libreta" element={<NotebookPage />} />
+        <Route path="contacto" element={<ContactPage />} />
         <Route path="perfil" element={<ProfilePage />} />
         <Route index element={<Navigate to="/dashboard" replace />} />
       </Route>

@@ -4,10 +4,19 @@ import ThemeSwitcher from "../ui/ThemeSwitcher";
 import { FaTachometerAlt, FaCalendarAlt, FaUserCircle, FaSignOutAlt, FaRegCalendarAlt, FaBookOpen, FaTimes } from "react-icons/fa";
 import { IoSchool } from "react-icons/io5";
 import { useAuth } from "../../contexts/AuthContext";
+import { FaEnvelope } from "react-icons/fa";
 
 // El componente ahora recibe 'onClose' (para el menú móvil) y 'onConfirmLogout' (para el botón)
 const Sidebar = ({ onClose, onConfirmLogout }) => {
   const { currentUser } = useAuth();
+
+  const getNavLinkClass = ({ isActive }) => {
+    const baseClasses = "flex items-center gap-3 py-2 px-4 rounded-lg font-semibold transition-all duration-200";
+    if (isActive) {
+      return `${baseClasses} bg-primary text-text-accent shadow-lg`;
+    }
+    return `${baseClasses} text-text-secondary hover:bg-surface-200 hover:text-text-primary`;
+  };
 
   return (
     <aside className="w-64 h-full flex-shrink-0 bg-surface-100 p-4 flex flex-col shadow-lg border-r border-surface-200">
@@ -49,6 +58,10 @@ const Sidebar = ({ onClose, onConfirmLogout }) => {
         <NavLink to="/libreta" className={({ isActive }) => isActive ? "flex items-center gap-3 py-2 px-4 rounded-lg font-semibold transition-all duration-200 bg-primary text-text-accent shadow-lg" : "flex items-center gap-3 py-2 px-4 rounded-lg font-semibold transition-all duration-200 text-text-secondary hover:bg-surface-200 hover:text-text-primary"}>
           <FaBookOpen />
           <span>Mi Libreta</span>
+        </NavLink>
+        <NavLink to="/contacto" className={getNavLinkClass}> {/* <-- Añadir enlace */}
+          <FaEnvelope />
+          <span>Contacto</span>
         </NavLink>
         <NavLink to="/perfil" className={({ isActive }) => isActive ? "flex items-center gap-3 py-2 px-4 rounded-lg font-semibold transition-all duration-200 bg-primary text-text-accent shadow-lg" : "flex items-center gap-3 py-2 px-4 rounded-lg font-semibold transition-all duration-200 text-text-secondary hover:bg-surface-200 hover:text-text-primary"}>
           <FaUserCircle />
