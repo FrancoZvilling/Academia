@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
-const AVATARS = Array.from({ length: 10 }, (_, i) => `/avatars/avatar${i + 1}.png`);
+const AVATARS = Array.from({ length: 14 }, (_, i) => `/avatars/avatar${i + 1}.png`);
 
 const ProfilePage = () => {
     const { currentUser, updateUserProfile, changeUserPassword, deleteCurrentUserAccount } = useAuth();
