@@ -38,26 +38,26 @@ const AddSubjectForm = ({ onSubmit, onCancel }) => {
 
     return (
         <form onSubmit={handleSubmit(handleFormSubmit)} className="p-1 flex flex-col gap-4">
-            <input {...register("name", { required: true })} placeholder="* Nombre de la materia" className="input input-bordered w-full dark:bg-gray-700" />
-            <input {...register("professor")} placeholder="Profesor" className="input input-bordered w-full dark:bg-gray-700" />
+            <input {...register("name", { required: true })} placeholder="* Nombre de la materia" className="input input-bordered border-black bg-surface-100 w-full dark:bg-gray-700" />
+            <input {...register("professor")} placeholder="Profesor" className="input input-bordered border-black bg-surface-100 w-full dark:bg-gray-700" />
 
             <div className="flex gap-4">
                 <div className="w-1/2">
-                    <input {...register("classroom")} placeholder="Aula (ej: 204)" className="input input-bordered w-full dark:bg-gray-700" />
+                    <input {...register("classroom")} placeholder="Aula (ej: 204)" className="input input-bordered border-black bg-surface-100 w-full dark:bg-gray-700" />
                 </div>
                 <div className="w-1/2">
-                    <input {...register("commission")} placeholder="Comisión (ej: 1K1)" className="input input-bordered w-full dark:bg-gray-700" />
+                    <input {...register("commission")} placeholder="Comisión (ej: 1K1)" className="input input-bordered border-black bg-surface-100 w-full dark:bg-gray-700" />
                 </div>
             </div>
 
             <div className="flex gap-4">
                 <div className="w-1/2">
                     <label className="text-sm font-semibold block mb-1">Inicio Cursada*:</label>
-                    <input type="date" {...register("startDate", { required: true })} className="input input-bordered w-full text-sm dark:bg-gray-700" />
+                    <input type="date" {...register("startDate", { required: true })} className="input input-bordered border-black bg-surface-100 w-full text-sm dark:bg-gray-700" />
                 </div>
                 <div className="w-1/2">
                     <label className="text-sm font-semibold block mb-1">Fin Cursada:</label>
-                    <input type="date" {...register("endDate")} className="input input-bordered w-full text-sm dark:bg-gray-700" />
+                    <input type="date" {...register("endDate")} className="input input-bordered border-black bg-surface-100 w-full text-sm dark:bg-gray-700" />
                 </div>
             </div>
             <div>
@@ -74,11 +74,11 @@ const AddSubjectForm = ({ onSubmit, onCancel }) => {
             <div className="flex gap-4">
                 <div className="w-1/2">
                     <label className="text-sm block mb-1">Desde:</label>
-                    <input type="time" {...register("startTime")} className="input input-bordered w-full text-sm dark:bg-gray-700" />
+                    <input type="time" {...register("startTime")} className="input input-bordered border-black bg-surface-100 w-full text-sm dark:bg-gray-700" />
                 </div>
                 <div className="w-1/2">
                     <label className="text-sm block mb-1">Hasta:</label>
-                    <input type="time" {...register("endTime")} className="input input-bordered w-full text-sm dark:bg-gray-700" />
+                    <input type="time" {...register("endTime")} className="input input-bordered border-black bg-surface-100 w-full text-sm dark:bg-gray-700" />
                 </div>
             </div>
             <div className="flex justify-end gap-4 mt-4">
