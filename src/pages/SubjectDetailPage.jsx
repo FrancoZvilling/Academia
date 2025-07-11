@@ -42,7 +42,7 @@ const SubjectForm = ({ onSubmit, onCancel, defaultValues = {}, isEditing = false
 
     const handleFormSubmit = (data) => {
         const schedule = daysOfWeek.filter(day => data.days && data.days[day]).map(day => ({ day, startTime: data.startTime || null, endTime: data.endTime || null }));
-        const subjectData = { name: data.name, professor: data.professor || "", classroom: data.classroom || "", schedule, startDate: data.startDate, endDate: data.endDate || null, color: selectedColor };
+        const subjectData = { name: data.name, professor: data.professor || "", classroom: data.classroom || "", commission: data.commission || "", schedule, startDate: data.startDate, endDate: data.endDate || null, color: selectedColor };
         onSubmit(subjectData);
     };
 
@@ -50,7 +50,14 @@ const SubjectForm = ({ onSubmit, onCancel, defaultValues = {}, isEditing = false
         <form onSubmit={handleSubmit(handleFormSubmit)} className="p-1 flex flex-col gap-4">
             <input {...register("name", { required: true })} placeholder="* Nombre de la materia" className="input input-bordered w-full dark:bg-gray-700" />
             <input {...register("professor")} placeholder="Profesor" className="input input-bordered w-full dark:bg-gray-700" />
-            <input {...register("classroom")} placeholder="Aula (ej: 204)" className="input input-bordered w-full dark:bg-gray-700" />
+            <div className="flex gap-4">
+                <div className="w-1/2">
+                    <input {...register("classroom")} placeholder="Aula (ej: 204)" className="input input-bordered w-full dark:bg-gray-700" />
+                </div>
+                <div className="w-1/2">
+                    <input {...register("commission")} placeholder="Comisión (ej: 1K1)" className="input input-bordered w-full dark:bg-gray-700" />
+                </div>
+            </div>
             <div className="flex gap-4"><div className="w-1/2"><label className="text-sm font-semibold block mb-1">Inicio Cursada*:</label><input type="date" {...register("startDate", { required: true })} className="input input-bordered w-full text-sm dark:bg-gray-700" /></div><div className="w-1/2"><label className="text-sm font-semibold block mb-1">Fin Cursada:</label><input type="date" {...register("endDate")} className="input input-bordered w-full text-sm dark:bg-gray-700" /></div></div>
             <div><div className="text-sm font-semibold mb-2">Días de Cursada:</div><div className="grid grid-cols-3 gap-x-4 gap-y-2">{daysOfWeek.map(day => (<label key={day} className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" {...register(`days.${day}`)} className="checkbox checkbox-sm" /><span>{day}</span></label>))}</div></div>
             <div className="flex gap-4"><div className="w-1/2"><label className="text-sm block mb-1">Desde:</label><input type="time" {...register("startTime")} className="input input-bordered w-full text-sm dark:bg-gray-700" /></div><div className="w-1/2"><label className="text-sm block mb-1">Hasta:</label><input type="time" {...register("endTime")} className="input input-bordered w-full text-sm dark:bg-gray-700" /></div></div>
@@ -273,7 +280,7 @@ const SubjectDetailPage = () => {
     const subjectDefaultValues = useMemo(() => {
         if (!subject) return {};
         const days = subject.schedule?.reduce((acc, slot) => { acc[slot.day] = true; return acc; }, {}) || {};
-        return { name: subject.name || '', professor: subject.professor || '', classroom: subject.classroom || '', startDate: subject.startDate || '', endDate: subject.endDate || '', days: days, startTime: subject.schedule?.[0]?.startTime || '', endTime: subject.schedule?.[0]?.endTime || '', color: subject.color || defaultSubjectColor };
+        return { name: subject.name || '', professor: subject.professor || '', classroom: subject.classroom || '', commission: subject.commission ||  '', startDate: subject.startDate || '', endDate: subject.endDate || '', days: days, startTime: subject.schedule?.[0]?.startTime || '', endTime: subject.schedule?.[0]?.endTime || '', color: subject.color || defaultSubjectColor };
     }, [subject]);
     
     if (loading) return <div className="flex justify-center items-center h-screen"><span className="loading loading-spinner loading-lg text-primary"></span></div>;

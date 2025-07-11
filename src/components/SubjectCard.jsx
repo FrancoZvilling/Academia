@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FaTrash } from 'react-icons/fa';
-import { defaultSubjectColor } from '../config/colors'; // Importamos el color por defecto
+import { defaultSubjectColor } from '../config/colors';
 
 /**
  * Componente que renderiza la tarjeta de una materia en el dashboard con un diseño horizontal.
@@ -14,7 +14,7 @@ const SubjectCard = ({ subject, onDelete }) => {
     onDelete();
   };
 
-  // Pequeña función auxiliar para formatear el horario y evitar JSX complejo en el return
+  // Pequeña función auxiliar para formatear el horario
   const formatSchedule = () => {
     if (!subject.schedule || subject.schedule.length === 0) {
       return (
@@ -48,16 +48,27 @@ const SubjectCard = ({ subject, onDelete }) => {
       <Link to={`/materia/${subject.id}`} className="block">
         <div 
             className="p-4 bg-surface-100 rounded-lg shadow-md h-36 flex flex-col justify-between border-t-4"
-            // Aplicamos el color de la materia al borde superior. Si no tiene, usamos el color por defecto.
             style={{ borderColor: subject.color || defaultSubjectColor }}
         >
-          {/* Parte superior: Nombre, Profesor y Aula */}
+          {/* Parte superior: Nombre, Profesor, Aula y Comisión */}
           <div>
             <h3 className="font-bold text-lg text-text-primary truncate">{subject.name}</h3>
             <p className="text-sm text-text-secondary truncate">{subject.professor || 'Profesor no asignado'}</p>
-            {subject.classroom && (
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Aula: {subject.classroom}</p>
-            )}
+            
+            {/* --- ¡AQUÍ ESTÁ LA MODIFICACIÓN! --- */}
+            <div className="flex items-center text-xs text-text-secondary mt-1 space-x-2">
+              {subject.classroom && (
+                  <span>Aula: {subject.classroom}</span>
+              )}
+              {/* Mostramos el separador solo si ambos datos existen */}
+              {subject.classroom && subject.commission && (
+                  <span className="opacity-50">|</span>
+              )}
+              {subject.commission && (
+                  <span>Comisión: {subject.commission}</span>
+              )}
+            </div>
+            {/* ------------------------------------- */}
           </div>
           
           {/* Parte inferior: Horario resumido */}
