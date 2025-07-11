@@ -195,7 +195,11 @@ const DashboardPage = () => {
             <h1 className="text-3xl font-bold mb-6">Mis Materias</h1>
 
             <form onSubmit={handleSubmitYear(handleAddYear)} className="flex gap-2 mb-8">
-                <input {...registerYear("yearName", { required: true })} placeholder="Ej: Primer Año, 2024..." className="input input-bordered w-full max-w-xs dark:bg-gray-700" />
+                <input
+                    {...registerYear("yearName", { required: true })}
+                    placeholder="Ej: Primer Año, 2024..."
+                    className="input input-bordered w-full max-w-xs bg-surface-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                />
                 <button type="submit" className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary">
                     Añadir Año
                 </button>
