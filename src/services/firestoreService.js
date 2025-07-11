@@ -14,8 +14,38 @@ import {
     collectionGroup,
     where,
     serverTimestamp,
-    Timestamp 
+    Timestamp, 
+    writeBatch
 } from 'firebase/firestore';
+
+// --- GESTIÓN DE NOTAS (AÑADIMOS UNA NUEVA FUNCIÓN) ---
+
+/**
+ * [NUEVA FUNCIÓN] Elimina TODAS las notas asociadas a un subjectId específico.
+ * @param {string} userId
+ * @param {string} subjectId
+ */
+export const deleteSubjectAndItsGrades = async (userId, subjectId) => {
+  const gradesRef = collection(db, 'users', userId, 'notebook');
+  // 1. Creamos una consulta para encontrar todas las notas de esa materia
+  const q = query(gradesRef, where('subjectId', '==', subjectId));
+  
+  const querySnapshot = await getDocs(q);
+
+  if (querySnapshot.empty) {
+    console.log("No hay notas que borrar para esta materia.");
+    return; // No hay nada que hacer
+  }
+
+  // 2. Usamos un lote (batch) para borrar todos los documentos encontrados en una sola operación
+  const batch = writeBatch(db); // writeBatch es más adecuado para borrados
+  querySnapshot.forEach(doc => {
+    batch.delete(doc.ref);
+  });
+
+  // 3. Ejecutamos el lote
+  return batch.commit();
+};
 
 // --- GESTIÓN DE AÑOS ---
 export const addYearForUser = (userId, yearName) => {

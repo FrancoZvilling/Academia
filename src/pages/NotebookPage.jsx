@@ -1,33 +1,62 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { getNotebookGrades } from '../services/firestoreService';
-import { FaBook } from 'react-icons/fa';
+import { getNotebookGrades, deleteSubjectAndItsGrades } from '../services/firestoreService';
+import { FaBook, FaTrash } from 'react-icons/fa';
+import useConfirm from '../hooks/useConfirm';
+import { toast } from 'react-toastify';
 
 const NotebookPage = () => {
     const { currentUser } = useAuth();
     const [allGrades, setAllGrades] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [ConfirmationDialog, confirm] = useConfirm();
 
-    useEffect(() => {
+    const fetchGrades = async () => {
         if (!currentUser) return;
         setLoading(true);
-        getNotebookGrades(currentUser.uid)
-            .then(snapshot => {
-                const gradesData = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-                setAllGrades(gradesData);
-            })
-            .catch(error => {
-                console.error("Error al cargar la libreta:", error);
-                alert("No se pudieron cargar las notas de la libreta.");
-            })
-            .finally(() => setLoading(false));
+        try {
+            const snapshot = await getNotebookGrades(currentUser.uid);
+            const gradesData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setAllGrades(gradesData);
+        } catch (error) {
+            console.error("Error al cargar la libreta:", error);
+            toast.error("No se pudieron cargar las notas de la libreta.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchGrades();
     }, [currentUser]);
 
-    // Usamos useMemo para agrupar las notas y calcular promedios.
-    // Este cálculo solo se re-ejecuta si el array `allGrades` cambia.
+    const handleDeleteSubjectHistory = async (subject) => {
+        const result = await confirm(
+            `Eliminar Historial de "${subject.name}"`,
+            `¿Estás seguro? Se borrarán TODAS las notas (${subject.grades.length}) de esta materia de tu libreta permanentemente. Esta acción no se puede deshacer.`
+        );
+
+        if (result) {
+            try {
+                // Buscamos una nota de esa materia para obtener su subjectId, que es el mismo para todas.
+                const gradeWithId = allGrades.find(g => g.subjectName === subject.name);
+                if (gradeWithId && gradeWithId.subjectId) {
+                    await deleteSubjectAndItsGrades(currentUser.uid, gradeWithId.subjectId);
+                    toast.info(`Historial de "${subject.name}" eliminado.`);
+                    fetchGrades(); // Recargamos para que desaparezca de la libreta
+                } else {
+                    throw new Error("No se pudo encontrar el ID de la materia para el borrado.");
+                }
+            } catch (error) {
+                console.error("Error al borrar el historial de la materia:", error);
+                toast.error("No se pudo eliminar el historial de la materia.");
+            }
+        }
+    };
+
     const { subjectsWithAverages, overallAverage } = useMemo(() => {
         if (allGrades.length === 0) {
             return { subjectsWithAverages: [], overallAverage: '0.00' };
@@ -59,7 +88,7 @@ const NotebookPage = () => {
             return {
                 name: subjectName,
                 color: subjectData.color,
-                grades: subjectData.grades.sort((a,b) => a - b), // Ordenar notas de menor a mayor
+                grades: subjectData.grades.sort((a,b) => a - b),
                 average: average.toFixed(2)
             };
         });
@@ -79,6 +108,7 @@ const NotebookPage = () => {
 
     return (
         <div>
+            <ConfirmationDialog />
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <h1 className="text-3xl font-bold">Mi Libreta Universitaria</h1>
                 <div className="text-center sm:text-right bg-surface-100 p-4 rounded-lg shadow">
@@ -95,7 +125,16 @@ const NotebookPage = () => {
                                 className="p-4 flex justify-between items-center border-l-8"
                                 style={{ borderColor: subject.color }}
                             >
-                                <h2 className="text-xl font-semibold">{subject.name}</h2>
+                                <div className="flex items-center gap-4">
+                                    <h2 className="text-xl font-semibold">{subject.name}</h2>
+                                    <button 
+                                        onClick={() => handleDeleteSubjectHistory(subject)} 
+                                        className="text-red-500 hover:text-red-700 opacity-50 hover:opacity-100 transition-opacity"
+                                        title={`Eliminar historial de ${subject.name}`}
+                                    >
+                                        <FaTrash />
+                                    </button>
+                                </div>
                                 <div className="text-right">
                                     <span className="text-sm text-text-secondary">Promedio</span>
                                     <p className="text-lg font-bold">{subject.average}</p>
