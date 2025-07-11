@@ -14,13 +14,7 @@ const Navbar = ({ onMenuClick }) => {
         </button>
       </div>
 
-      {/* Contenedor Central: Logo y Nombre */}
-      <div className="flex-1 flex justify-center">
-        <div className="flex items-center gap-2 text-xl font-bold text-text-primary">
-            <IoSchool className="text-primary" size={24}/>
-            <span>Estud-IA</span>
-        </div>
-      </div>
+      
       
       {/* Contenedor Derecho: Botón de Instalación */}
       <div className="flex-1 flex justify-end">
