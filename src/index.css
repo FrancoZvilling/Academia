@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+input,
+textarea,
+select {
+  color-scheme: light;
+}
+
+/* 
+  En el caso de que nuestro tema SÍ sea oscuro, anulamos la regla anterior
+  y permitimos que los formularios también sean oscuros.
+*/
+.dark input,
+.dark textarea,
+.dark select {
+  color-scheme: dark;
+}
+
 
 :root {
   /* Por defecto, le decimos al navegador que la página es CLARA. */
