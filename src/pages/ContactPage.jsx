@@ -47,7 +47,7 @@ const ContactPage = () => {
                     <form ref={form} onSubmit={handleSubmit(sendEmail)} className="space-y-4">
                         <div>
                             <label htmlFor="from_name" className="label"><span className="label-text">Tu Nombre y Apellido</span></label>
-                            <input id="from_name" {...register("from_name", { required: true })} className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
+                            <input id="from_name" {...register("from_name", { required: true })} className="input input-bordered w-full bg-surface-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
                         </div>
                         <div>
                             <label htmlFor="subject" className="label"><span className="label-text">Asunto</span></label>
@@ -55,7 +55,7 @@ const ContactPage = () => {
                         </div>
                         <div>
                             <label htmlFor="message" className="label"><span className="label-text">Mensaje</span></label>
-                            <textarea id="message" {...register("message", { required: true })} className="textarea textarea-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300 h-32" placeholder="Escribe tu mensaje aquí..."></textarea>
+                            <textarea id="message" {...register("message", { required: true })} className="textarea textarea-bordered w-full bg-surface-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 h-32" placeholder="Escribe tu mensaje aquí..."></textarea>
                         </div>
                         {/* Campo oculto para enviar el email del usuario */}
                         <input type="hidden" {...register("user_email")} />
