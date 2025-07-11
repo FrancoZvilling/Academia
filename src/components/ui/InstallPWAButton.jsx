@@ -54,17 +54,31 @@ const InstallPWAButton = () => {
                 onClose={() => setIsModalOpen(false)} 
                 title="Instalar Estud-IA"
             >
-                <div className="prose prose-sm dark:prose-invert max-w-none text-center">
-                    <p>Para la mejor experiencia, puedes instalar esta aplicación en tu dispositivo.</p>
+                <div className="text-center space-y-4">
+                    <p className="text-text-secondary">
+                        Para la mejor experiencia, puedes instalar esta aplicación en tu dispositivo.
+                    </p>
                     
-                    <h4 className="font-bold mt-4 text-black">En Android (Chrome):</h4>
-                    <p>Toca el menú de los tres puntos (⋮) en la esquina superior derecha y selecciona "Agregar a la pantalla principal".</p>
+                    <div>
+                        <h4 className="font-bold text-text-primary">En Android (Chrome):</h4>
+                        <p className="text-text-secondary text-sm">
+                            Toca el menú de los tres puntos (⋮) en la esquina superior derecha y selecciona "Agregar a la pantalla principal".
+                        </p>
+                    </div>
                     
-                    <h4 className="font-bold mt-4 text-black">En iOS (Safari):</h4>
-                    <p>Toca el ícono de "Compartir" (un cuadrado con una flecha hacia arriba) y luego selecciona "Agregar a la pantalla de inicio".</p>
+                    <div>
+                        <h4 className="font-bold text-text-primary">En iOS (Safari):</h4>
+                        <p className="text-text-secondary text-sm">
+                            Toca el ícono de "Compartir" (un cuadrado con una flecha) y luego selecciona "Agregar a la pantalla de inicio".
+                        </p>
+                    </div>
                     
-                    <h4 className="font-bold mt-4 text-black">En Escritorio (Chrome, Edge):</h4>
-                    <p>Busca y haz clic en el ícono de instalación (un monitor con una flecha) en la barra de direcciones.</p>
+                    <div>
+                        <h4 className="font-bold text-text-primary">En Escritorio (Chrome, Edge):</h4>
+                        <p className="text-text-secondary text-sm">
+                            Busca y haz clic en el ícono de instalación (un monitor con una flecha) en la barra de direcciones.
+                        </p>
+                    </div>
                     
                     <button onClick={() => setIsModalOpen(false)} className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary mt-6">Entendido</button>
                 </div>
