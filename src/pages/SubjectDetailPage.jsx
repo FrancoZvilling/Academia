@@ -93,7 +93,7 @@ const AddEventForm = ({ subject, onEventAdded }) => {
                 {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>}
             </div>
             <div className="flex gap-4">
-                <div className="flex-grow"><label className="text-xs font-semibold">Fecha*</label><input type="date" {...register("date", { required: "La fecha es obligatoria" })} className="input input-bordered w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" />{errors.date && <p className="text-red-500 text-xs mt-1">{errors.date.message}</p>}</div>
+                <div className="flex-grow"><label className="text-xs font-semibold">Fecha*</label><input type="date" {...register("date", { required: "La fecha es obligatoria" })} className="input input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" />{errors.date && <p className="text-red-500 text-xs mt-1">{errors.date.message}</p>}</div>
                 <div className="w-1/3"><label className="text-xs font-semibold">Hora (Opcional)</label><input type="time" {...register("startTime")} className="input input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div>
             </div>
             <button type="submit" className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary w-full" disabled={isSubmitting}>{isSubmitting ? "Añadiendo..." : "Añadir al Calendario"}</button>

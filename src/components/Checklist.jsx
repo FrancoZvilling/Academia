@@ -33,7 +33,7 @@ const Checklist = ({ tasks, onAddTask, onToggleTask, onDeleteTask }) => {
                 <input 
                     {...register("taskText")} 
                     placeholder="Añadir nueva tarea..."
-                    className="input input-bordered w-full dark:bg-gray-700"
+                    className="input input-bordered border-black bg-surface-100 w-full dark:bg-gray-700"
                 />
                 <button type="submit" className="btn btn-primary btn-circle bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary">
                     <FaPlus />

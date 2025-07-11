@@ -26,14 +26,14 @@ const GeneralEventForm = ({ onSubmit, onCancel, defaultValues = {}, isEditing = 
 
     return (
         <form onSubmit={handleSubmit(handleFormSubmit)} className="p-1 flex flex-col gap-4">
-            <input {...register("title", { required: true })} placeholder="* Título del evento" className="input input-bordered w-full" />
+            <input {...register("title", { required: true })} placeholder="* Título del evento" className="input input-bordered border-black bg-surface-100 w-full" />
             <div className="flex gap-4">
-                <div className="flex-grow"><label className="text-sm font-semibold">Fecha*</label><input type="date" {...register("date", { required: true })} className="input input-bordered w-full" /></div>
-                <div className="w-1/3"><label className="text-sm font-semibold">Hora</label><input type="time" {...register("startTime")} className="input input-bordered w-full" /></div>
+                <div className="flex-grow"><label className="text-sm font-semibold">Fecha*</label><input type="date" {...register("date", { required: true })} className="input input-bordered border-black bg-surface-100 w-full" /></div>
+                <div className="w-1/3"><label className="text-sm font-semibold">Hora</label><input type="time" {...register("startTime")} className="input input-bordered border-black bg-surface-100 w-full" /></div>
             </div>
             <div className="flex justify-end gap-4 mt-4">
                 <button type="button" onClick={onCancel} className="btn btn-ghost">Cancelar</button>
-                <button type="submit" className="btn btn-primary">{isEditing ? 'Guardar Cambios' : 'Añadir Evento'}</button>
+                <button type="submit" className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary">{isEditing ? 'Guardar Cambios' : 'Añadir Evento'}</button>
             </div>
         </form>
     );
