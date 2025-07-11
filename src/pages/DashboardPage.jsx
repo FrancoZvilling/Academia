@@ -284,7 +284,7 @@ const DashboardPage = () => {
             <form onSubmit={handleSubmitEditYear(handleUpdateYear)} className="p-1 flex flex-col gap-4">
                 <input 
                     {...registerEditYear("newYearName", { required: true })} 
-                    className="input input-bordered w-full" 
+                    className="input input-bordered border-black bg-surface-100 w-full" 
                 />
                 <div className="flex justify-end gap-4 mt-4">
                     <button type="button" onClick={() => setIsEditYearModalOpen(false)} className="btn btn-ghost">Cancelar</button>
