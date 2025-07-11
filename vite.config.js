@@ -10,11 +10,12 @@ export default defineConfig({
     VitePWA({ 
       registerType: 'autoUpdate',
       // Incluye los assets más importantes en el precaché del service worker
-      includeAssets: ['favicon.ico', 'apple-icon-180.png'], 
+      includeAssets: ['favicon.ico', 'apple-icon-180.png', 'manifest-icon-512.maskable.png'], 
       manifest: {
         name: 'Estud-IA',
         short_name: 'EstudIA',
         description: 'Tu asistente académico para organizar materias, notas y calendario.',
+        id: "/",
         theme_color: '#ffffff', // Color de la barra de título de la app en Android
         background_color: '#ffffff', // Color de la pantalla de carga (splash screen)
         display: "standalone",
