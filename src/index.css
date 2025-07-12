@@ -111,4 +111,35 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
+/* 1. Corrección para el Popover de "más eventos" en la vista de mes */
+.dark .fc-popover {
+  background-color: rgb(var(--color-surface-200));
+  border-color: rgb(var(--color-surface-100));
+}
+.dark .fc-popover .fc-popover-header {
+  background-color: rgb(var(--color-surface-100));
+  color: rgb(var(--color-text-primary));
+}
+.dark .fc-popover .fc-popover-body {
+  color: rgb(var(--color-text-primary));
+}
+/* Cambia el color del texto del evento dentro del popover */
+.dark .fc-daygrid-event-dot {
+  border-color: currentColor; /* Usa el color del texto del evento */
+}
+
+
+/* 2. Corrección para los encabezados en la Vista de Lista */
+.dark .fc-list-day-text, 
+.dark .fc-list-day-side-text {
+  color: rgb(var(--color-text-primary)) !important; /* Forzamos el color del texto principal */
+}
+
+/* Le damos un fondo a la fila del encabezado para que se distinga */
+.dark .fc-list-day-cushion {
+  background-color: rgb(var(--color-surface-200));
+}
+
+
+
 
