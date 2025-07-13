@@ -77,7 +77,7 @@ const SubjectCard = ({ subject, onDelete }) => {
       </Link>
 
       {/* Botones de acción */}
-      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+      <div className="absolute top-2 right-2 flex gap-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <button
           onClick={handleDelete}
           className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-700"
@@ -87,6 +87,7 @@ const SubjectCard = ({ subject, onDelete }) => {
           <FaTrash size={10} />
         </button>
       </div>
+      {/* ------------------------------------- */}
     </div>
   );
 };
