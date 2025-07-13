@@ -1,47 +1,26 @@
-// src/components/ui/InstallPWAButton.jsx (VERSIÓN FINAL Y FIABLE)
 import { useState, useEffect } from 'react';
 import { FaDownload } from 'react-icons/fa';
-import Modal from './Modal'; // Usaremos nuestro modal existente
+import Modal from './Modal';
 
 const InstallPWAButton = () => {
-    const [showButton, setShowButton] = useState(false);
+    const [isAppInstalled, setIsAppInstalled] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
-        // Detecta si la app ya se está ejecutando en modo standalone (instalada)
-        const isAppInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-        // Detecta si el navegador tiene la capacidad de mostrar el prompt (aunque no lo usemos)
-        // Esto nos sirve como un buen indicador de compatibilidad.
-        const handleBeforeInstallPrompt = () => {
-            // No hacemos nada con el evento, solo lo usamos para saber que se puede instalar
-            setShowButton(true);
-        };
-
-        // Si la app no está instalada, mostramos el botón.
-        if (!isAppInstalled) {
-            // Como beforeinstallprompt es poco fiable, mostramos el botón en navegadores compatibles
-            // que no sean iOS Safari (ya que este tiene un método de instalación diferente).
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-            if (!isIOS || (isIOS && !isSafari)) {
-                setShowButton(true);
-            }
+        // La única comprobación que necesitamos: ¿la app ya se está ejecutando como una ventana independiente?
+        const installed = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        
+        if (installed) {
+            setIsAppInstalled(true);
         }
-
-        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-        return () => {
-            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-        };
     }, []);
 
-    // Si el botón no se debe mostrar, no renderizamos nada
-    if (!showButton) {
+    // Si la app ya está instalada, no renderizamos nada.
+    if (isAppInstalled) {
         return null;
     }
 
+    // Si no está instalada, SIEMPRE mostramos el botón.
     return (
         <>
             <button onClick={() => setIsModalOpen(true)} className="btn btn-sm btn-primary bg-primary ml-auto">
@@ -54,6 +33,7 @@ const InstallPWAButton = () => {
                 onClose={() => setIsModalOpen(false)} 
                 title="Instalar Estud-IA"
             >
+                {/* Usamos exactamente tu estructura y clases de estilo */}
                 <div className="text-center space-y-4">
                     <p className="text-text-secondary">
                         Para la mejor experiencia, puedes instalar esta aplicación en tu dispositivo.
