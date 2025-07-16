@@ -58,7 +58,7 @@ const MainLayout = () => {
     <>
       {/* Renderizamos el diálogo aquí, a nivel superior */}
       <ConfirmationDialog />
-      <BetaAnnouncementModal isOpen={showBetaModal} onClose={handleCloseBetaModal} />
+      {/*<BetaAnnouncementModal isOpen={showBetaModal} onClose={handleCloseBetaModal} /> NO SE MUESTRA LA NOTIFICACION POR AHORA*/ } 
       <div className="flex h-screen bg-background text-text-primary">
         <div 
           className={`fixed inset-y-0 left-0 z-30 w-64 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${
