@@ -26,6 +26,7 @@ import AccordionItem from '../components/ui/AccordionItem';
 import FileUpload from '../components/FileUpload';
 import FileList from '../components/FileList';
 import Modal from '../components/ui/Modal';
+import FilePreviewModal from '../components/ui/FilePreviewModal';
 import Checklist from '../components/Checklist';
 import NotesEditor from '../components/NotesEditor';
 import { IoArrowBack, IoCalendarOutline, IoCheckboxOutline, IoFolderOpenOutline, IoNewspaperOutline } from "react-icons/io5";
@@ -328,14 +329,14 @@ const SubjectDetailPage = () => {
             <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Editar Materia">
                 {subject && (<SubjectForm onSubmit={handleUpdateSubject} onCancel={() => setIsEditModalOpen(false)} defaultValues={subjectDefaultValues} isEditing={true}/>)}
             </Modal>
-            <Modal isOpen={!!previewFile} onClose={handleClosePreview} title={previewFile?.name}>
+            <FilePreviewModal isOpen={!!previewFile} onClose={handleClosePreview} title={previewFile?.name}>
                 {previewUrl && (
                     <>
                         {previewFile?.type.startsWith('image/') && (<img src={previewUrl} alt={previewFile.name} className="max-w-full max-h-[75vh] mx-auto" />)}
                         {previewFile?.type === 'application/pdf' && (<iframe src={previewUrl} className="w-full h-[75vh]" title={previewFile.name}></iframe>)}
                     </>
                 )}
-            </Modal>
+            </FilePreviewModal>
         </div>
     );
 };

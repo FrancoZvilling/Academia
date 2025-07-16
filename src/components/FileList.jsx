@@ -6,7 +6,24 @@ const FileItem = ({ file, onPreview, onDelete }) => {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownload = async (e) => {
-    // ... (lógica de descarga sin cambios)
+    e.stopPropagation();
+    setIsDownloading(true);
+    try {
+      // 1. Obtenemos la URL de descarga desde Firebase Storage
+      const url = await getFileUrl(file.path);
+      
+      // 2. Abrimos esa URL en una nueva pestaña.
+      //    El navegador se encargará de mostrarla o descargarla.
+      window.open(url, '_blank', 'noopener,noreferrer');
+      
+    } catch (error) {
+      console.error("Error al obtener la URL de descarga:", error);
+      alert("No se pudo obtener el enlace de descarga.");
+    } finally {
+      // Ponemos un pequeño timeout para que el usuario vea el spinner
+      // incluso si la apertura de la pestaña es instantánea.
+      setTimeout(() => setIsDownloading(false), 500);
+    }
   };
 
   const canPreview = file.type.startsWith('image/') || file.type === 'application/pdf';
