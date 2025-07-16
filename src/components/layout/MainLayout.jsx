@@ -1,17 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom"; // Importar useNavigate
 import { useAuth } from "../../contexts/AuthContext"; // Importar useAuth
 import useConfirm from "../../hooks/useConfirm"; // Importar useConfirm
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
+import BetaAnnouncementModal from "../ui/BetaAnnouncementModal";
 
 const MainLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showBetaModal, setShowBetaModal] = useState(false);
   
   // --- LÓGICA DEL LOGOUT MOVIDA AQUÍ ---
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [ConfirmationDialog, confirm] = useConfirm();
+
+  useEffect(() => {
+    const lastShown = localStorage.getItem('betaModalLastShown');
+    const now = new Date().getTime();
+    const threeDaysInMillis = 72 * 60 * 60 * 1000;
+
+    // Si nunca se ha mostrado, o si han pasado más de 72 horas
+    if (!lastShown || (now - parseInt(lastShown, 10)) > threeDaysInMillis) {
+      setShowBetaModal(true);
+    }
+  }, []);
+
+  const handleCloseBetaModal = () => {
+    setShowBetaModal(false);
+    // Guardamos la marca de tiempo actual en localStorage cuando el usuario lo cierra
+    localStorage.setItem('betaModalLastShown', new Date().getTime().toString());
+  };
 
   const handleConfirmLogout = async () => {
     const result = await confirm(
@@ -39,6 +58,7 @@ const MainLayout = () => {
     <>
       {/* Renderizamos el diálogo aquí, a nivel superior */}
       <ConfirmationDialog />
+      <BetaAnnouncementModal isOpen={showBetaModal} onClose={handleCloseBetaModal} />
       <div className="flex h-screen bg-background text-text-primary">
         <div 
           className={`fixed inset-y-0 left-0 z-30 w-64 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${

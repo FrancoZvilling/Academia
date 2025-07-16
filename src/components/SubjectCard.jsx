@@ -87,7 +87,6 @@ const SubjectCard = ({ subject, onDelete }) => {
           <FaTrash size={10} />
         </button>
       </div>
-      {/* ------------------------------------- */}
     </div>
   );
 };
