@@ -43,10 +43,30 @@ const FileUpload = ({ subject, onUploadSuccess }) => {
         }
     };
 
+    const acceptedFileTypes = [
+        // Documentos
+        'application/pdf', // .pdf
+        'application/msword', // .doc
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+        'application/vnd.ms-excel', // .xls
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+        'application/vnd.ms-powerpoint', // .ppt
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
+        'text/plain', // .txt
+        // Imágenes
+        'image/jpeg', // .jpg, .jpeg
+        'image/png', // .png
+        'image/gif', // .gif
+        'image/webp', // .webp
+        // Comprimidos
+        '.zip',
+        '.rar',
+    ].join(',');
+
     return (
         <div>
             <form onSubmit={handleSubmit(handleFileUpload)}>
-                <input type="file" {...register("file", { required: true })} accept="*/*" className="file-input file-input-bordered border-black bg-surface-100 w-full mb-2" />
+                <input type="file" {...register("file", { required: true })} accept={acceptedFileTypes} className="file-input file-input-bordered border-black bg-surface-100 w-full mb-2" />
                 
                 <button type="submit" className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary w-full" disabled={isUploading}>
                     {isUploading ? "Subiendo..." : "Subir Archivo"}
