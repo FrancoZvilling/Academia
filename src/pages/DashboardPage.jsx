@@ -66,7 +66,13 @@ const AddSubjectForm = ({ onSubmit, onCancel }) => {
                 <div className="grid grid-cols-3 gap-x-4 gap-y-2">
                     {daysOfWeek.map(day => (
                         <label key={day} className="flex items-center gap-2 text-sm cursor-pointer">
-                            <input type="checkbox" {...register(`days.${day}`)} className="checkbox checkbox-sm" />
+                            <input 
+                                type="checkbox" 
+                                {...register(`days.${day}`)} 
+                                // Al hacer clic, el evento 'e' se pasa y usamos e.target.blur() para quitar el foco
+                                onClick={(e) => e.target.blur()}
+                                className="checkbox checkbox-sm" 
+                            />
                             <span>{day}</span>
                         </label>
                     ))}

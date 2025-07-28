@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import ThemeSwitcher from "../ui/ThemeSwitcher";
 
-import { FaTachometerAlt, FaCalendarAlt, FaUserCircle, FaSignOutAlt, FaRegCalendarAlt, FaBookOpen, FaTimes } from "react-icons/fa";
+import { FaTachometerAlt, FaCalendarAlt, FaUserCircle, FaSignOutAlt, FaRegCalendarAlt, FaBookOpen, FaTimes, FaRobot } from "react-icons/fa";
 import { IoSchool } from "react-icons/io5";
 import { useAuth } from "../../contexts/AuthContext";
 import { FaEnvelope } from "react-icons/fa";
@@ -59,6 +59,10 @@ const Sidebar = ({ onClose, onConfirmLogout }) => {
           <FaBookOpen />
           <span>Mi Libreta</span>
         </NavLink>
+        <NavLink to="/ia" className={getNavLinkClass}>
+            <FaRobot />
+            <span>Inteligencia Artificial</span>
+          </NavLink>
         <NavLink to="/contacto" className={getNavLinkClass}> {/* <-- Añadir enlace */}
           <FaEnvelope />
           <span>Contacto</span>
@@ -71,13 +75,6 @@ const Sidebar = ({ onClose, onConfirmLogout }) => {
 
       <div className="mt-auto space-y-4">
         <ThemeSwitcher />
-        <button
-          onClick={onConfirmLogout} // El onClick ahora llama a la prop
-          className="w-full flex items-center justify-center gap-3 py-2 px-4 rounded-lg font-semibold transition-colors duration-200 text-red-500 hover:bg-red-500 hover:text-white"
-        >
-          <FaSignOutAlt />
-          <span>Cerrar Sesión</span>
-        </button>
       </div>
     </aside>
   );
