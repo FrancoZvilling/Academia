@@ -4,12 +4,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import useConfirm from '../hooks/useConfirm';
-import { 
-    getSubjectById, 
+import {
+    getSubjectById,
     updateSubject,
-    getEventsForSubject, 
-    addEventToSubject, 
-    deleteEvent, 
+    getEventsForSubject,
+    addEventToSubject,
+    deleteEvent,
     removeFileFromSubject,
     addGradeToNotebook,
     getGradesForSubject,
@@ -60,7 +60,21 @@ const SubjectForm = ({ onSubmit, onCancel, defaultValues = {}, isEditing = false
                 </div>
             </div>
             <div className="flex gap-4"><div className="w-1/2"><label className="text-sm font-semibold block mb-1">Inicio Cursada*:</label><input type="date" {...register("startDate", { required: true })} className="input input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div><div className="w-1/2"><label className="text-sm font-semibold block mb-1">Fin Cursada:</label><input type="date" {...register("endDate")} className="input input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div></div>
-            <div><div className="text-sm font-semibold mb-2">Días de Cursada:</div><div className="grid grid-cols-3 gap-x-4 gap-y-2">{daysOfWeek.map(day => (<label key={day} className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" {...register(`days.${day}`)} className="checkbox checkbox-sm" /><span>{day}</span></label>))}</div></div>
+            <div><div className="text-sm font-semibold mb-2">Días de Cursada:</div><div className="grid grid-cols-3 gap-x-4 gap-y-2">{daysOfWeek.map(day => (<label key={day} className="flex items-center gap-2 text-sm cursor-pointer"><div className="relative flex items-center justify-center">
+        {/* Input real, pero visualmente oculto */}
+        <input 
+            type="checkbox" 
+            {...register(`days.${day}`)} 
+            onClick={(e) => e.target.blur()}
+            className="appearance-none h-4 w-4 border border-gray-400 dark:border-gray-500 rounded-sm "
+        />
+        {/* El tilde (tick) personalizado, se muestra solo cuando el input está 'checked' */}
+        <div className="absolute left-0 top-0 h-4 w-4 flex items-center justify-center pointer-events-none">
+            <svg className="h-3 w-3 hidden peer-checked:block fill-current text-black dark:text-gray-300" viewBox="0 0 16 16">
+                <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z"></path>
+            </svg>
+        </div>
+    </div><span>{day}</span></label>))}</div></div>
             <div className="flex gap-4"><div className="w-1/2"><label className="text-sm block mb-1">Desde:</label><input type="time" {...register("startTime")} className="input input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div><div className="w-1/2"><label className="text-sm block mb-1">Hasta:</label><input type="time" {...register("endTime")} className="input input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div></div>
             <div><label className="text-sm font-semibold block mb-2">Color de la Materia</label><div className="flex flex-wrap gap-3">{subjectColors.map(color => (<div key={color.value} onClick={() => setSelectedColor(color.value)} className="w-8 h-8 rounded-full transition-all duration-200 transform cursor-pointer" style={{ backgroundColor: color.value }}>{selectedColor === color.value && (<div className="w-full h-full rounded-full flex items-center justify-center bg-black/30"><svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg></div>)}</div>))}</div><input {...register('color')} type="hidden" /></div>
             <div className="flex justify-end gap-4 mt-4"><button type="button" onClick={onCancel} className="btn btn-ghost">Cancelar</button><button type="submit" className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary">{isEditing ? 'Guardar Cambios' : 'Añadir Materia'}</button></div>
@@ -138,8 +152,8 @@ const GradesManager = ({ subject, grades, onAddGrade, onDeleteGrade }) => {
         <div className="bg-surface-100 p-6 rounded-lg shadow-md sticky top-8">
             <h3 className="font-bold text-lg mb-4">Notas de la Cursada</h3>
             <form onSubmit={handleSubmit(handleFormSubmit)} className="flex items-start gap-2 mb-6">
-                <div className="flex-grow"><input {...register("gradeTitle", { required: true })} placeholder="Ej: Primer Parcial" className="input input-sm input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300"/></div>
-                <div className="w-20"><input type="number" step="0.01" {...register("gradeScore", { required: true })} placeholder="Nota" className="input input-sm input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300"/></div>
+                <div className="flex-grow"><input {...register("gradeTitle", { required: true })} placeholder="Ej: Primer Parcial" className="input input-sm input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div>
+                <div className="w-20"><input type="number" step="0.01" {...register("gradeScore", { required: true })} placeholder="Nota" className="input input-sm input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div>
                 <button type="submit" className="btn btn-sm btn-primary btn-circle bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary"><FaPlusCircle /></button>
             </form>
             <div className="space-y-2 mb-6 max-h-48 overflow-y-auto pr-2">
@@ -225,14 +239,14 @@ const SubjectDetailPage = () => {
             try { await updateTasksForSubject(currentUser.uid, subject.yearId, subject.id, updatedTasks); toast.info('Tarea eliminada.'); } catch (error) { console.error("Error al eliminar tarea:", error); setSubject(prev => ({ ...prev, tasks: originalTasks })); toast.error("No se pudo eliminar la tarea."); }
         }
     };
-    
+
     const handleEventDeleted = async (event) => {
         const result = await confirm('Eliminar Evento', `¿Seguro que quieres eliminar "${event.title}"?`);
         if (result) {
             try { await deleteEvent(currentUser.uid, event.yearId, event.subjectId, event.id); toast.info('Evento eliminado.'); setEvents(prevEvents => prevEvents.filter(e => e.id !== event.id)); } catch (error) { console.error("Error al eliminar el evento:", error); toast.error('No se pudo eliminar el evento.'); }
         }
     };
-    
+
     const handlePreviewFile = async (file) => {
         setPreviewFile(file);
         try { const url = await getFileUrl(file.path); setPreviewUrl(url); } catch (error) { console.error("Error al obtener URL de vista previa:", error); toast.error("No se pudo cargar la vista previa."); handleClosePreview(); }
@@ -241,16 +255,16 @@ const SubjectDetailPage = () => {
     const handleClosePreview = () => { setPreviewFile(null); setPreviewUrl(''); };
 
     const handleFileDelete = async (fileToDelete) => {
-      const result = await confirm('Eliminar Archivo', `¿Seguro que quieres eliminar "${fileToDelete.name}"? Esta acción es irreversible.`);
-      if (result) {
-        try { await deleteFileByPath(fileToDelete.path); await removeFileFromSubject(currentUser.uid, subject.yearId, subject.id, fileToDelete); toast.info('Archivo eliminado.'); fetchAllData(); } catch (error) { console.error("Error al eliminar el archivo:", error); toast.error('No se pudo eliminar el archivo.'); }
-      }
+        const result = await confirm('Eliminar Archivo', `¿Seguro que quieres eliminar "${fileToDelete.name}"? Esta acción es irreversible.`);
+        if (result) {
+            try { await deleteFileByPath(fileToDelete.path); await removeFileFromSubject(currentUser.uid, subject.yearId, subject.id, fileToDelete); toast.info('Archivo eliminado.'); fetchAllData(); } catch (error) { console.error("Error al eliminar el archivo:", error); toast.error('No se pudo eliminar el archivo.'); }
+        }
     };
 
     const handleNotesChange = async (newContent) => {
         if (!subject) return false;
         setSubject(prev => ({ ...prev, personalNotes: newContent }));
-        try { await updateSubjectNotes(currentUser.uid, subject.yearId, subject.id, newContent); return true; } catch (error) { console.error("Error al guardar notas:", error); toast.error("No se pudieron guardar las notas."); setSubject(prev => ({...prev, personalNotes: subject.personalNotes})); return false; }
+        try { await updateSubjectNotes(currentUser.uid, subject.yearId, subject.id, newContent); return true; } catch (error) { console.error("Error al guardar notas:", error); toast.error("No se pudieron guardar las notas."); setSubject(prev => ({ ...prev, personalNotes: subject.personalNotes })); return false; }
     };
 
     const handleAddGrade = async (gradeData) => {
@@ -277,13 +291,13 @@ const SubjectDetailPage = () => {
             }
         }
     };
-    
+
     const subjectDefaultValues = useMemo(() => {
         if (!subject) return {};
         const days = subject.schedule?.reduce((acc, slot) => { acc[slot.day] = true; return acc; }, {}) || {};
-        return { name: subject.name || '', professor: subject.professor || '', classroom: subject.classroom || '', commission: subject.commission ||  '', startDate: subject.startDate || '', endDate: subject.endDate || '', days: days, startTime: subject.schedule?.[0]?.startTime || '', endTime: subject.schedule?.[0]?.endTime || '', color: subject.color || defaultSubjectColor };
+        return { name: subject.name || '', professor: subject.professor || '', classroom: subject.classroom || '', commission: subject.commission || '', startDate: subject.startDate || '', endDate: subject.endDate || '', days: days, startTime: subject.schedule?.[0]?.startTime || '', endTime: subject.schedule?.[0]?.endTime || '', color: subject.color || defaultSubjectColor };
     }, [subject]);
-    
+
     if (loading) return <div className="flex justify-center items-center h-screen"><span className="loading loading-spinner loading-lg text-primary"></span></div>;
     if (error) return <div className="text-center p-10 text-red-500">{error}</div>;
     if (!subject) return <div className="text-center p-10">Materia no encontrada.</div>;
@@ -299,7 +313,7 @@ const SubjectDetailPage = () => {
                 </div>
                 <button onClick={() => setIsEditModalOpen(true)} className="btn btn-circle btn-ghost text-text-secondary hover:bg-surface-200"><FaCog size={24} /></button>
             </div>
-            
+
             <div className="flex flex-col lg:flex-row gap-12">
                 <div className="w-full lg:w-2/3">
                     <div className="space-y-1">
@@ -308,26 +322,26 @@ const SubjectDetailPage = () => {
                             <EventList events={events} onEventDeleted={handleEventDeleted} />
                         </AccordionItem>
                         <AccordionItem title="Tareas / Checklist" icon={IoCheckboxOutline}>
-                           <Checklist tasks={subject.tasks} onAddTask={handleAddTask} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask}/>
+                            <Checklist tasks={subject.tasks} onAddTask={handleAddTask} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} />
                         </AccordionItem>
                         <AccordionItem title="Archivos de la Materia" icon={IoFolderOpenOutline}>
                             <div className="p-2">
                                 <FileUpload subject={subject} onUploadSuccess={fetchAllData} />
-                                <FileList files={subject.files} onPreview={handlePreviewFile} onDelete={handleFileDelete}/>
+                                <FileList files={subject.files} onPreview={handlePreviewFile} onDelete={handleFileDelete} />
                             </div>
                         </AccordionItem>
                         <AccordionItem title="Notas Personales" icon={IoNewspaperOutline} >
-                           <NotesEditor content={subject.personalNotes} onContentChange={handleNotesChange}/>
+                            <NotesEditor content={subject.personalNotes} onContentChange={handleNotesChange} />
                         </AccordionItem>
                     </div>
                 </div>
                 <div className="w-full lg:w-1/3">
-                    <GradesManager subject={subject} grades={subjectGrades} onAddGrade={handleAddGrade} onDeleteGrade={handleDeleteGrade}/>
+                    <GradesManager subject={subject} grades={subjectGrades} onAddGrade={handleAddGrade} onDeleteGrade={handleDeleteGrade} />
                 </div>
             </div>
-            
+
             <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Editar Materia">
-                {subject && (<SubjectForm onSubmit={handleUpdateSubject} onCancel={() => setIsEditModalOpen(false)} defaultValues={subjectDefaultValues} isEditing={true}/>)}
+                {subject && (<SubjectForm onSubmit={handleUpdateSubject} onCancel={() => setIsEditModalOpen(false)} defaultValues={subjectDefaultValues} isEditing={true} />)}
             </Modal>
             <FilePreviewModal isOpen={!!previewFile} onClose={handleClosePreview} title={previewFile?.name}>
                 {previewUrl && (
