@@ -48,6 +48,15 @@ const BetaAnnouncementModal = ({ isOpen, onClose }) => {
                 (La IA no va a rendir el final por vos, pero te va a dar una mano 😂)
             </p>
 
+            <div className="bg-blue-600/70 border-l-4 border-purple-300 p-4 rounded-lg my-6">
+                <p className="font-semibold text-white mb-2">
+                    📚 Además, <span className="text-yellow-300"> Estudi-IA </span> junto con el apoyo de <span className="text-purple-300"> Franja Morada </span> va a destinar entre el <span className="text-yellow-300"> 15% y 20% </span>  de las ganancias mensuales de la aplicación a la facultad, para colaborar con materiales, insumos y todo lo que la facultad necesite.
+                </p>
+                <p className="text-sm text-blue-200">
+                    💡 De esta manera, vas a ver cómo tu aporte vuelve directamente a tu propia educación y a mejorar el día a día en la facu.
+                </p>
+            </div>
+
             <div className="border-t border-blue-600/50 pt-4">
                 <p className="text-center text-blue-200 font-semibold mb-2">
                     ¿Usás Mercado Pago? ¡Perfecto!
