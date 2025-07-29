@@ -1,20 +1,19 @@
-// Importaciones V2. Todo viene de un módulo específico.
+// Importamos onDocumentDeleted de su módulo específico
 const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
-const { onUserDeleted } = require("firebase-functions/v2/auth");
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+
+// Importamos TODO lo demás de "firebase-functions/v2"
+// Esto es compatible con versiones de la v2 que aún no habían separado 'auth'
+const { onUserDeleted, onCall, HttpsError } = require("firebase-functions/v2"); 
 const { logger } = require("firebase-functions");
 const { defineSecret } = require("firebase-functions/params");
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const admin = require("firebase-admin");
 
-// --- INICIALIZACIÓN ---
 admin.initializeApp();
 const db = admin.firestore();
 const storage = admin.storage();
 
-// Declaramos que nuestro código usará un secreto llamado GEMINI_API_KEY.
-// Firebase lo buscará en el Secret Manager que ya configuraste.
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 
 
