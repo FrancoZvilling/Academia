@@ -1,5 +1,3 @@
-// Importamos onDocumentDeleted de su módulo específico
-const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
 // Importamos onUserDeleted y onCall del módulo V2 principal para máxima compatibilidad
 const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
 const { onCall, HttpsError } = require("firebase-functions/v2");
