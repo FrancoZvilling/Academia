@@ -1,7 +1,6 @@
-// Importaciones V2. Todo viene de un módulo específico.
 const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
-const { onUserDeleted } = require("firebase-functions/v2/auth");
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+// Importamos onUserDeleted y onCall desde el módulo V2 principal
+const { onUserDeleted, onCall, HttpsError } = require("firebase-functions/v2");
 const { logger } = require("firebase-functions");
 const { defineSecret } = require("firebase-functions/params");
 
