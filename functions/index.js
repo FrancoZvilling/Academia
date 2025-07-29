@@ -1,32 +1,33 @@
-// --- IMPORTACIÓN V2 (SOLO PARA FIRESTORE, QUE SABEMOS QUE FUNCIONA) ---
+// Importaciones V2. Todo viene de un módulo específico.
 const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
+const { onUserDeleted } = require("firebase-functions/v2/auth");
+const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { logger } = require("firebase-functions");
+const { defineSecret } = require("firebase-functions/params");
 
-// --- IMPORTACIONES V1 (PARA AUTH, HTTPS Y CONFIGURACIÓN) ---
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
-
-// --- DEPENDENCIAS COMUNES ---
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const admin = require("firebase-admin");
 
 // --- INICIALIZACIÓN ---
 admin.initializeApp();
 const db = admin.firestore();
 const storage = admin.storage();
 
-// --- SECRETO (leído con el método V1, que es más estable) ---
-const GEMINI_API_KEY = functions.config().gemini.key;
+// Declaramos que nuestro código usará un secreto llamado GEMINI_API_KEY.
+// Firebase lo buscará en el Secret Manager que ya configuraste.
+const geminiApiKey = defineSecret("GEMINI_API_KEY");
 
 
-// --- FUNCIÓN: Borrar Año y su Contenido (Se mantiene en V2 porque funciona) ---
+// --- FUNCIÓN: Borrar Año y su Contenido ---
 exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}", async (event) => {
   const { userId, yearId } = event.params;
-  functions.logger.info(`(V2) Iniciando limpieza para el año ${yearId}`);
+  logger.info(`(V2) Iniciando limpieza para el año ${yearId}`);
 
   const subjectsRef = db.collection("users").doc(userId).collection("years").doc(yearId).collection("subjects");
   const subjectsSnap = await subjectsRef.get();
 
   if (subjectsSnap.empty) {
-    functions.logger.info("No hay materias que limpiar para este año.");
+    logger.info("No hay materias que limpiar.");
     return;
   }
   
@@ -46,45 +47,46 @@ exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}"
   
   deletePromises.push(batch.commit());
   await Promise.all(deletePromises);
-  functions.logger.info(`(V2) Limpieza de año completada.`);
+  logger.info(`(V2) Limpieza de año completada.`);
 });
 
 
-// --- FUNCIÓN: Borrar Usuario y su Contenido (Pasada a SINTAXIS V1 ESTABLE) ---
-exports.deleteUserAndContent = functions.auth.user().onDelete(async (user) => {
-  const uid = user.uid;
-  functions.logger.info(`(V1) Iniciando limpieza completa para usuario ${uid}`);
+// --- FUNCIÓN: Borrar Usuario y su Contenido ---
+exports.deleteUserAndContent = onUserDeleted(async (event) => {
+  const { uid } = event.data;
+  logger.info(`(V2) Iniciando limpieza completa para usuario ${uid}`);
   try {
     const userDocRef = db.collection("users").doc(uid);
     await db.recursiveDelete(userDocRef);
-    functions.logger.info(`(V1) Documentos de Firestore eliminados.`);
+    logger.info(`(V2) Documentos de Firestore eliminados.`);
 
     const bucket = storage.bucket();
     const folderPath = `users/${uid}/`;
     await bucket.deleteFiles({ prefix: folderPath });
-    functions.logger.info(`(V1) Archivos de Storage eliminados.`);
+    logger.info(`(V2) Archivos de Storage eliminados.`);
   } catch (error) {
     if (error.code === 5) {
-      functions.logger.info(`(V1) No se encontraron datos para el usuario ${uid}.`);
+      logger.info(`(V2) No se encontraron datos para el usuario ${uid}.`);
     } else {
-      functions.logger.error(`(V1) Error en limpieza de usuario ${uid}:`, error);
+      logger.error(`(V2) Error en limpieza de usuario ${uid}:`, error);
     }
   }
 });
 
 
-// --- FUNCIÓN: Generar Resumen con Gemini (Pasada a SINTAXIS V1 ESTABLE) ---
-exports.generateSummary = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError("unauthenticated", "La función debe ser llamada por un usuario autenticado.");
+// --- FUNCIÓN: Generar Resumen con Gemini ---
+exports.generateSummary = onCall({ secrets: [geminiApiKey] }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "La función debe ser llamada por un usuario autenticado.");
   }
 
-  const textToSummarize = data.text;
+  const textToSummarize = request.data.text;
   if (!textToSummarize || typeof textToSummarize !== 'string' || textToSummarize.length === 0) {
-    throw new functions.https.HttpsError("invalid-argument", "La función debe ser llamada con un campo 'text' válido.");
+    throw new HttpsError("invalid-argument", "La función debe ser llamada con un campo 'text' válido.");
   }
   
-  const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+  // Usamos .value() para obtener el valor del secreto
+  const genAI = new GoogleGenerativeAI(geminiApiKey.value());
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const prompt = `
@@ -100,7 +102,7 @@ exports.generateSummary = functions.https.onCall(async (data, context) => {
     ---
   `;
 
-  functions.logger.info("Llamando a la API de Gemini (V1)...");
+  logger.info("Llamando a la API de Gemini...");
   try {
     const result = await model.generateContent(prompt);
     const response = result.response;
@@ -108,7 +110,7 @@ exports.generateSummary = functions.https.onCall(async (data, context) => {
     
     return { summary: summary };
   } catch (error) {
-    functions.logger.error("Error al llamar a la API de Gemini:", error);
-    throw new functions.https.HttpsError("internal", "No se pudo generar el resumen.");
+    logger.error("Error al llamar a la API de Gemini:", error);
+    throw new HttpsError("internal", "No se pudo generar el resumen.");
   }
 });
