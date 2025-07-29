@@ -9,9 +9,21 @@ jobs:
   deploy_functions:
     runs-on: ubuntu-latest
     
+    # Permisos necesarios para la acción de autenticación de Google
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      # 1. Autentica con Google Cloud usando la cuenta de servicio de Firebase
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_ESTUD_IA_A94A3 }}'
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -24,11 +36,10 @@ jobs:
       - name: Install Function Dependencies
         run: cd functions && npm install
 
-      # --- ¡PASO NUEVO Y CRUCIAL! ---
+      # 2. Configura el secreto. Ahora que estamos autenticados, este comando funcionará.
       - name: Set Gemini API Key Secret
         run: firebase functions:config:set gemini.key="${{ secrets.GEMINI_API_KEY }}" --project estud-ia-a94a3
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ESTUD_IA_A94A3 }}
 
+      # 3. Despliega las funciones. Ya no necesita el --token.
       - name: Deploy to Firebase Functions
-        run: firebase deploy --only functions --token "${{ secrets.FIREBASE_SERVICE_ACCOUNT_ESTUD_IA_A94A3 }}" --project estud-ia-a94a3 --force
+        run: firebase deploy --only functions --project estud-ia-a94a3 --force
