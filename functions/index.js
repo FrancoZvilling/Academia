@@ -1,7 +1,9 @@
 // Importamos onDocumentDeleted de su módulo específico
 const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
 // Importamos onUserDeleted y onCall del módulo V2 principal para máxima compatibilidad
-const { onUserDeleted, onCall, HttpsError } = require("firebase-functions/v2"); 
+const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
+const { onCall, HttpsError } = require("firebase-functions/v2");
+const { onUserDeleted } = require("firebase-functions/v2/auth");
 const { logger } = require("firebase-functions");
 const { defineSecret } = require("firebase-functions/params");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
