@@ -6,7 +6,7 @@ const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
 const { onCall, HttpsError } = require("firebase-functions/v2");
 
 // Auth/Identity trigger (usuario eliminado)
-const { onUserDeleted } = require("firebase-functions/v2/identity");
+const functions = require("firebase-functions");
 
 // Otros módulos de Firebase Functions
 const { logger } = require("firebase-functions");
@@ -58,8 +58,8 @@ exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}"
 });
 
 // --- FUNCIÓN: Borrar Usuario y su Contenido (V2) ---
-exports.deleteUserAndContent = onUserDeleted(async (event) => {
-  const { uid } = event.data;
+exports.deleteUserAndContent = functions.auth.user().onDelete(async (user) => {
+  const uid = user.uid;
   logger.info(`(V2) Iniciando limpieza completa para usuario ${uid}`);
   try {
     const userDocRef = db.collection("users").doc(uid);
