@@ -1,9 +1,18 @@
-// Importamos onUserDeleted y onCall del módulo V2 principal para máxima compatibilidad
+// --- IMPORTS ---
+// Firestore triggers
 const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
+
+// Callable functions y manejo de errores HTTPS
 const { onCall, HttpsError } = require("firebase-functions/v2");
-const { onUserDeleted } = require("firebase-functions/v2/auth");
+
+// Auth/Identity trigger (usuario eliminado)
+const { onUserDeleted } = require("firebase-functions/v2/identity");
+
+// Otros módulos de Firebase Functions
 const { logger } = require("firebase-functions");
 const { defineSecret } = require("firebase-functions/params");
+
+// Librerías externas
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const admin = require("firebase-admin");
 
@@ -14,7 +23,6 @@ const storage = admin.storage();
 
 // Declaramos que nuestro código usará un secreto llamado GEMINI_API_KEY.
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
-
 
 // --- FUNCIÓN: Borrar Año y su Contenido (V2) ---
 exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}", async (event) => {
@@ -28,26 +36,26 @@ exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}"
     logger.info("No hay materias que limpiar para este año.");
     return;
   }
-  
+
   const batch = db.batch();
   const deletePromises = [];
+
   for (const doc of subjectsSnap.docs) {
     const eventsRef = doc.ref.collection("events");
     const eventsSnap = await eventsRef.get();
-    eventsSnap.forEach(d => batch.delete(d.ref));
-    
+    eventsSnap.forEach((d) => batch.delete(d.ref));
+
     const bucket = storage.bucket();
     const folderPath = `users/${userId}/subjects/${doc.id}/`;
     deletePromises.push(bucket.deleteFiles({ prefix: folderPath }));
-    
+
     batch.delete(doc.ref);
   }
-  
+
   deletePromises.push(batch.commit());
   await Promise.all(deletePromises);
   logger.info(`(V2) Limpieza de año completada.`);
 });
-
 
 // --- FUNCIÓN: Borrar Usuario y su Contenido (V2) ---
 exports.deleteUserAndContent = onUserDeleted(async (event) => {
@@ -71,7 +79,6 @@ exports.deleteUserAndContent = onUserDeleted(async (event) => {
   }
 });
 
-
 // --- FUNCIÓN: Generar Resumen con Gemini (V2) ---
 exports.generateSummary = onCall({ secrets: [geminiApiKey] }, async (request) => {
   if (!request.auth) {
@@ -79,11 +86,10 @@ exports.generateSummary = onCall({ secrets: [geminiApiKey] }, async (request) =>
   }
 
   const textToSummarize = request.data.text;
-  if (!textToSummarize || typeof textToSummarize !== 'string' || textToSummarize.length === 0) {
+  if (!textToSummarize || typeof textToSummarize !== "string" || textToSummarize.length === 0) {
     throw new HttpsError("invalid-argument", "La función debe ser llamada con un campo 'text' válido.");
   }
-  
-  // Usamos .value() para obtener el valor del secreto
+
   const genAI = new GoogleGenerativeAI(geminiApiKey.value());
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -105,8 +111,8 @@ exports.generateSummary = onCall({ secrets: [geminiApiKey] }, async (request) =>
     const result = await model.generateContent(prompt);
     const response = result.response;
     const summary = response.text();
-    
-    return { summary: summary };
+
+    return { summary };
   } catch (error) {
     logger.error("Error al llamar a la API de Gemini:", error);
     throw new HttpsError("internal", "No se pudo generar el resumen.");
