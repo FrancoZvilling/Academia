@@ -1,9 +1,9 @@
+// Importamos onDocumentDeleted de su módulo específico
 const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
-// Importamos onUserDeleted y onCall desde el módulo V2 principal
-const { onUserDeleted, onCall, HttpsError } = require("firebase-functions/v2");
+// Importamos onUserDeleted y onCall del módulo V2 principal para máxima compatibilidad
+const { onUserDeleted, onCall, HttpsError } = require("firebase-functions/v2"); 
 const { logger } = require("firebase-functions");
 const { defineSecret } = require("firebase-functions/params");
-
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const admin = require("firebase-admin");
 
@@ -13,11 +13,10 @@ const db = admin.firestore();
 const storage = admin.storage();
 
 // Declaramos que nuestro código usará un secreto llamado GEMINI_API_KEY.
-// Firebase lo buscará en el Secret Manager que ya configuraste.
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 
 
-// --- FUNCIÓN: Borrar Año y su Contenido ---
+// --- FUNCIÓN: Borrar Año y su Contenido (V2) ---
 exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}", async (event) => {
   const { userId, yearId } = event.params;
   logger.info(`(V2) Iniciando limpieza para el año ${yearId}`);
@@ -26,7 +25,7 @@ exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}"
   const subjectsSnap = await subjectsRef.get();
 
   if (subjectsSnap.empty) {
-    logger.info("No hay materias que limpiar.");
+    logger.info("No hay materias que limpiar para este año.");
     return;
   }
   
@@ -50,7 +49,7 @@ exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}"
 });
 
 
-// --- FUNCIÓN: Borrar Usuario y su Contenido ---
+// --- FUNCIÓN: Borrar Usuario y su Contenido (V2) ---
 exports.deleteUserAndContent = onUserDeleted(async (event) => {
   const { uid } = event.data;
   logger.info(`(V2) Iniciando limpieza completa para usuario ${uid}`);
@@ -73,7 +72,7 @@ exports.deleteUserAndContent = onUserDeleted(async (event) => {
 });
 
 
-// --- FUNCIÓN: Generar Resumen con Gemini ---
+// --- FUNCIÓN: Generar Resumen con Gemini (V2) ---
 exports.generateSummary = onCall({ secrets: [geminiApiKey] }, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "La función debe ser llamada por un usuario autenticado.");
