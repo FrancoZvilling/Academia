@@ -1,6 +1,6 @@
 // --- IMPORTS ---
-// Importamos solo "auth" de firebase-functions (API clásica)
-const { auth, logger } = require("firebase-functions");
+// API de Auth v1 (para el trigger de eliminación de usuarios)
+const { user } = require("firebase-functions/v1/auth");
 
 // Triggers de Firestore (API v2)
 const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
@@ -9,6 +9,7 @@ const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
 const { onCall, HttpsError } = require("firebase-functions/v2");
 
 // Otros módulos de Firebase Functions
+const { logger } = require("firebase-functions");
 const { defineSecret } = require("firebase-functions/params");
 
 // Librerías externas
@@ -56,24 +57,24 @@ exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}"
   logger.info(`(V2) Limpieza de año completada.`);
 });
 
-// --- FUNCIÓN: Borrar Usuario y su Contenido (API clásica de Auth) ---
-exports.deleteUserAndContent = auth.user().onDelete(async (user) => {
-  const uid = user.uid;
-  logger.info(`(Auth) Iniciando limpieza completa para usuario ${uid}`);
+// --- FUNCIÓN: Borrar Usuario y su Contenido (usando v1/auth) ---
+exports.deleteUserAndContent = user().onDelete(async (userRecord) => {
+  const uid = userRecord.uid;
+  logger.info(`(Auth v1) Iniciando limpieza completa para usuario ${uid}`);
   try {
     const userDocRef = db.collection("users").doc(uid);
     await db.recursiveDelete(userDocRef);
-    logger.info(`(Auth) Documentos de Firestore eliminados.`);
+    logger.info(`(Auth v1) Documentos de Firestore eliminados.`);
 
     const bucket = storage.bucket();
     const folderPath = `users/${uid}/`;
     await bucket.deleteFiles({ prefix: folderPath });
-    logger.info(`(Auth) Archivos de Storage eliminados.`);
+    logger.info(`(Auth v1) Archivos de Storage eliminados.`);
   } catch (error) {
     if (error.code === 5) {
-      logger.info(`(Auth) No se encontraron datos para el usuario ${uid}.`);
+      logger.info(`(Auth v1) No se encontraron datos para el usuario ${uid}.`);
     } else {
-      logger.error(`(Auth) Error en limpieza de usuario ${uid}:`, error);
+      logger.error(`(Auth v1) Error en limpieza de usuario ${uid}:`, error);
     }
   }
 });
