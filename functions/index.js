@@ -1,6 +1,6 @@
 // --- IMPORTS ---
-// API clásica de Firebase Functions (para auth.user().onDelete)
-const functions = require("firebase-functions");
+// Importamos solo "auth" de firebase-functions (API clásica)
+const { auth, logger } = require("firebase-functions");
 
 // Triggers de Firestore (API v2)
 const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
@@ -9,7 +9,6 @@ const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
 const { onCall, HttpsError } = require("firebase-functions/v2");
 
 // Otros módulos de Firebase Functions
-const { logger } = require("firebase-functions");
 const { defineSecret } = require("firebase-functions/params");
 
 // Librerías externas
@@ -58,7 +57,7 @@ exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}"
 });
 
 // --- FUNCIÓN: Borrar Usuario y su Contenido (API clásica de Auth) ---
-exports.deleteUserAndContent = functions.auth.user().onDelete(async (user) => {
+exports.deleteUserAndContent = auth.user().onDelete(async (user) => {
   const uid = user.uid;
   logger.info(`(Auth) Iniciando limpieza completa para usuario ${uid}`);
   try {
