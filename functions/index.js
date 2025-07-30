@@ -1,11 +1,11 @@
 // --- IMPORTS ---
-// Para triggers de Auth (API clásica)
+// API clásica de Firebase Functions (para auth.user().onDelete)
 const functions = require("firebase-functions");
 
-// Para triggers de Firestore (API v2)
+// Triggers de Firestore (API v2)
 const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
 
-// Para funciones HTTPS (Callable) y manejo de errores
+// Funciones HTTPS (API v2)
 const { onCall, HttpsError } = require("firebase-functions/v2");
 
 // Otros módulos de Firebase Functions
@@ -21,7 +21,7 @@ admin.initializeApp();
 const db = admin.firestore();
 const storage = admin.storage();
 
-// Declaramos que nuestro código usará un secreto llamado GEMINI_API_KEY
+// Secreto para la API de Gemini
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 
 // --- FUNCIÓN: Borrar Año y su Contenido (V2) ---
