@@ -1,12 +1,12 @@
 // --- IMPORTS ---
-// Firestore triggers
+// Para triggers de Auth (API clásica)
+const functions = require("firebase-functions");
+
+// Para triggers de Firestore (API v2)
 const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
 
-// Callable functions y manejo de errores HTTPS
+// Para funciones HTTPS (Callable) y manejo de errores
 const { onCall, HttpsError } = require("firebase-functions/v2");
-
-// Auth/Identity trigger (usuario eliminado)
-const functions = require("firebase-functions");
 
 // Otros módulos de Firebase Functions
 const { logger } = require("firebase-functions");
@@ -21,7 +21,7 @@ admin.initializeApp();
 const db = admin.firestore();
 const storage = admin.storage();
 
-// Declaramos que nuestro código usará un secreto llamado GEMINI_API_KEY.
+// Declaramos que nuestro código usará un secreto llamado GEMINI_API_KEY
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 
 // --- FUNCIÓN: Borrar Año y su Contenido (V2) ---
@@ -57,24 +57,24 @@ exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}"
   logger.info(`(V2) Limpieza de año completada.`);
 });
 
-// --- FUNCIÓN: Borrar Usuario y su Contenido (V2) ---
+// --- FUNCIÓN: Borrar Usuario y su Contenido (API clásica de Auth) ---
 exports.deleteUserAndContent = functions.auth.user().onDelete(async (user) => {
   const uid = user.uid;
-  logger.info(`(V2) Iniciando limpieza completa para usuario ${uid}`);
+  logger.info(`(Auth) Iniciando limpieza completa para usuario ${uid}`);
   try {
     const userDocRef = db.collection("users").doc(uid);
     await db.recursiveDelete(userDocRef);
-    logger.info(`(V2) Documentos de Firestore eliminados.`);
+    logger.info(`(Auth) Documentos de Firestore eliminados.`);
 
     const bucket = storage.bucket();
     const folderPath = `users/${uid}/`;
     await bucket.deleteFiles({ prefix: folderPath });
-    logger.info(`(V2) Archivos de Storage eliminados.`);
+    logger.info(`(Auth) Archivos de Storage eliminados.`);
   } catch (error) {
     if (error.code === 5) {
-      logger.info(`(V2) No se encontraron datos para el usuario ${uid}.`);
+      logger.info(`(Auth) No se encontraron datos para el usuario ${uid}.`);
     } else {
-      logger.error(`(V2) Error en limpieza de usuario ${uid}:`, error);
+      logger.error(`(Auth) Error en limpieza de usuario ${uid}:`, error);
     }
   }
 });
