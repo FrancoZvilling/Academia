@@ -28,4 +28,4 @@ jobs:
         run: cd functions && npm install
       
       - name: Deploy to Firebase Functions
-        run: firebase deploy --only functions --project estud-ia-a94a3 --force
+        run: firebase deploy --only functions --project estud-ia-a94a3 --force --region=southamerica-east1
