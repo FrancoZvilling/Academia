@@ -1,31 +1,24 @@
-// --- IMPORTS ---
-// API de Auth v1 (para el trigger de eliminación de usuarios)
+// --- IMPORTS (SIN CAMBIOS) ---
 const { user } = require("firebase-functions/v1/auth");
-
-// Triggers de Firestore (API v2)
 const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
-
-// Funciones HTTPS (API v2)
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
-
-// Otros módulos de Firebase Functions
 const { logger } = require("firebase-functions");
 const { defineSecret } = require("firebase-functions/params");
-
-// Librerías externas
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const admin = require("firebase-admin");
 
-// --- INICIALIZACIÓN ---
+// --- INICIALIZACIÓN (SIN CAMBIOS) ---
 admin.initializeApp();
 const db = admin.firestore();
 const storage = admin.storage();
-
-// Secreto para la API de Gemini
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 
-// --- FUNCIÓN: Borrar Año y su Contenido (V2) ---
-exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}", async (event) => {
+
+// --- FUNCIÓN: Borrar Año y su Contenido (CON REGIÓN AÑADIDA) ---
+exports.deleteYearAndContent = onDocumentDeleted({
+    document: "users/{userId}/years/{yearId}",
+    region: "southamerica-east1"
+}, async (event) => {
   const { userId, yearId } = event.params;
   logger.info(`(V2) Iniciando limpieza para el año ${yearId}`);
 
@@ -57,30 +50,37 @@ exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}"
   logger.info(`(V2) Limpieza de año completada.`);
 });
 
-// --- FUNCIÓN: Borrar Usuario y su Contenido (usando v1/auth) ---
-exports.deleteUserAndContent = user().onDelete(async (userRecord) => {
-  const uid = userRecord.uid;
-  logger.info(`(Auth v1) Iniciando limpieza completa para usuario ${uid}`);
-  try {
-    const userDocRef = db.collection("users").doc(uid);
-    await db.recursiveDelete(userDocRef);
-    logger.info(`(Auth v1) Documentos de Firestore eliminados.`);
 
-    const bucket = storage.bucket();
-    const folderPath = `users/${uid}/`;
-    await bucket.deleteFiles({ prefix: folderPath });
-    logger.info(`(Auth v1) Archivos de Storage eliminados.`);
-  } catch (error) {
-    if (error.code === 5) {
-      logger.info(`(Auth v1) No se encontraron datos para el usuario ${uid}.`);
-    } else {
-      logger.error(`(Auth v1) Error en limpieza de usuario ${uid}:`, error);
-    }
-  }
-});
+// --- FUNCIÓN: Borrar Usuario y su Contenido (CON REGIÓN AÑADIDA) ---
+exports.deleteUserAndContent = user()
+    .region("southamerica-east1")
+    .onDelete(async (userRecord) => {
+      const uid = userRecord.uid;
+      logger.info(`(Auth v1) Iniciando limpieza completa para usuario ${uid}`);
+      try {
+        const userDocRef = db.collection("users").doc(uid);
+        await db.recursiveDelete(userDocRef);
+        logger.info(`(Auth v1) Documentos de Firestore eliminados.`);
 
-// --- FUNCIÓN: Generar Resumen con Gemini (V2) ---
-exports.generateSummary = onCall({ secrets: [geminiApiKey] }, async (request) => {
+        const bucket = storage.bucket();
+        const folderPath = `users/${uid}/`;
+        await bucket.deleteFiles({ prefix: folderPath });
+        logger.info(`(Auth v1) Archivos de Storage eliminados.`);
+      } catch (error) {
+        if (error.code === 5) {
+          logger.info(`(Auth v1) No se encontraron datos para el usuario ${uid}.`);
+        } else {
+          logger.error(`(Auth v1) Error en limpieza de usuario ${uid}:`, error);
+        }
+      }
+    });
+
+
+// --- FUNCIÓN: Generar Resumen con Gemini (CON REGIÓN AÑADIDA) ---
+exports.generateSummary = onCall({ 
+    secrets: [geminiApiKey],
+    region: "southamerica-east1"
+}, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "La función debe ser llamada por un usuario autenticado.");
   }
