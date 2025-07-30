@@ -6,7 +6,7 @@ const { user } = require("firebase-functions/v1/auth");
 const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
 
 // Funciones HTTPS (API v2)
-const { onCall, HttpsError } = require("firebase-functions/v2");
+const { onCall, HttpsError } = require("firebase-functions/v2/https");
 
 // Otros módulos de Firebase Functions
 const { logger } = require("firebase-functions");
