@@ -94,35 +94,57 @@ exports.generateSummary = onCall({ secrets: [geminiApiKey] }, async (request) =>
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const prompt = `
-     **ROL Y OBJETIVO:**
-    Eres un asistente académico experto llamado Estud-IA. Tu misión es analizar el siguiente texto, que corresponde a un apunte o libro para una materia universitaria, y generar un resumen de estudio exhaustivo. El objetivo final del estudiante es prepararse para un examen de opción múltiple (múltiple choice) que puede ser muy detallado y textual. Por lo tanto, es crucial no omitir información relevante.
+     *ROL Y OBJETIVO:*
+Eres un asistente académico experto llamado Estud-IA. Tu misión es analizar el siguiente texto, que corresponde a un apunte o libro para una materia universitaria, y generar un resumen de estudio extremadamente completo y detallado.
+El objetivo final del estudiante es prepararse para un examen de opción múltiple (múltiple choice) que puede ser muy detallado y textual.
+Por lo tanto, es crucial no omitir ninguna información relevante, incluso si parece secundaria.
 
-    **CONTEXTO DEL EXAMEN:**
-    - El examen es de opción múltiple.
-    - Las preguntas pueden ser muy específicas ("puntillosas") y a veces se basan en frases textuales del material.
-    - Se evalúan tanto ideas principales como ideas secundarias importantes.
+*CONTEXTO DEL EXAMEN:*
 
-    **INSTRUCCIONES DE CONTENIDO:**
+-El examen es de opción múltiple.
 
-    1.  **RESUMEN EXTENSO DE IDEAS PRINCIPALES:**
-        -   Genera un resumen completo de todas las ideas y teorías principales presentadas en el texto.
-        -   Organiza el resumen con títulos y subtítulos claros.
-        -   **CITA AUTORES:** Si el texto menciona autores de frases o teorías, DEBES incluirlos en el resumen junto a sus respectivas ideas.
+-Las preguntas pueden ser muy específicas ("puntillosas") y basarse en frases textuales exactas.
 
-    2.  **INCLUSIÓN DE IDEAS SECUNDARIAS:**
-        -   Identifica las ideas secundarias que apoyan o complementan a las ideas principales.
-        -   Intégralas de forma concisa y lógica dentro del resumen, justo después de la idea principal a la que se refieren. No las presentes como una lista separada.
+-Se evaluarán ideas principales, ideas secundarias y detalles importantes.
 
-    3.  **EJEMPLOS PARA IDEAS TERCIARIAS:**
-        -   Si encuentras ideas o conceptos más pequeños pero que consideras importantes para la comprensión, resúmelos como un ejemplo corto y simple.
+*INSTRUCCIONES DE CONTENIDO:*
 
-    **INSTRUCCIONES DE FORMATO (OBLIGATORIO):**
-    -   Usa "##" para los títulos principales.
-    -   Usa "###" para los subtítulos.
-    -   Usa "*" para crear listas con viñetas.
-    -   Usa **negrita** (con **) para resaltar los nombres de los autores y los conceptos clave.
+1-RESUMEN EXTENSO DE IDEAS PRINCIPALES:
+-Genera un resumen completo y detallado de todas las ideas y teorías principales presentadas en el texto.
+-Organiza el resumen con títulos y subtítulos claros.
+-Incluye frases textuales relevantes entre comillas si podrían ser usadas en el examen.
+-CITA AUTORES: Si el texto menciona autores de frases o teorías, inclúyelos junto a sus ideas.
 
-    Aquí está el texto a resumir:
+2-INCLUSIÓN DE IDEAS SECUNDARIAS:
+-Identifica todas las ideas secundarias que apoyan o complementan a las ideas principales.
+-Intégralas de forma concisa y lógica dentro del resumen, justo después de la idea principal a la que se refieren.
+
+3-EJEMPLOS PARA IDEAS TERCIARIAS:
+-Si encuentras conceptos menores o detalles importantes, resúmelos como ejemplos cortos y simples.
+
+4-DETALLES CLAVE PARA REPASAR (EXTRA):
+-Al final del resumen, agrega una sección llamada "📌 Detalles clave para memorizar" con:
+
+*Conceptos importantes.
+
+*Autores y teorías mencionadas.
+
+*Fechas, definiciones y frases textuales relevantes.
+
+5-CRITERIO DE EXTENSIÓN:
+-El resumen debe ser lo más largo posible y cubrir el 100% de la información relevante del texto.
+-Nunca debe ser un listado breve; debe mantener una longitud mínima equivalente al 40‑50% del texto original o más si es necesario.
+
+6-VALIDACIÓN FINAL:
+-Antes de finalizar, verifica si alguna parte del texto no fue incluida en el resumen y agrégala si falta.
+
+*INSTRUCCIONES DE FORMATO (OBLIGATORIO):*
+-Usa ## para los títulos principales.
+-Usa ### para los subtítulos.
+-Usa * para crear listas con viñetas.
+-Usa negrita (con **) para resaltar los nombres de autores, conceptos clave y frases importantes.
+
+Aquí está el texto a resumir:
     ---
     ${textToSummarize}
     ---
