@@ -179,16 +179,25 @@ exports.generateExam = onCall({ secrets: [geminiApiKey] }, async (request) => {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const prompt = `
-    ROL: Eres un experto creador de exámenes académicos.
-    TAREA: Analiza el siguiente texto de un apunte universitario y genera un examen de opción múltiple (múltiple choice) de 10 preguntas.
-    REGLAS ESTRICTAS DE SALIDA:
-    1.  Tu respuesta debe ser EXCLUSIVAMENTE un string JSON válido, sin ningún texto antes o después.
-    2.  El JSON debe ser un array de 10 objetos.
-    3.  Cada objeto debe tener EXACTAMENTE la siguiente estructura: { "question": "El texto completo de la pregunta", "options": ["Texto opción A", "Texto opción B", "Texto opción C", "Texto opción D"], "answer": "La letra de la opción correcta en minúscula, ej: 'a', 'b', 'c' o 'd'" }.
-    4.  Las preguntas deben ser relevantes y cubrir diferentes partes del texto proporcionado.
-    5.  Asegúrate de que siempre haya 4 opciones y una de ellas sea claramente la correcta según el texto.
+    ROL: Eres un experto creador de exámenes universitarios.
+    TAREA: Analiza el siguiente texto de un apunte universitario y genera un examen de opción múltiple (multiple choice) de 10 preguntas.
 
-    TEXTO A ANALIZAR:
+    INSTRUCCIONES CLAVE:
+Crea preguntas de comprensión y aplicación del conocimiento, como las que haría un profesor para evaluar si el alumno entendió el contenido.
+Nunca hagas preguntas que hagan referencia explícita al texto, tablas, figuras o secciones (ejemplo: "según la tabla 2", "como menciona el párrafo 3").
+Formula preguntas como si fueras un profesor que enseña el tema, no como un lector del texto.
+Cada pregunta debe ser clara, relevante y tener una sola respuesta correcta, sin ambigüedades.
+Evita preguntas triviales o que solo pidan repetir frases del texto.
+
+REGLAS ESTRICTAS DE SALIDA:
+Tu respuesta debe ser EXCLUSIVAMENTE un string JSON válido, sin ningún texto antes o después.
+El JSON debe ser un array de 10 objetos.
+Cada objeto debe tener EXACTAMENTE la siguiente estructura:
+{ "question": "El texto completo de la pregunta", "options": ["Texto opción A", "Texto opción B", "Texto opción C", "Texto opción D"], "answer": "La letra de la opción correcta en minúscula, ej: 'a', 'b', 'c' o 'd'" }
+Todas las preguntas deben basarse en el contenido del texto, pero redactadas como lo haría un profesor.
+Las preguntas deben cubrir distintas partes y conceptos importantes del texto.
+
+TEXTO A ANALIZAR:
     ---
     ${textForExam}
     ---
