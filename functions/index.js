@@ -162,3 +162,52 @@ Aquí está el texto a resumir:
     throw new HttpsError("internal", "No se pudo generar el resumen.");
   }
 });
+
+// --- ¡NUEVA FUNCIÓN: Generar Modelo de Parcial! ---
+exports.generateExam = onCall({ secrets: [geminiApiKey] }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "La función debe ser llamada por un usuario autenticado.");
+  }
+
+  const textForExam = request.data.text;
+  if (!textForExam || typeof textForExam !== "string" || textForExam.length === 0) {
+    throw new HttpsError("invalid-argument", "La función debe ser llamada con un campo 'text' válido.");
+  }
+
+  // Inicializamos el cliente de Gemini DENTRO de la función
+  const genAI = new GoogleGenerativeAI(geminiApiKey.value());
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  const prompt = `
+    ROL: Eres un experto creador de exámenes académicos.
+    TAREA: Analiza el siguiente texto de un apunte universitario y genera un examen de opción múltiple (múltiple choice) de 10 preguntas.
+    REGLAS ESTRICTAS DE SALIDA:
+    1.  Tu respuesta debe ser EXCLUSIVAMENTE un string JSON válido, sin ningún texto antes o después.
+    2.  El JSON debe ser un array de 10 objetos.
+    3.  Cada objeto debe tener EXACTAMENTE la siguiente estructura: { "question": "El texto completo de la pregunta", "options": ["Texto opción A", "Texto opción B", "Texto opción C", "Texto opción D"], "answer": "La letra de la opción correcta en minúscula, ej: 'a', 'b', 'c' o 'd'" }.
+    4.  Las preguntas deben ser relevantes y cubrir diferentes partes del texto proporcionado.
+    5.  Asegúrate de que siempre haya 4 opciones y una de ellas sea claramente la correcta según el texto.
+
+    TEXTO A ANALIZAR:
+    ---
+    ${textForExam}
+    ---
+  `;
+
+  logger.info("Llamando a la API de Gemini para generar un examen...");
+  try {
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const jsonText = response.text();
+    
+    // Devolvemos el texto JSON directamente al frontend
+    return { examData: jsonText };
+
+  } catch (error) {
+    logger.error("Error al llamar a la API de Gemini para generar el examen:", error);
+    if (error.message && error.message.toLowerCase().includes('overloaded')) {
+        throw new HttpsError("resource-exhausted", "Nuestros servidores de IA están ocupados. Por favor, inténtalo de nuevo en unos minutos.");
+    }
+    throw new HttpsError("internal", "No se pudo generar el modelo de parcial.");
+  }
+});
