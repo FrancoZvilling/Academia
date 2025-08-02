@@ -226,22 +226,23 @@ TEXTO A ANALIZAR:
 });
 
 // --- ¡NUEVA FUNCIÓN PARA CREAR LINK DE SUSCRIPCIÓN! ---
+
 exports.createSubscriptionLink = onCall({ 
-    secrets: [mpAccessToken], // 3. Dar acceso al secreto
+    secrets: [mpAccessToken],
     region: "southamerica-east1" 
 }, async (request) => {
     if (!request.auth) {
         throw new HttpsError("unauthenticated", "Debes estar logueado para suscribirte.");
     }
-
     const userId = request.auth.uid;
 
-    // 4. Configurar el SDK de Mercado Pago con nuestro token
-    mercadopago.configure({
-        access_token: mpAccessToken.value(),
+    // --- SINTAXIS CORRECTA PARA EL NUEVO SDK ---
+    const client = new mercadopago.MercadoPagoConfig({ 
+        accessToken: mpAccessToken.value() 
     });
+    const preapproval = new mercadopago.PreApproval(client);
+    // ------------------------------------------
 
-    // 5. Definir el plan de suscripción
     const planData = {
         reason: "Suscripción Premium Estud-IA",
         auto_recurring: {
@@ -250,20 +251,22 @@ exports.createSubscriptionLink = onCall({
             transaction_amount: 4800,
             currency_id: "ARS"
         },
-        back_url: "https://estud-ia.vercel.app/premium", // URL a la que vuelve el usuario
-        external_reference: userId // ¡MUY IMPORTANTE! Vinculamos el plan al userId
+        back_url: "www.estud-ia.com.ar", 
+        external_reference: userId,
+        status: "pending"
     };
 
     try {
-        // 6. Creamos el plan en Mercado Pago
-        const plan = await mercadopago.preapproval.create(planData);
+        const result = await preapproval.create({ body: planData });
         
-        // 7. Devolvemos la URL de pago al frontend
-        const checkoutUrl = plan.body.init_point;
-        return { url: checkoutUrl };
-
+        if (result && result.init_point) {
+            return { url: result.init_point };
+        } else {
+            throw new Error("La respuesta de Mercado Pago no contiene una URL de pago.");
+        }
     } catch (error) {
         logger.error("Error al crear la suscripción en Mercado Pago:", error);
-        throw new HttpsError("internal", "No se pudo generar el link de pago.");
+        const errorMessage = error.cause?.message || "No se pudo generar el link de pago.";
+        throw new HttpsError("internal", errorMessage);
     }
 });
