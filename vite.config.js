@@ -39,7 +39,12 @@ export default defineConfig({
             purpose: 'any maskable' // Ícono que se adapta a diferentes formas en Android
           }
         ]
-      } 
+      },
+      workbox: {
+        // Aumentamos el límite de tamaño de archivo para el precaché.
+        // 5 * 1024 * 1024 bytes = 5 MB
+        maximumFileSizeToCacheInBytes: 5000000, 
+      }
     })
   ],
 })
