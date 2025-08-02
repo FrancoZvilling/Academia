@@ -1,32 +1,20 @@
 // --- IMPORTS ---
-// API de Auth v1 (para el trigger de eliminación de usuarios)
 const { user } = require("firebase-functions/v1/auth");
-
-// Triggers de Firestore (API v2)
 const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
-
-// Funciones HTTPS (API v2)
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
-
-// Otros módulos de Firebase Functions
 const { logger } = require("firebase-functions");
 const { defineSecret } = require("firebase-functions/params");
-
-// Librerías externas
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const admin = require("firebase-admin");
+const mercadopago = require("mercadopago");
 
 // --- INICIALIZACIÓN ---
 admin.initializeApp();
 const db = admin.firestore();
 const storage = admin.storage();
-
-// Secreto para la API de Gemini
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
+const mpAccessToken = defineSecret("MERCADOPAGO_ACCESS_TOKEN");
 
-//MERCADO PAGO
-const mercadopago = require("mercadopago");
-const mpAccessToken = defineSecret("MERCADOPAGO_ACCESS_TOKEN")
 
 // --- FUNCIÓN: Borrar Año y su Contenido (V2) ---
 exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}", async (event) => {
@@ -61,6 +49,7 @@ exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}"
   logger.info(`(V2) Limpieza de año completada.`);
 });
 
+
 // --- FUNCIÓN: Borrar Usuario y su Contenido (usando v1/auth) ---
 exports.deleteUserAndContent = user().onDelete(async (userRecord) => {
   const uid = userRecord.uid;
@@ -82,6 +71,7 @@ exports.deleteUserAndContent = user().onDelete(async (userRecord) => {
     }
   }
 });
+
 
 // --- FUNCIÓN: Generar Resumen con Gemini (V2) ---
 exports.generateSummary = onCall({ secrets: [geminiApiKey] }, async (request) => {
@@ -167,7 +157,8 @@ Aquí está el texto a resumir:
   }
 });
 
-// --- ¡NUEVA FUNCIÓN: Generar Modelo de Parcial! ---
+
+// --- FUNCIÓN: Generar Modelo de Parcial (V2) ---
 exports.generateExam = onCall({ secrets: [geminiApiKey] }, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "La función debe ser llamada por un usuario autenticado.");
@@ -178,7 +169,6 @@ exports.generateExam = onCall({ secrets: [geminiApiKey] }, async (request) => {
     throw new HttpsError("invalid-argument", "La función debe ser llamada con un campo 'text' válido.");
   }
 
-  // Inicializamos el cliente de Gemini DENTRO de la función
   const genAI = new GoogleGenerativeAI(geminiApiKey.value());
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -213,7 +203,6 @@ TEXTO A ANALIZAR:
     const response = result.response;
     const jsonText = response.text();
     
-    // Devolvemos el texto JSON directamente al frontend
     return { examData: jsonText };
 
   } catch (error) {
@@ -225,8 +214,8 @@ TEXTO A ANALIZAR:
   }
 });
 
-// --- ¡NUEVA FUNCIÓN PARA CREAR LINK DE SUSCRIPCIÓN! ---
 
+// --- FUNCIÓN PARA CREAR LINK DE SUSCRIPCIÓN (V2) ---
 exports.createSubscriptionLink = onCall({ 
     secrets: [mpAccessToken],
     region: "southamerica-east1" 
@@ -236,12 +225,10 @@ exports.createSubscriptionLink = onCall({
     }
     const userId = request.auth.uid;
 
-    // --- SINTAXIS CORRECTA PARA EL NUEVO SDK ---
     const client = new mercadopago.MercadoPagoConfig({ 
         accessToken: mpAccessToken.value() 
     });
     const preapproval = new mercadopago.PreApproval(client);
-    // ------------------------------------------
 
     const planData = {
         reason: "Suscripción Premium Estud-IA",
@@ -251,7 +238,7 @@ exports.createSubscriptionLink = onCall({
             transaction_amount: 4800,
             currency_id: "ARS"
         },
-        back_url: "www.estud-ia.com.ar", 
+        back_url: "https://www.estud-ia.com.ar/premium",
         external_reference: userId,
         status: "pending"
     };
