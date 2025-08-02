@@ -11,6 +11,7 @@ import GeneralEventsPage from '../pages/GeneralEventsPage';
 import NotebookPage from '../pages/NotebookPage';
 import ContactPage from '../pages/ContactPage';
 import AIPage from '../pages/AIPage';
+import PremiumPage from '../pages/PremiumPage';
 
 const AppRouter = () => {
   return (
@@ -24,6 +25,7 @@ const AppRouter = () => {
         <Route path="libreta" element={<NotebookPage />} />
         <Route path="ia" element={<AIPage />} />
         <Route path="contacto" element={<ContactPage />} />
+        <Route path="premium" element={<PremiumPage />} />
         <Route path="perfil" element={<ProfilePage />} />
         <Route index element={<Navigate to="/dashboard" replace />} />
       </Route>

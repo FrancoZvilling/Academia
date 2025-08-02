@@ -37,9 +37,16 @@ export default {
 
   // Configuración de DaisyUI (opcional pero muy útil)
   daisyui: {
-    themes: false, // Desactivamos los temas por defecto de DaisyUI, usaremos los nuestros
+    themes: false,
     base: true,
     styled: true,
     utils: true,
+    // Le decimos a DaisyUI que no use oklch
+    theme_override: {
+      '--p': 'rgb(var(--color-primary))',
+      '--s': 'rgb(var(--color-secondary))',
+      '--a': 'rgb(var(--color-accent))',
+    },
+    logs: false, // Opcional: desactiva los logs de DaisyUI en la consola
   },
 };

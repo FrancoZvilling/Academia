@@ -15,8 +15,10 @@ import {
     where,
     serverTimestamp,
     Timestamp, 
-    writeBatch
+    writeBatch,
+    setDoc
 } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 // --- GESTIÓN DE NOTAS (AÑADIMOS UNA NUEVA FUNCIÓN) ---
 
@@ -210,4 +212,73 @@ export const addFileToSubject = (userId, yearId, subjectId, fileData) => {
 export const removeFileFromSubject = (userId, yearId, subjectId, fileData) => {
   const subjectDocRef = doc(db, 'users', userId, 'years', yearId, 'subjects', subjectId);
   return updateDoc(subjectDocRef, { files: arrayRemove(fileData) });
+};
+
+// --- SERVICIO PARA LLAMAR A CLOUD FUNCTIONS ---
+
+const functions = getFunctions();
+
+/**
+ * Llama a la Cloud Function 'generateSummary' con el texto proporcionado.
+ * @param {string} text - El texto extraído del PDF para resumir.
+ * @returns {Promise<string>} - Una promesa que resuelve al resumen generado.
+ */
+export const callGenerateSummary = async (text) => {
+    try {
+        const generateSummaryFunction = httpsCallable(functions, 'generateSummary');
+        const result = await generateSummaryFunction({ text });
+        return result.data.summary;
+    } catch (error) {
+        console.error("Error al llamar a la Cloud Function 'generateSummary':", error);
+        // Lanza el error de nuevo para que el componente que llama pueda manejarlo
+        throw new Error(error.message || "No se pudo generar el resumen.");
+    }
+};
+
+/**
+ * Llama a la Cloud Function 'generateExam' con el texto proporcionado.
+ * @param {string} text - El texto extraído del PDF para generar el examen.
+ * @returns {Promise<string>} - Una promesa que resuelve al string JSON con los datos del examen.
+ */
+export const callGenerateExam = async (text) => {
+    try {
+        const generateExamFunction = httpsCallable(functions, 'generateExam');
+        const result = await generateExamFunction({ text });
+        // La Cloud Function devuelve un objeto { examData: '...' }
+        return result.data.examData;
+    } catch (error) {
+        console.error("Error al llamar a la Cloud Function 'generateExam':", error);
+        throw new Error(error.message || "No se pudo generar el modelo de parcial.");
+    }
+};
+
+// --- NUEVA FUNCIÓN PARA GESTIÓN DE DATOS DE USUARIO ---
+
+/**
+ * Crea un documento para un nuevo usuario en Firestore con valores por defecto.
+ * Si el documento ya existe, no hace nada.
+ * @param {string} userId - El UID del usuario de Firebase Auth.
+ * @param {object} additionalData - Datos extra como email o displayName.
+ */
+export const createUserDocument = async (userId, additionalData = {}) => {
+    if (!userId) return;
+    
+    const userDocRef = doc(db, 'users', userId);
+
+    // Verificamos si el documento ya existe para no sobrescribirlo
+    const userSnapshot = await getDoc(userDocRef);
+
+    if (!userSnapshot.exists()) {
+        const createdAt = new Date();
+        try {
+            await setDoc(userDocRef, {
+                uid: userId,
+                plan: 'free', // Todos los usuarios empiezan con el plan gratuito
+                createdAt: createdAt,
+                ...additionalData
+            });
+        } catch (error) {
+            console.error("Error al crear el documento de usuario:", error);
+        }
+    }
 };

@@ -1,11 +1,11 @@
-// src/contexts/AuthContext.jsx (Código COMPLETO)
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import {
-  // Importaciones existentes
-  createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup,
-  GoogleAuthProvider, signOut, onAuthStateChanged,
-  // --- NUEVAS IMPORTACIONES ---
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+  onAuthStateChanged,
   updateProfile,
   updatePassword,
   reauthenticateWithCredential,
@@ -14,6 +14,7 @@ import {
   sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth } from '../config/firebase-config';
+import { createUserDocument } from '../services/firestoreService'; // Asegúrate de que esta importación esté presente
 
 const AuthContext = createContext();
 
@@ -29,21 +30,46 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Funciones existentes (signup, login, etc.)
-  const signup = (email, password) => createUserWithEmailAndPassword(auth, email, password);
-  const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
-  const loginWithGoogle = () => {
-    const googleProvider = new GoogleAuthProvider();
-    return signInWithPopup(auth, googleProvider);
-  };
-  const logout = () => signOut(auth);
-  
-  // --- NUEVAS FUNCIONES PARA EL PERFIL ---
+  // --- FUNCIÓN SIGNUP MODIFICADA ---
+  const signup = async (email, password) => {
+    // 1. Creamos el usuario en Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-  /**
-   * Actualiza el nombre y/o la foto de perfil del usuario actual.
-   * @param {object} profileData - Objeto con { displayName, photoURL }
-   */
+    // 2. Creamos su documento correspondiente en Firestore
+    await createUserDocument(user.uid, {
+      email: user.email,
+      displayName: user.displayName // Será null al principio
+    });
+
+    // 3. Actualizamos su perfil de Auth con el avatar por defecto
+    await updateProfile(user, {
+      photoURL: '/defaults/default-avatar.png'
+    });
+
+    return userCredential;
+  };
+  
+  const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
+  
+  // --- FUNCIÓN LOGINWITHGOOGLE MODIFICADA ---
+  const loginWithGoogle = async () => {
+    const googleProvider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+
+    // Al iniciar sesión/registrarse con Google, nos aseguramos de que su documento exista
+    await createUserDocument(user.uid, {
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL
+    });
+    
+    return result;
+  };
+  
+  const logout = () => signOut(auth);
+
   const updateUserProfile = (profileData) => {
     if (auth.currentUser) {
       return updateProfile(auth.currentUser, profileData);
@@ -51,31 +77,17 @@ export const AuthProvider = ({ children }) => {
     return Promise.reject(new Error("No hay usuario autenticado."));
   };
 
-  /**
-   * Cambia la contraseña del usuario actual.
-   * Requiere re-autenticación por seguridad.
-   * @param {string} oldPassword - La contraseña actual.
-   * @param {string} newPassword - La nueva contraseña.
-   */
   const changeUserPassword = async (oldPassword, newPassword) => {
     if (auth.currentUser) {
       const credential = EmailAuthProvider.credential(auth.currentUser.email, oldPassword);
-      // Primero, re-autenticamos al usuario para confirmar su identidad
       await reauthenticateWithCredential(auth.currentUser, credential);
-      // Si la re-autenticación es exitosa, actualizamos la contraseña
       return updatePassword(auth.currentUser, newPassword);
     }
     return Promise.reject(new Error("No hay usuario autenticado."));
   };
   
-  /**
-   * Elimina la cuenta del usuario actual.
-   * También requiere re-autenticación.
-   * @param {string} password - La contraseña actual para confirmar.
-   */
   const deleteCurrentUserAccount = async (password) => {
     if (auth.currentUser) {
-      // Solo es necesario para proveedores de email/contraseña
       if (auth.currentUser.providerData.some(p => p.providerId === 'password')) {
         const credential = EmailAuthProvider.credential(auth.currentUser.email, password);
         await reauthenticateWithCredential(auth.currentUser, credential);
@@ -88,7 +100,6 @@ export const AuthProvider = ({ children }) => {
   const resetPassword = (email) => {
     return sendPasswordResetEmail(auth, email);
   };
-
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
