@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { FaFileUpload, FaSpinner, FaFilePdf, FaDownload, FaInfoCircle, FaFileWord, FaCopy } from 'react-icons/fa';
+import { FaFileUpload, FaSpinner, FaFilePdf, FaDownload, FaInfoCircle, FaFileWord, FaCopy, FaStar } from 'react-icons/fa';
 import * as pdfjsLib from 'pdfjs-dist';
 import { callGenerateSummary, callGenerateExam } from '../services/firestoreService';
 import { marked } from 'marked';
@@ -9,6 +9,8 @@ import { Document, Packer, Paragraph, TextRun, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import Modal from '../components/ui/Modal';
 import AIInstructions from '../components/ui/AIInstructions';
+import { useAuth } from '../contexts/AuthContext'; 
+import { Link } from 'react-router-dom';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.mjs`;
 
@@ -287,11 +289,35 @@ const ExamGeneratorTab = () => {
   );
 };
 
-
-// --- Componente principal de la página con PESTAÑAS ---
+// --- Componente principal de la página con PESTAÑAS y MURO DE PAGO ---
 const AIPage = () => {
   const [activeTab, setActiveTab] = useState('summarizer');
+  const { userData, loading } = useAuth(); // <-- 3. Obtener datos del usuario y estado de carga
 
+  // Mientras se cargan los datos del usuario, mostramos un spinner
+  if (loading) {
+    return <div className="flex justify-center items-center h-full pt-20"><span className="loading loading-spinner loading-lg text-primary"></span></div>;
+  }
+
+  // --- 4. LÓGICA DEL MURO DE PAGO ---
+  // Si tenemos los datos y el plan no es 'premium', mostramos el componente de upgrade
+  if (userData && userData.plan !== 'premium') {
+    return (
+        <div className="text-center p-6 sm:p-10 bg-surface-100 rounded-lg shadow-xl flex flex-col items-center">
+            <FaStar className="text-yellow-400 text-5xl mb-4" />
+            <h1 className="text-3xl font-bold mb-4">Desbloquea las Funciones de IA</h1>
+            <p className="text-text-secondary mb-8 max-w-md">
+                Las herramientas de Resúmenes y Modelos de Parcial son exclusivas para usuarios Premium. ¡Lleva tu estudio al siguiente nivel!
+            </p>
+            <Link to="/premium" className="btn btn-primary btn-lg bg-primary text-text-accent">
+                Ver Beneficios Premium
+            </Link>
+        </div>
+    );
+  }
+  // ------------------------------------
+
+  // Si es premium, mostramos la página normal con las pestañas
   return (
     <div>
       <div className="flex items-center justify-between mb-4">

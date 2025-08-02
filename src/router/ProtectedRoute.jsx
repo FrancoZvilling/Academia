@@ -1,17 +1,24 @@
-// src/router/ProtectedRoute.jsx
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-// Este componente envuelve las rutas que queremos proteger.
 const ProtectedRoute = ({ children }) => {
-  const { currentUser } = useAuth(); // Usamos nuestro hook para obtener el usuario
+  const { currentUser, loadingAuth } = useAuth(); // Usamos la variable renombrada
 
-  // Si no hay un usuario logueado, redirigimos a la página de login.
-  if (!currentUser) {
-    return <Navigate to="/login" />;
+  // Mientras la autenticación está cargando, mostramos un spinner.
+  if (loadingAuth) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <span className="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+    );
   }
 
-  // Si hay un usuario, mostramos el contenido de la ruta.
+  // Una vez que la carga ha terminado, si NO hay usuario, redirigimos a login.
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Si SÍ hay usuario, mostramos el contenido protegido.
   return children;
 };
 
