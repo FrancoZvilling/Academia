@@ -26,7 +26,6 @@ const geminiApiKey = defineSecret("GEMINI_API_KEY");
 
 //MERCADO PAGO
 const mercadopago = require("mercadopago");
-const { defineSecret } = require("firebase-functions/params");
 const mpAccessToken = defineSecret("MERCADOPAGO_ACCESS_TOKEN")
 
 // --- FUNCIÓN: Borrar Año y su Contenido (V2) ---
