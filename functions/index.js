@@ -24,6 +24,11 @@ const storage = admin.storage();
 // Secreto para la API de Gemini
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 
+//MERCADO PAGO
+const mercadopago = require("mercadopago");
+const { defineSecret } = require("firebase-functions/params");
+const mpAccessToken = defineSecret("MERCADOPAGO_ACCESS_TOKEN")
+
 // --- FUNCIÓN: Borrar Año y su Contenido (V2) ---
 exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}", async (event) => {
   const { userId, yearId } = event.params;
@@ -219,4 +224,47 @@ TEXTO A ANALIZAR:
     }
     throw new HttpsError("internal", "No se pudo generar el modelo de parcial.");
   }
+});
+
+// --- ¡NUEVA FUNCIÓN PARA CREAR LINK DE SUSCRIPCIÓN! ---
+exports.createSubscriptionLink = onCall({ 
+    secrets: [mpAccessToken], // 3. Dar acceso al secreto
+    region: "southamerica-east1" 
+}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Debes estar logueado para suscribirte.");
+    }
+
+    const userId = request.auth.uid;
+
+    // 4. Configurar el SDK de Mercado Pago con nuestro token
+    mercadopago.configure({
+        access_token: mpAccessToken.value(),
+    });
+
+    // 5. Definir el plan de suscripción
+    const planData = {
+        reason: "Suscripción Premium Estud-IA",
+        auto_recurring: {
+            frequency: 1,
+            frequency_type: "months",
+            transaction_amount: 4800,
+            currency_id: "ARS"
+        },
+        back_url: "https://estud-ia.vercel.app/premium", // URL a la que vuelve el usuario
+        external_reference: userId // ¡MUY IMPORTANTE! Vinculamos el plan al userId
+    };
+
+    try {
+        // 6. Creamos el plan en Mercado Pago
+        const plan = await mercadopago.preapproval.create(planData);
+        
+        // 7. Devolvemos la URL de pago al frontend
+        const checkoutUrl = plan.body.init_point;
+        return { url: checkoutUrl };
+
+    } catch (error) {
+        logger.error("Error al crear la suscripción en Mercado Pago:", error);
+        throw new HttpsError("internal", "No se pudo generar el link de pago.");
+    }
 });
