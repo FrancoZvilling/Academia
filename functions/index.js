@@ -221,13 +221,16 @@ exports.createSubscriptionLink = onCall({
     region: "southamerica-east1" 
 }, async (request) => {
     if (!request.auth) {
-        throw new HttpsError("unauthenticated", "Debes estar logueado para suscribirte.");
+        throw new HttpsError("unauthenticated", "Debes estar logueado.");
     }
     const userId = request.auth.uid;
+    const userEmail = request.auth.token.email;
 
-    const client = new mercadopago.MercadoPagoConfig({ 
-        accessToken: mpAccessToken.value() 
-    });
+    if (!userEmail) {
+        throw new HttpsError("failed-precondition", "El usuario no tiene un email asociado.");
+    }
+    
+    const client = new mercadopago.MercadoPagoConfig({ accessToken: mpAccessToken.value() });
     const preapproval = new mercadopago.PreApproval(client);
 
     const planData = {
@@ -240,20 +243,39 @@ exports.createSubscriptionLink = onCall({
         },
         back_url: "https://www.estud-ia.com.ar/premium",
         external_reference: userId,
+        payer_email: userEmail,
         status: "pending"
     };
 
     try {
+        logger.info("Enviando a Mercado Pago:", JSON.stringify(planData));
         const result = await preapproval.create({ body: planData });
         
+        logger.info("Respuesta exitosa de Mercado Pago:", result);
         if (result && result.init_point) {
             return { url: result.init_point };
         } else {
-            throw new Error("La respuesta de Mercado Pago no contiene una URL de pago.");
+            throw new Error("La respuesta de Mercado Pago no contenía una URL.");
         }
     } catch (error) {
-        logger.error("Error al crear la suscripción en Mercado Pago:", error);
-        const errorMessage = error.cause?.message || "No se pudo generar el link de pago.";
-        throw new HttpsError("internal", errorMessage);
+        // --- CAPTURA DE ERROR AGRESIVA ---
+        logger.error("---- INICIO DEL ERROR DETALLADO DE MERCADO PAGO ----");
+        
+        // Logueamos el error completo como un objeto para que sea explorable en la consola
+        logger.error("Objeto de error completo:", error);
+        
+        // Intentamos loguear las partes más comunes de un error de API
+        if (error.cause) {
+            logger.error("Causa del error (error.cause):", JSON.stringify(error.cause, null, 2));
+        }
+        if (error.response?.data) {
+            logger.error("Datos de la respuesta de error (error.response.data):", JSON.stringify(error.response.data, null, 2));
+        }
+
+        logger.error("---- FIN DEL ERROR DETALLADO DE MERCADO PAGO ----");
+
+        const errorMessage = error.cause?.message || "Error desconocido de Mercado Pago.";
+        throw new HttpsError("internal", `Error de Mercado Pago: ${errorMessage}`);
+        // ------------------------------------
     }
 });
