@@ -1,23 +1,38 @@
 import { useState } from 'react';
 import { FaCheckCircle, FaStar } from 'react-icons/fa';
+import ReactMarkdown from 'react-markdown';
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { toast } from 'react-toastify';
-import ReactMarkdown from 'react-markdown'; // Importamos la librería para formato
 
 const PremiumPage = () => {
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubscribe = () => {
+    // --- VOLVEMOS A LA LÓGICA DE LA API ---
+    const handleSubscribe = async () => {
         setIsLoading(true);
-        const subscriptionLink = import.meta.env.VITE_MERCADOPAGO_SUB_LINK;
-        if (subscriptionLink) {
-            window.location.href = subscriptionLink;
-        } else {
-            console.error("El link de suscripción de Mercado Pago no está configurado.");
-            alert("Hubo un error en la configuración. Por favor, contacta al soporte.");
+        try {
+            // Especificamos la región para asegurar que la llamada vaya al lugar correcto
+            const functions = getFunctions(undefined, "southamerica-east1");
+            const createSubscriptionLink = httpsCallable(functions, 'createSubscriptionLink');
+            
+            // Llamamos a la Cloud Function
+            const result = await createSubscriptionLink();
+            const checkoutUrl = result.data.url;
+            
+            if (checkoutUrl) {
+                // Redirigimos al usuario al checkout de Mercado Pago
+                window.location.href = checkoutUrl;
+            } else {
+                throw new Error("No se recibió una URL de pago desde el servidor.");
+            }
+
+        } catch (error) {
+            console.error("Error al obtener el link de suscripción:", error);
+            toast.error("No se pudo iniciar el proceso de pago. Por favor, inténtalo de nuevo.");
             setIsLoading(false);
         }
     };
+    // ------------------------------------
 
     const benefits = [
         "**Resúmenes Automáticos:** Convierte apuntes largos en resúmenes concisos.",
@@ -31,7 +46,7 @@ const PremiumPage = () => {
             <div className="text-center mb-12">
                 <FaStar className="mx-auto text-yellow-400 text-5xl mb-4" />
                 <h1 className="text-4xl sm:text-5xl font-extrabold text-text-primary tracking-tight">
-                    Desbloquea Inteligencia Artificial con <span className="text-primary">Estud-IA Premium</span>
+                    Desbloquea tu Potencial con <span className="text-primary">Estud-IA Premium</span>
                 </h1>
                 <p className="mt-4 text-lg text-text-secondary max-w-2xl mx-auto">
                     Lleva tu organización y estudio al siguiente nivel con herramientas de Inteligencia Artificial diseñadas para ti.
@@ -67,13 +82,14 @@ const PremiumPage = () => {
                 >
                     {isLoading ? <span className="loading loading-spinner"></span> : '¡Hacerme Premium Ahora!'}
                 </button>
-                <p className="text-xs text-text-secondary mt-2">Serás redirigido a Mercado Pago para completar la compra de forma segura.</p>
+
+                <p className="text-xs text-text-secondary mt-2">Cancelación fácil en cualquier momento.</p>
             </div>
 
             <div className="text-center mt-12 p-6 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
                 <h3 className="font-semibold text-amber-800 dark:text-amber-200">Actualmente en Fase BETA</h3>
                 <p className="text-sm text-amber-700 dark:text-amber-300 mt-2">
-                    Al suscribirte ahora, te aseguras de mantener este precio y todas las funcionalidades cuando la aplicación pase a su versión final. ¡Gracias por tu apoyo como estudiante pionero!
+                    Al suscribirte ahora, te aseguras de mantener este precio y todas las funcionalidades cuando la aplicación pase a su versión final. ¡Gracias por tu apoyo como usuario pionero!
                 </p>
             </div>
         </div>
