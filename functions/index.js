@@ -233,13 +233,24 @@ exports.createSubscriptionLink = onCall({
     const client = new mercadopago.MercadoPagoConfig({ accessToken: mpAccessToken.value() });
     const preapproval = new mercadopago.PreApproval(client);
 
+    // --- LÓGICA DE FECHAS AÑADIDA ---
+    const startDate = new Date();
+    startDate.setMinutes(startDate.getMinutes() + 1); // Inicio en 1 minuto para evitar errores
+
+    const endDate = new Date();
+    endDate.setFullYear(endDate.getFullYear() + 5); // Fin en 5 años (práctica estándar)
+    // ------------------------------------
+
     const planData = {
         reason: "Suscripción Premium Estud-IA",
         auto_recurring: {
             frequency: 1,
             frequency_type: "months",
             transaction_amount: 4800,
-            currency_id: "ARS"
+            currency_id: "ARS",
+            // --- CAMPOS OBLIGATORIOS AÑADIDOS ---
+            start_date: startDate.toISOString(), 
+            end_date: endDate.toISOString()
         },
         back_url: "https://www.estud-ia.com.ar/premium",
         external_reference: userId,
@@ -258,24 +269,17 @@ exports.createSubscriptionLink = onCall({
             throw new Error("La respuesta de Mercado Pago no contenía una URL.");
         }
     } catch (error) {
-        // --- CAPTURA DE ERROR AGRESIVA ---
+        // --- (Tu excelente lógica de captura de errores se mantiene igual) ---
         logger.error("---- INICIO DEL ERROR DETALLADO DE MERCADO PAGO ----");
-        
-        // Logueamos el error completo como un objeto para que sea explorable en la consola
         logger.error("Objeto de error completo:", error);
-        
-        // Intentamos loguear las partes más comunes de un error de API
         if (error.cause) {
             logger.error("Causa del error (error.cause):", JSON.stringify(error.cause, null, 2));
         }
         if (error.response?.data) {
             logger.error("Datos de la respuesta de error (error.response.data):", JSON.stringify(error.response.data, null, 2));
         }
-
         logger.error("---- FIN DEL ERROR DETALLADO DE MERCADO PAGO ----");
-
         const errorMessage = error.cause?.message || "Error desconocido de Mercado Pago.";
         throw new HttpsError("internal", `Error de Mercado Pago: ${errorMessage}`);
-        // ------------------------------------
     }
 });
