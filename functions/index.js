@@ -216,41 +216,52 @@ TEXTO A ANALIZAR:
 
 
 // --- FUNCIÓN PARA CREAR LINK DE SUSCRIPCIÓN (V2) ---
+// ... (Tus importaciones no cambian)
+
+// ... (Tus otras funciones no cambian)
+
+
+// --- FUNCIÓN PARA CREAR LINK DE SUSCRIPCIÓN (CON DEPURACIÓN AGRESIVA) ---
 exports.createSubscriptionLink = onCall({ 
     secrets: [mpAccessToken],
     region: "southamerica-east1" 
 }, async (request) => {
+    // 1. Loguear inicio y datos del usuario
+    logger.info("Iniciando 'createSubscriptionLink'...");
     if (!request.auth) {
-        throw new HttpsError("unauthenticated", "Debes estar logueado.");
+        logger.error("Error: La función fue llamada sin autenticación.");
+        throw new HttpsError("unauthenticated", "Debes estar logueado para suscribirte.");
     }
     const userId = request.auth.uid;
     const userEmail = request.auth.token.email;
+    logger.info(`Llamada autenticada por usuario: ${userId} (${userEmail})`);
 
     if (!userEmail) {
         throw new HttpsError("failed-precondition", "El usuario no tiene un email asociado.");
     }
-    
-    const client = new mercadopago.MercadoPagoConfig({ accessToken: mpAccessToken.value() });
+
+    // 2. Loguear el Access Token (solo los primeros caracteres por seguridad)
+    const accessToken = mpAccessToken.value();
+    if (!accessToken) {
+        logger.error("FATAL: El secreto MERCADOPAGO_ACCESS_TOKEN no se pudo leer.");
+        throw new HttpsError("internal", "Error de configuración del servidor.");
+    }
+    logger.info(`Access Token cargado correctamente. Comienza con: ${accessToken.substring(0, 15)}...`);
+
+    // 3. Configurar el cliente de Mercado Pago
+    const client = new mercadopago.MercadoPagoConfig({ 
+        accessToken: accessToken,
+        options: { timeout: 5000 }
+    });
     const preapproval = new mercadopago.PreApproval(client);
-
-    // --- LÓGICA DE FECHAS AÑADIDA ---
-    const startDate = new Date();
-    startDate.setMinutes(startDate.getMinutes() + 1); // Inicio en 1 minuto para evitar errores
-
-    const endDate = new Date();
-    endDate.setFullYear(endDate.getFullYear() + 5); // Fin en 5 años (práctica estándar)
-    // ------------------------------------
-
+    
     const planData = {
         reason: "Suscripción Premium Estud-IA",
         auto_recurring: {
             frequency: 1,
             frequency_type: "months",
             transaction_amount: 4800,
-            currency_id: "ARS",
-            // --- CAMPOS OBLIGATORIOS AÑADIDOS ---
-            start_date: startDate.toISOString(), 
-            end_date: endDate.toISOString()
+            currency_id: "ARS"
         },
         back_url: "https://www.estud-ia.com.ar/premium",
         external_reference: userId,
@@ -259,27 +270,24 @@ exports.createSubscriptionLink = onCall({
     };
 
     try {
-        logger.info("Enviando a Mercado Pago:", JSON.stringify(planData));
+        // 4. Loguear los datos exactos que se envían a Mercado Pago
+        logger.info("Enviando los siguientes datos a la API de Mercado Pago:", JSON.stringify(planData, null, 2));
+        
         const result = await preapproval.create({ body: planData });
         
-        logger.info("Respuesta exitosa de Mercado Pago:", result);
+        logger.info("Respuesta exitosa recibida de Mercado Pago:", result);
+        
         if (result && result.init_point) {
             return { url: result.init_point };
         } else {
-            throw new Error("La respuesta de Mercado Pago no contenía una URL.");
+            logger.error("La respuesta de Mercado Pago fue exitosa pero no contenía una URL 'init_point'.", result);
+            throw new Error("Respuesta inválida de Mercado Pago.");
         }
     } catch (error) {
-        // --- (Tu excelente lógica de captura de errores se mantiene igual) ---
-        logger.error("---- INICIO DEL ERROR DETALLADO DE MERCADO PAGO ----");
-        logger.error("Objeto de error completo:", error);
-        if (error.cause) {
-            logger.error("Causa del error (error.cause):", JSON.stringify(error.cause, null, 2));
-        }
-        if (error.response?.data) {
-            logger.error("Datos de la respuesta de error (error.response.data):", JSON.stringify(error.response.data, null, 2));
-        }
-        logger.error("---- FIN DEL ERROR DETALLADO DE MERCADO PAGO ----");
-        const errorMessage = error.cause?.message || "Error desconocido de Mercado Pago.";
+        // 5. Loguear el error detallado que hemos estado buscando
+        const mpError = error.cause || error;
+        logger.error("---- ERROR DETALLADO DE MERCADO PAGO ----", mpError);
+        const errorMessage = mpError.message || "No se pudo generar el link de pago.";
         throw new HttpsError("internal", `Error de Mercado Pago: ${errorMessage}`);
     }
 });
