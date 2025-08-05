@@ -292,19 +292,11 @@ exports.createSubscriptionLink = onCall({
     }
 });
 
-// --- ¡NUEVA FUNCIÓN DE ADMINISTRADOR! ---
-
-/**
- * Función Callable restringida a administradores.
- * Permite realizar acciones como listar usuarios o cambiar su plan.
- */
 exports.adminTasks = onCall({ 
-    secrets: [/* ... tus secretos ... */],
+    secrets: [/* ... */],
     region: "southamerica-east1" 
 }, async (request) => {
-    const adminUID = "40HuVxGw1KfO73hqJDiOb9OERIp1"; // <-- ¡IMPORTANTE! Reemplaza esto
-
-    // 1. Verificación de seguridad: ¿Quien llama es el admin?
+    const adminUID = "40HuVxGw1KfO73hqJDiOb9OERIp1";
     if (request.auth?.uid !== adminUID) {
         throw new HttpsError("permission-denied", "No tienes permisos de administrador.");
     }
@@ -312,16 +304,27 @@ exports.adminTasks = onCall({
     const action = request.data.action;
     const payload = request.data.payload;
 
-    // 2. Lógica para diferentes acciones
     switch (action) {
         case 'LIST_USERS':
             try {
+                // Obtenemos los usuarios de Auth
                 const listUsersResult = await admin.auth().listUsers(1000);
+                
+                // Obtenemos los datos adicionales de Firestore
+                const firestoreUsersSnap = await db.collection('users').get();
+                const firestoreUsersData = {};
+                firestoreUsersSnap.forEach(doc => {
+                    firestoreUsersData[doc.id] = doc.data();
+                });
+
+                // Combinamos los datos de Auth y Firestore
                 const users = listUsersResult.users.map(user => ({
                     uid: user.uid,
                     email: user.email,
                     displayName: user.displayName,
                     photoURL: user.photoURL,
+                    // Añadimos los datos de Firestore (plan, premiumUntil, etc.)
+                    ...firestoreUsersData[user.uid] 
                 }));
                 return { users };
             } catch (error) {
@@ -331,13 +334,31 @@ exports.adminTasks = onCall({
         
         case 'UPDATE_USER_PLAN':
             try {
-                const { userId, newPlan } = payload;
-                if (!userId || !newPlan) throw new HttpsError("invalid-argument", "Faltan datos.");
+                const { userId, plan, mercadopagoEmail } = payload;
+                if (!userId || !plan) throw new HttpsError("invalid-argument", "Faltan datos.");
                 
                 const userDocRef = db.collection("users").doc(userId);
-                await userDocRef.update({ plan: newPlan });
-                logger.info(`Plan del usuario ${userId} actualizado a ${newPlan} por el admin.`);
-                return { success: true, message: `Plan de ${userId} actualizado.` };
+                
+                const dataToUpdate = { plan };
+
+                if (plan === 'premium') {
+                    // Si el plan es premium, seteamos o reseteamos la fecha de vencimiento a 31 días
+                    const newExpiryDate = new Date();
+                    newExpiryDate.setDate(newExpiryDate.getDate() + 31);
+                    dataToUpdate.premiumUntil = admin.firestore.Timestamp.fromDate(newExpiryDate);
+                } else {
+                    // Si lo pasamos a free, podemos borrar la fecha de vencimiento
+                    dataToUpdate.premiumUntil = admin.firestore.FieldValue.delete();
+                }
+
+                // Si se nos pasa un email de MP, lo guardamos
+                if (mercadopagoEmail) {
+                    dataToUpdate.mercadopagoEmail = mercadopagoEmail;
+                }
+
+                await userDocRef.update(dataToUpdate);
+                logger.info(`Plan del usuario ${userId} actualizado.`, dataToUpdate);
+                return { success: true };
 
             } catch (error) {
                 logger.error("Error al actualizar el plan del usuario:", error);
