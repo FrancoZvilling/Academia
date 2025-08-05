@@ -65,7 +65,7 @@ const AdminPage = () => {
         if (user.plan !== 'premium') return { text: 'Gratuito', color: 'bg-gray-400' };
         if (!user.premiumUntil) return { text: 'Premium (Sin fecha)', color: 'bg-blue-500' };
         
-        const expiryDate = user.premiumUntil.toDate();
+        const expiryDate = new Date(user.premiumUntil._seconds * 1000);
         const now = new Date();
         const daysLeft = (expiryDate - now) / (1000 * 60 * 60 * 24);
 
