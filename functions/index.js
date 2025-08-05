@@ -291,3 +291,60 @@ exports.createSubscriptionLink = onCall({
         throw new HttpsError("internal", `Error de Mercado Pago: ${errorMessage}`);
     }
 });
+
+// --- ¡NUEVA FUNCIÓN DE ADMINISTRADOR! ---
+
+/**
+ * Función Callable restringida a administradores.
+ * Permite realizar acciones como listar usuarios o cambiar su plan.
+ */
+exports.adminTasks = onCall({ 
+    secrets: [/* ... tus secretos ... */],
+    region: "southamerica-east1" 
+}, async (request) => {
+    const adminUID = "40HuVxGw1KfO73hqJDiOb9OERIp1"; // <-- ¡IMPORTANTE! Reemplaza esto
+
+    // 1. Verificación de seguridad: ¿Quien llama es el admin?
+    if (request.auth?.uid !== adminUID) {
+        throw new HttpsError("permission-denied", "No tienes permisos de administrador.");
+    }
+
+    const action = request.data.action;
+    const payload = request.data.payload;
+
+    // 2. Lógica para diferentes acciones
+    switch (action) {
+        case 'LIST_USERS':
+            try {
+                const listUsersResult = await admin.auth().listUsers(1000);
+                const users = listUsersResult.users.map(user => ({
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL,
+                }));
+                return { users };
+            } catch (error) {
+                logger.error("Error al listar usuarios:", error);
+                throw new HttpsError("internal", "No se pudo listar los usuarios.");
+            }
+        
+        case 'UPDATE_USER_PLAN':
+            try {
+                const { userId, newPlan } = payload;
+                if (!userId || !newPlan) throw new HttpsError("invalid-argument", "Faltan datos.");
+                
+                const userDocRef = db.collection("users").doc(userId);
+                await userDocRef.update({ plan: newPlan });
+                logger.info(`Plan del usuario ${userId} actualizado a ${newPlan} por el admin.`);
+                return { success: true, message: `Plan de ${userId} actualizado.` };
+
+            } catch (error) {
+                logger.error("Error al actualizar el plan del usuario:", error);
+                throw new HttpsError("internal", "No se pudo actualizar el plan.");
+            }
+
+        default:
+            throw new HttpsError("invalid-argument", "Acción no reconocida.");
+    }
+});

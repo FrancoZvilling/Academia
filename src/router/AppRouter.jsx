@@ -12,6 +12,7 @@ import NotebookPage from '../pages/NotebookPage';
 import ContactPage from '../pages/ContactPage';
 import AIPage from '../pages/AIPage';
 import PremiumPage from '../pages/PremiumPage';
+import AdminPage from '../pages/AdminPage';
 
 const AppRouter = () => {
   return (
@@ -27,6 +28,7 @@ const AppRouter = () => {
         <Route path="contacto" element={<ContactPage />} />
         <Route path="premium" element={<PremiumPage />} />
         <Route path="perfil" element={<ProfilePage />} />
+        <Route path="admin" element={<AdminPage />} />
         <Route index element={<Navigate to="/dashboard" replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
