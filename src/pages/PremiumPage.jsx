@@ -23,15 +23,15 @@ const ActivationForm = ({ onFormSubmit }) => {
                 <input {...register("user_email_estudia")} readOnly className="input input-bordered w-full bg-surface-200" />
             </div>
             <div>
-                <label className="label"><span className="label-text text-text-secondary">Email que usaste en Mercado Pago*</span></label>
-                <input {...register("user_email_mp", { required: true })} type="email" placeholder="ejemplo@email.com" className="input input-bordered w-full" />
+                <label className="label"><span className="label-text text-text-secondary">Email que usaste en Mercado Pago</span></label>
+                <input {...register("user_email_mp", { required: true })} type="email" placeholder="ejemplo@email.com" className="input input-bordered border-black w-full bg-surface-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
             </div>
              <div>
                 <label className="label"><span className="label-text text-text-secondary">Nombre y Apellido del titular de Mercado Pago</span></label>
-                <input {...register("user_name_mp")} placeholder="Juan Pérez" className="input input-bordered w-full" />
+                <input {...register("user_name_mp")} placeholder="Juan Pérez" className="input input-bordered border-black w-full bg-surface-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
             </div>
             <p className="text-xs text-text-secondary">Opcional: puedes adjuntar el comprobante de pago enviándolo por correo.</p>
-            <button type="submit" className="btn btn-primary w-full" disabled={isSubmitting}>
+            <button type="submit" className="btn btn-primary bg-primary w-full" disabled={isSubmitting}>
                 {isSubmitting ? <span className="loading loading-spinner"></span> : "Enviar Solicitud de Activación"}
             </button>
         </form>
@@ -144,7 +144,7 @@ const PremiumPage = () => {
                     <div>
                         <h3 className="font-bold text-lg text-primary">Paso 1: Realiza el Pago</h3>
                         <p className="text-sm text-text-secondary mt-1 mb-3">Haz clic en el botón para ir a la página segura de Mercado Pago y completar tu suscripción. Luego, vuelve aquí para el Paso 2.</p>
-                        <button onClick={redirectToMercadoPago} className="btn btn-secondary w-full">
+                        <button onClick={redirectToMercadoPago} className="btn btn-secondary bg-primary w-full">
                             Pagar con Mercado Pago
                         </button>
                     </div>

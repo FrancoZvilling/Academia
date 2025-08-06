@@ -117,7 +117,7 @@ const SummarizerTab = () => {
         )}
 
         {/* Columna 3 */}
-        <button type="submit" className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary" disabled={isLoading || !fileName}>
+        <button type="submit" className="btn btn-secondary bg-secondary border-secondary  hover:bg-primary" disabled={isLoading || !fileName}>
             {isLoading ? <span className="loading loading-spinner"></span> : 'Generar Resumen'}
         </button>
       </form>
@@ -249,7 +249,7 @@ const ExamGeneratorTab = () => {
         )}
 
         {/* Columna 3 */}
-        <button type="submit" className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary" disabled={isLoading || !fileName}>
+        <button type="submit" className="btn btn-secondary bg-secondary border-secondary  hover:bg-primary" disabled={isLoading || !fileName}>
           {isLoading ? <span className="loading loading-spinner"></span> : 'Generar Examen'}
         </button>
       </form>
@@ -324,10 +324,10 @@ const AIPage = () => {
         <h1 className="text-3xl font-bold">Inteligencia Artificial</h1>
       </div>
       <div role="tablist" className="tabs tabs-boxed bg-surface-100 mb-8">
-        <a role="tab" className={`tab tab-lg ${activeTab === 'summarizer' ? 'tab-active !bg-primary !text-text-accent' : ''}`} onClick={() => setActiveTab('summarizer')}>
+        <a role="tab" className={`tab tab-lg ${activeTab === 'summarizer' ? 'tab-active !bg-primary !text-text-accent' : 'tab-active'}`} onClick={() => setActiveTab('summarizer')}>
           Resúmenes
         </a>
-        <a role="tab" className={`tab tab-lg ${activeTab === 'exam' ? 'tab-active !bg-primary !text-text-accent' : ''}`} onClick={() => setActiveTab('exam')}>
+        <a role="tab" className={`tab tab-lg ${activeTab === 'exam' ? 'tab-active !bg-primary !text-text-accent' : 'tab-active'}`} onClick={() => setActiveTab('exam')}>
           Modelos de Parcial
         </a>
       </div>
