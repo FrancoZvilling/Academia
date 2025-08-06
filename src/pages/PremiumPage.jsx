@@ -27,10 +27,10 @@ const ActivationForm = ({ onFormSubmit }) => {
                 <input {...register("user_email_mp", { required: true })} type="email" placeholder="ejemplo@email.com" className="input input-bordered border-black w-full bg-surface-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
             </div>
              <div>
-                <label className="label"><span className="label-text text-text-secondary">Nombre y Apellido del titular de Mercado Pago</span></label>
+                <label className="label"><span className="label-text text-text-secondary">Nombre y Apellido de Mercado Pago</span></label>
                 <input {...register("user_name_mp")} placeholder="Juan Pérez" className="input input-bordered border-black w-full bg-surface-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
             </div>
-            <p className="text-xs text-text-secondary">Opcional: puedes adjuntar el comprobante de pago enviándolo por correo.</p>
+            
             <button type="submit" className="btn btn-primary bg-primary w-full" disabled={isSubmitting}>
                 {isSubmitting ? <span className="loading loading-spinner"></span> : "Enviar Solicitud de Activación"}
             </button>
@@ -138,7 +138,7 @@ const PremiumPage = () => {
             <Modal
                 isOpen={isInstructionsModalOpen}
                 onClose={() => setIsInstructionsModalOpen(false)}
-                title="Sincronización de Cuenta (Solo la primera vez)"
+                title="Sincronización de cuenta (por única vez)"
             >
                 <div className="space-y-6">
                     <div>
@@ -148,7 +148,7 @@ const PremiumPage = () => {
                             Pagar con Mercado Pago
                         </button>
                     </div>
-                    <div className="divider">Luego, completa el Paso 2</div>
+                    
                     <div>
                         <h3 className="font-bold text-lg text-primary">Paso 2: Informa tu Pago</h3>
                         <p className="text-sm text-text-secondary mt-1 mb-3">Una vez completado el pago, llena este formulario para que podamos sincronizar tu cuenta. Esto es solo por tu primera vez, los cobros siguientes serán automáticos.</p>
