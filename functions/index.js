@@ -216,11 +216,6 @@ TEXTO A ANALIZAR:
 
 
 // --- FUNCIÓN PARA CREAR LINK DE SUSCRIPCIÓN (V2) ---
-// ... (Tus importaciones no cambian)
-
-// ... (Tus otras funciones no cambian)
-
-
 // --- FUNCIÓN PARA CREAR LINK DE SUSCRIPCIÓN (CON DEPURACIÓN AGRESIVA) ---
 exports.createSubscriptionLink = onCall({ 
     secrets: [mpAccessToken],
