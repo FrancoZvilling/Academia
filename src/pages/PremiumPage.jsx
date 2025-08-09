@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import { toast } from 'react-toastify';
 import Modal from '../components/ui/Modal';
 import emailjs from '@emailjs/browser';
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 // --- SUB-COMPONENTE: Formulario de Activación ---
 const ActivationForm = ({ onFormSubmit }) => {
@@ -23,7 +24,7 @@ const ActivationForm = ({ onFormSubmit }) => {
                 <input {...register("user_email_estudia")} readOnly className="input input-bordered w-full bg-surface-200" />
             </div>
             <div>
-                <label className="label"><span className="label-text text-text-secondary">Email que usaste en Mercado Pago</span></label>
+                <label className="label"><span className="label-text text-text-secondary">Email que usaste en Mercado Pago*</span></label>
                 <input {...register("user_email_mp", { required: true })} type="email" placeholder="ejemplo@email.com" className="input input-bordered border-black w-full bg-surface-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
             </div>
              <div>
@@ -41,14 +42,40 @@ const ActivationForm = ({ onFormSubmit }) => {
 
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA ---
 const PremiumPage = () => {
+    const [isLoading, setIsLoading] = useState(false);
     const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState(false);
     
-    // El handler del botón principal ahora solo abre el modal
-    const handleSubscribeClick = () => {
-        setIsInstructionsModalOpen(true);
+    const handleSubscribeClick = async () => {
+        setIsLoading(true);
+        const mode = import.meta.env.VITE_SUBSCRIPTION_MODE;
+
+        if (mode === 'API') {
+            // --- FLUJO DE API ---
+            console.log("Modo de suscripción: API");
+            try {
+                const functions = getFunctions(undefined, "southamerica-east1");
+                const createSubscriptionLink = httpsCallable(functions, 'createSubscriptionLink');
+                const result = await createSubscriptionLink();
+                const checkoutUrl = result.data.url;
+                
+                if (checkoutUrl) {
+                    window.location.href = checkoutUrl;
+                } else {
+                    throw new Error("No se recibió una URL de pago desde el servidor.");
+                }
+            } catch (error) {
+                console.error("Error al obtener el link de suscripción (API):", error);
+                toast.error("No se pudo iniciar el proceso de pago con la API.");
+                setIsLoading(false);
+            }
+        } else {
+            // --- FLUJO MANUAL ---
+            console.log("Modo de suscripción: MANUAL");
+            setIsInstructionsModalOpen(true);
+            setIsLoading(false);
+        }
     };
 
-    // Handler para el formulario dentro del modal
     const handleFormSubmit = async (data) => {
         try {
             await emailjs.send(
@@ -65,7 +92,6 @@ const PremiumPage = () => {
         }
     };
     
-    // Handler para el botón de pago dentro del modal
     const redirectToMercadoPago = () => {
         const subscriptionLink = import.meta.env.VITE_MERCADOPAGO_SUB_LINK;
         if (subscriptionLink) {
@@ -120,8 +146,9 @@ const PremiumPage = () => {
                     <button 
                         onClick={handleSubscribeClick}
                         className="btn btn-primary btn-lg w-full max-w-md bg-primary text-text-accent shadow-lg hover:bg-secondary"
+                        disabled={isLoading}
                     >
-                        ¡Hacerme Premium Ahora!
+                        {isLoading ? <span className="loading loading-spinner"></span> : '¡Hacerme Premium Ahora!'}
                     </button>
 
                     <p className="text-xs text-text-secondary mt-2">Cancelación fácil en cualquier momento.</p>

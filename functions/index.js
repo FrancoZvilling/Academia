@@ -215,30 +215,32 @@ TEXTO A ANALIZAR:
 });
 
 
-// --- FUNCIÓN PARA CREAR LINK DE SUSCRIPCIÓN (CORREGIDA) ---
+// --- FUNCIÓN PARA CREAR LINK DE SUSCRIPCIÓN (V2) ---
+// ... (Tus importaciones no cambian)
+
+// ... (Tus otras funciones no cambian)
+
+
+// --- FUNCIÓN PARA CREAR LINK DE SUSCRIPCIÓN (CON DEPURACIÓN AGRESIVA) ---
 exports.createSubscriptionLink = onCall({ 
     secrets: [mpAccessToken],
     region: "southamerica-east1" 
 }, async (request) => {
+    // 1. Loguear inicio y datos del usuario
     logger.info("Iniciando 'createSubscriptionLink'...");
     if (!request.auth) {
         logger.error("Error: La función fue llamada sin autenticación.");
         throw new HttpsError("unauthenticated", "Debes estar logueado para suscribirte.");
     }
     const userId = request.auth.uid;
-    
-    // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
-    // Obtenemos el registro completo del usuario desde Firebase Auth para acceder a su email.
-    const userRecord = await admin.auth().getUser(userId);
-    const userEmail = userRecord.email;
-    // ------------------------------------
-
+    const userEmail = request.auth.token.email;
     logger.info(`Llamada autenticada por usuario: ${userId} (${userEmail})`);
 
     if (!userEmail) {
-        throw new HttpsError("failed-precondition", "Tu cuenta no tiene un email asociado.");
+        throw new HttpsError("failed-precondition", "El usuario no tiene un email asociado.");
     }
 
+    // 2. Loguear el Access Token (solo los primeros caracteres por seguridad)
     const accessToken = mpAccessToken.value();
     if (!accessToken) {
         logger.error("FATAL: El secreto MERCADOPAGO_ACCESS_TOKEN no se pudo leer.");
@@ -246,6 +248,7 @@ exports.createSubscriptionLink = onCall({
     }
     logger.info(`Access Token cargado correctamente. Comienza con: ${accessToken.substring(0, 15)}...`);
 
+    // 3. Configurar el cliente de Mercado Pago
     const client = new mercadopago.MercadoPagoConfig({ 
         accessToken: accessToken,
         options: { timeout: 5000 }
@@ -267,9 +270,13 @@ exports.createSubscriptionLink = onCall({
     };
 
     try {
+        // 4. Loguear los datos exactos que se envían a Mercado Pago
         logger.info("Enviando los siguientes datos a la API de Mercado Pago:", JSON.stringify(planData, null, 2));
+        
         const result = await preapproval.create({ body: planData });
+        
         logger.info("Respuesta exitosa recibida de Mercado Pago:", result);
+        
         if (result && result.init_point) {
             return { url: result.init_point };
         } else {
@@ -277,6 +284,7 @@ exports.createSubscriptionLink = onCall({
             throw new Error("Respuesta inválida de Mercado Pago.");
         }
     } catch (error) {
+        // 5. Loguear el error detallado que hemos estado buscando
         const mpError = error.cause || error;
         logger.error("---- ERROR DETALLADO DE MERCADO PAGO ----", mpError);
         const errorMessage = mpError.message || "No se pudo generar el link de pago.";
