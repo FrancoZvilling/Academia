@@ -24,7 +24,7 @@ const ActivationForm = ({ onFormSubmit }) => {
                 <input {...register("user_email_estudia")} readOnly className="input input-bordered w-full bg-surface-200" />
             </div>
             <div>
-                <label className="label"><span className="label-text text-text-secondary">Email que usaste en Mercado Pago*</span></label>
+                <label className="label"><span className="label-text text-text-secondary">Email que usas en Mercado Pago</span></label>
                 <input {...register("user_email_mp", { required: true })} type="email" placeholder="ejemplo@email.com" className="input input-bordered border-black w-full bg-surface-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
             </div>
              <div>
