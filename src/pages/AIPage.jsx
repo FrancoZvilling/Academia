@@ -5,7 +5,7 @@ import { FaFileUpload, FaSpinner, FaFilePdf, FaDownload, FaInfoCircle, FaFileWor
 import * as pdfjsLib from 'pdfjs-dist';
 import { callGenerateSummary, callGenerateExam } from '../services/firestoreService';
 import { marked } from 'marked';
-import { Document, Packer, Paragraph, TextRun, AlignmentType } from 'docx';
+import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } from 'docx';
 import { saveAs } from 'file-saver';
 import Modal from '../components/ui/Modal';
 import AIInstructions from '../components/ui/AIInstructions';
@@ -57,21 +57,103 @@ const SummarizerTab = () => {
     }
   };
 
-  const handleDownloadDOCX = () => {
+ const handleDownloadDOCX = () => {
     if (!summary) return;
     toast.info("Generando .docx...");
-    const lines = summary.split('\n').map(line => {
-      if (line.startsWith('###')) return new Paragraph({ children: [new TextRun({ text: line.replace('###', '').trim(), bold: true, size: 28 })], spacing: { before: 240, after: 120 } });
-      if (line.startsWith('##')) return new Paragraph({ children: [new TextRun({ text: line.replace('##', '').trim(), bold: true, size: 32 })], spacing: { before: 360, after: 180 } });
-      if (line.startsWith('*')) return new Paragraph({ text: line.replace('*', '').trim(), bullet: { level: 0 } });
-      return new Paragraph({ text: line.trim() });
+
+    const docChildren = summary.split('\n').filter(line => line.trim() !== '').map(line => {
+        const trimmedLine = line.trim();
+
+        // Manejo de encabezados
+        if (trimmedLine.startsWith('## ')) {
+            return new Paragraph({
+                children: [new TextRun({ text: trimmedLine.substring(3), bold: true, size: 32 })],
+                heading: HeadingLevel.HEADING_2,
+                spacing: { before: 360, after: 180 }
+            });
+        }
+        if (trimmedLine.startsWith('### ')) {
+            return new Paragraph({
+                children: [new TextRun({ text: trimmedLine.substring(4), bold: true, size: 28 })],
+                heading: HeadingLevel.HEADING_3,
+                spacing: { before: 240, after: 120 }
+            });
+        }
+        
+        // Manejo de ítems de lista
+        if (trimmedLine.startsWith('* ')) {
+            return new Paragraph({
+                children: parseMarkdownBold(trimmedLine.substring(2)),
+                bullet: { level: 0 },
+                spacing: { after: 120 }
+            });
+        }
+
+        // Párrafo normal
+        return new Paragraph({
+            children: parseMarkdownBold(trimmedLine),
+            spacing: { after: 120 }
+        });
     });
-    const doc = new Document({ sections: [{ children: [new Paragraph({ children: [new TextRun({ text: `Resumen de: ${fileName || 'Documento'}`, bold: true, size: 40 })], alignment: AlignmentType.CENTER, spacing: { after: 480 } }), ...lines], }] });
+
+    // Función para procesar **negritas** en texto
+    function parseMarkdownBold(text) {
+        const textRuns = [];
+        const regex = /\*\*(.+?)\*\*/g;
+        let lastIndex = 0;
+        let match;
+
+        while ((match = regex.exec(text)) !== null) {
+            // Texto normal antes de la negrita
+            if (match.index > lastIndex) {
+                textRuns.push(new TextRun({
+                    text: text.substring(lastIndex, match.index),
+                    bold: false,
+                    size: 24
+                }));
+            }
+
+            // Texto en negrita (sin los **)
+            textRuns.push(new TextRun({
+                text: match[1],
+                bold: true,
+                size: 24
+            }));
+
+            lastIndex = regex.lastIndex;
+        }
+
+        // Texto restante después de la última negrita
+        if (lastIndex < text.length) {
+            textRuns.push(new TextRun({
+                text: text.substring(lastIndex),
+                bold: false,
+                size: 24
+            }));
+        }
+
+        return textRuns;
+    }
+
+    const doc = new Document({
+        sections: [{
+            children: [
+                new Paragraph({
+                    children: [new TextRun({ text: `Resumen de: ${fileName || 'Documento'}`, bold: true, size: 40 })],
+                    alignment: AlignmentType.CENTER,
+                    spacing: { after: 480 }
+                }),
+                ...docChildren
+            ],
+        }],
+    });
+    
     Packer.toBlob(doc).then(blob => {
-      saveAs(blob, `Resumen - ${fileName.replace('.pdf', '') || 'Estud-IA'}.docx`);
-      toast.success(".docx descargado.");
+        saveAs(blob, `Resumen - ${fileName.replace('.pdf', '') || 'Estud-IA'}.docx`);
+        toast.success(".docx descargado.");
     });
-  };
+};
+
 
   const handleCopyText = () => {
     if (!summary) return;

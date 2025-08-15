@@ -47,4 +47,15 @@ export default defineConfig({
       }
     })
   ],
+
+define: {
+    'global': 'window'
+  },
+  
+  resolve: {
+    alias: {
+      events: 'events',
+    },
+  },
+
 })
