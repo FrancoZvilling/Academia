@@ -170,7 +170,9 @@ Cada objeto debe tener EXACTAMENTE la siguiente estructura:
 Todas las preguntas deben basarse en el contenido del texto, pero redactadas como lo haría un profesor.
 Las preguntas deben cubrir distintas partes y conceptos importantes del texto.
 Mezcla preguntas de distintos niveles de dificultad (fáciles, intermedias, difíciles).
-Mezcla las preguntas del multiple choice para que no se repitan patrones (ejemplo: no pongas siempre la respuesta correcta en la opción 'a').
+Mezcla las preguntas del multiple choice para que no se repitan patrones (ejemplo: no pongas siempre la respuesta correcta en la opción 'a'). 
+Distribuye las respuestas correctas entre 'a', 'b', 'c' y 'd' de forma aleatoria.
+Evita el exeso de respuestas correctas en una misma opción (ejemplo: no pongas 5 respuestas correctas en 'a' y solo 1 en 'b').
 
 TEXTO A ANALIZAR:
     ---
