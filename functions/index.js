@@ -169,6 +169,8 @@ Cada objeto debe tener EXACTAMENTE la siguiente estructura:
 { "question": "El texto completo de la pregunta", "options": ["Texto opción A", "Texto opción B", "Texto opción C", "Texto opción D"], "answer": "La letra de la opción correcta en minúscula, ej: 'a', 'b', 'c' o 'd'" }
 Todas las preguntas deben basarse en el contenido del texto, pero redactadas como lo haría un profesor.
 Las preguntas deben cubrir distintas partes y conceptos importantes del texto.
+Mezcla preguntas de distintos niveles de dificultad (fáciles, intermedias, difíciles).
+Mezcla las preguntas del multiple choice para que no se repitan patrones (ejemplo: no pongas siempre la respuesta correcta en la opción 'a').
 
 TEXTO A ANALIZAR:
     ---
