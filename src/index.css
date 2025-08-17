@@ -140,6 +140,38 @@ body {
   background-color: rgb(var(--color-surface-200));
 }
 
+/* --- CORRECCIÓN FINAL Y DEFINITIVA PARA EL COLOR DEL RESUMEN --- */
+
+/* 
+  Sobrescribimos los colores de texto por defecto que aplica la clase 'prose'
+  para que usen nuestras variables de tema.
+*/
+.prose {
+    --tw-prose-body: rgb(var(--color-text-primary));
+    --tw-prose-headings: rgb(var(--color-text-primary));
+    --tw-prose-lead: rgb(var(--color-text-secondary));
+    --tw-prose-links: rgb(var(--color-primary));
+    --tw-prose-bold: rgb(var(--color-text-primary));
+    --tw-prose-counters: rgb(var(--color-text-secondary));
+    --tw-prose-bullets: rgb(var(--color-text-secondary));
+}
+
+/* 
+  Hacemos lo mismo para el modo oscuro, asegurando que los colores
+  se inviertan correctamente según nuestro tema.
+*/
+.dark .prose {
+    --tw-prose-body: rgb(var(--color-text-primary));
+    --tw-prose-headings: rgb(var(--color-text-primary));
+    --tw-prose-lead: rgb(var(--color-text-secondary));
+    --tw-prose-links: rgb(var(--color-primary));
+    --tw-prose-bold: rgb(var(--color-text-primary));
+    --tw-prose-counters: rgb(var(--color-text-secondary));
+    --tw-prose-bullets: rgb(var(--color-text-secondary));
+}
+
+/* ------------------------------------------------------------- */
+
 
 
 
