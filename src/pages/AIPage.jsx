@@ -11,6 +11,7 @@ import Modal from '../components/ui/Modal';
 import AIInstructions from '../components/ui/AIInstructions';
 import { useAuth } from '../contexts/AuthContext'; 
 import { Link } from 'react-router-dom';
+import { shuffleExam } from '../utils/examUtils';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.mjs`;
 
@@ -237,12 +238,17 @@ const ExamGeneratorTab = () => {
 
   const onGenerateExam = async (data) => {
     const file = data.pdfFile[0];
-    if (!file) { toast.warn("Por favor, selecciona un archivo PDF."); return; }
+    if (!file) {
+        toast.warn("Por favor, selecciona un archivo PDF.");
+        return;
+    }
+    
     setIsLoading(true);
     setQuestions([]);
     setIsCorrected(false);
     setScore(0);
     resetExam();
+    
     try {
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
@@ -252,17 +258,29 @@ const ExamGeneratorTab = () => {
             const textContent = await page.getTextContent();
             fullText += textContent.items.map(item => item.str).join(' ');
         }
+
         toast.info("La IA está generando tu examen...");
         const rawResponse = await callGenerateExam(fullText);
+
         const firstBracket = rawResponse.indexOf('[');
         const lastBracket = rawResponse.lastIndexOf(']');
+
         if (firstBracket === -1 || lastBracket === -1) {
             throw new Error("La respuesta de la IA no contiene un formato JSON válido.");
         }
+
         const jsonString = rawResponse.substring(firstBracket, lastBracket + 1);
         const parsedQuestions = JSON.parse(jsonString);
-        setQuestions(parsedQuestions);
+
+        // --- ¡CAMBIO APLICADO AQUÍ! ---
+        // Barajamos las preguntas antes de guardarlas en el estado.
+        const shuffledQuestions = shuffleExam(parsedQuestions);
+        
+        setQuestions(shuffledQuestions);
+        // -----------------------------
+        
         toast.success("¡Examen generado! Es hora de practicar.");
+
     } catch (error) {
         console.error("Error al procesar el examen:", error);
         if (error instanceof SyntaxError) {
@@ -273,7 +291,7 @@ const ExamGeneratorTab = () => {
     } finally {
         setIsLoading(false);
     }
-  };
+};
 
   const onCorrectExam = () => {
     const userAnswers = getValues();
