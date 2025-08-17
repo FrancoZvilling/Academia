@@ -140,25 +140,7 @@ body {
   background-color: rgb(var(--color-surface-200));
 }
 
-/* --- CLASE PERSONALIZADA PARA EL CONTENIDO DEL RESUMEN --- */
 
-/* Por defecto (temas claros), forzamos los colores del texto */
-.prose-estudia h1, .prose-estudia h2, .prose-estudia h3, .prose-estudia h4, .prose-estudia strong {
-  color: #1f2937; /* slate-800 */
-}
-
-.prose-estudia p, .prose-estudia li, .prose-estudia a {
-  color: #374151; /* slate-700 */
-}
-
-/* Cuando nuestro tema oscuro (.dark) está activo, permitimos la inversión de colores */
-.dark .prose-estudia h1, .dark .prose-estudia h2, .dark .prose-estudia h3, .dark .prose-estudia h4, .dark .prose-estudia strong {
-  color: #f3f4f6; /* gray-100 */
-}
-
-.dark .prose-estudia p, .dark .prose-estudia li, .dark .prose-estudia a {
-  color: #d1d5db; /* gray-300 */
-}
 
 
 

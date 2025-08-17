@@ -211,7 +211,7 @@ const SummarizerTab = () => {
             <h2 className="text-2xl font-bold">Tu Resumen:</h2>
             <div className="flex items-center gap-2"><button onClick={handleCopyText} className="btn btn-ghost btn-sm" title="Copiar Texto"><FaCopy className="mr-2" />Copiar</button><button onClick={handleDownloadDOCX} className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary" title="Descargar como Word"><FaFileWord className="mr-2" />Descargar .docx</button></div>
           </div>
-          <div ref={summaryRef} className="p-6 bg-surface-100 rounded-lg shadow-md"><div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: marked.parse(summary) }} /></div>
+          <div ref={summaryRef} className="p-6 bg-surface-100 rounded-lg shadow-md"><div className="prose dark:prose-invert max-w-none text-black dark:text-gray-200" dangerouslySetInnerHTML={{ __html: marked.parse(summary) }} /></div>
         </div>
       )}
       <Modal isOpen={isInstructionsModalOpen} onClose={() => setIsInstructionsModalOpen(false)} title="Guía de Uso de la IA"><div className="max-h-[60vh] overflow-y-auto p-1 pr-4"><AIInstructions /></div></Modal>
