@@ -140,12 +140,9 @@ body {
   background-color: rgb(var(--color-surface-200));
 }
 
-/* --- CORRECCIÓN FINAL Y DEFINITIVA PARA EL COLOR DEL RESUMEN --- */
+/* --- CORRECCIÓN PARA EL COLOR DEL RESUMEN --- */
 
-/* 
-  Sobrescribimos los colores de texto por defecto que aplica la clase 'prose'
-  para que usen nuestras variables de tema.
-*/
+
 .prose {
     --tw-prose-body: rgb(var(--color-text-primary));
     --tw-prose-headings: rgb(var(--color-text-primary));
@@ -154,12 +151,17 @@ body {
     --tw-prose-bold: rgb(var(--color-text-primary));
     --tw-prose-counters: rgb(var(--color-text-secondary));
     --tw-prose-bullets: rgb(var(--color-text-secondary));
+    --tw-prose-hr: rgb(var(--color-surface-200));
+    --tw-prose-quotes: rgb(var(--color-text-primary));
+    --tw-prose-quote-borders: rgb(var(--color-surface-200));
+    --tw-prose-captions: rgb(var(--color-text-secondary));
+    --tw-prose-code: rgb(var(--color-text-primary));
+    --tw-prose-pre-code: rgb(var(--color-text-accent));
+    --tw-prose-pre-bg: rgb(var(--color-text-primary));
+    --tw-prose-th-borders: rgb(var(--color-surface-200));
+    --tw-prose-td-borders: rgb(var(--color-surface-200));
 }
 
-/* 
-  Hacemos lo mismo para el modo oscuro, asegurando que los colores
-  se inviertan correctamente según nuestro tema.
-*/
 .dark .prose {
     --tw-prose-body: rgb(var(--color-text-primary));
     --tw-prose-headings: rgb(var(--color-text-primary));
@@ -168,9 +170,17 @@ body {
     --tw-prose-bold: rgb(var(--color-text-primary));
     --tw-prose-counters: rgb(var(--color-text-secondary));
     --tw-prose-bullets: rgb(var(--color-text-secondary));
+    --tw-prose-hr: rgb(var(--color-surface-200));
+    --tw-prose-quotes: rgb(var(--color-text-primary));
+    --tw-prose-quote-borders: rgb(var(--color-surface-200));
+    --tw-prose-captions: rgb(var(--color-text-secondary));
+    --tw-prose-code: rgb(var(--color-text-primary));
+    --tw-prose-pre-code: rgb(var(--color-text-accent));
+    --tw-prose-pre-bg: rgb(var(--color-text-primary));
+    --tw-prose-th-borders: rgb(var(--color-surface-200));
+    --tw-prose-td-borders: rgb(var(--color-surface-200));
 }
 
-/* ------------------------------------------------------------- */
 
 
 
