@@ -156,23 +156,32 @@ exports.generateExam = onCall({ secrets: [geminiApiKey] }, async (request) => {
     TAREA: Analiza el siguiente texto de un apunte universitario y genera un examen de opción múltiple (multiple choice) de 10 preguntas.
 
     INSTRUCCIONES CLAVE:
-Crea preguntas de comprensión y aplicación del conocimiento, como las que haría un profesor para evaluar si el alumno entendió el contenido.
-Nunca hagas preguntas que hagan referencia explícita al texto, tablas, figuras o secciones (ejemplo: "según la tabla 2", "como menciona el párrafo 3").
-Formula preguntas como si fueras un profesor que enseña el tema, no como un lector del texto.
-Cada pregunta debe ser clara, relevante y tener una sola respuesta correcta, sin ambigüedades.
-Evita preguntas triviales o que solo pidan repetir frases del texto.
+-Crea preguntas de comprensión y aplicación del conocimiento, como las que haría un profesor para evaluar si el alumno entendió el contenido.
+-Nunca hagas preguntas que hagan referencia explícita al texto, tablas, figuras o secciones (ejemplo: "según la tabla 2", "como menciona el párrafo 3").
+-Formula preguntas como si fueras un profesor que enseña el tema, no como un lector del texto.
+-Cada pregunta debe ser clara, relevante y tener una sola respuesta correcta, sin ambigüedades.
+-Evita preguntas triviales o que solo pidan repetir frases del texto.
+
+Al generar las preguntas de opción múltiple, asegurate de que:
+-Las respuestas incorrectas no sean obvias ni triviales.
+-Los distractores se construyan mezclando conceptos, definiciones o ejemplos de otras partes del mismo texto, para que sean plausibles aunque incorrectos.
+-No todos los distractores deben ser definiciones inventadas, algunos deben ser reales pero aplicados en un contexto equivocado.
+-Variá entre preguntas fáciles, medias y difíciles, pero en las fáciles evitá que la respuesta correcta sea demasiado evidente.
+-En las difíciles, asegurate de que todas las opciones requieran atención y comprensión del contenido, no solo memoria mecánica.
+-Las preguntas deben cubrir distintas partes y conceptos importantes del texto.
+-Mezcla preguntas de distintos niveles de dificultad (fáciles, intermedias, difíciles).
+-Mezcla las preguntas del multiple choice para que no se repitan patrones (ejemplo: no pongas siempre la respuesta correcta en la opción 'a'). 
+-Distribuye las respuestas correctas entre 'a', 'b', 'c' y 'd' de forma aleatoria.
+-Evita el exeso de respuestas correctas en una misma opción (ejemplo: no pongas 5 respuestas correctas en 'a' y solo 1 en 'b').
+-Todas las preguntas deben basarse en el contenido del texto, pero redactadas como lo haría un profesor.
 
 REGLAS ESTRICTAS DE SALIDA:
 Tu respuesta debe ser EXCLUSIVAMENTE un string JSON válido, sin ningún texto antes o después.
 El JSON debe ser un array de 10 objetos.
 Cada objeto debe tener EXACTAMENTE la siguiente estructura:
 { "question": "El texto completo de la pregunta", "options": ["Texto opción A", "Texto opción B", "Texto opción C", "Texto opción D"], "answer": "La letra de la opción correcta en minúscula, ej: 'a', 'b', 'c' o 'd'" }
-Todas las preguntas deben basarse en el contenido del texto, pero redactadas como lo haría un profesor.
-Las preguntas deben cubrir distintas partes y conceptos importantes del texto.
-Mezcla preguntas de distintos niveles de dificultad (fáciles, intermedias, difíciles).
-Mezcla las preguntas del multiple choice para que no se repitan patrones (ejemplo: no pongas siempre la respuesta correcta en la opción 'a'). 
-Distribuye las respuestas correctas entre 'a', 'b', 'c' y 'd' de forma aleatoria.
-Evita el exeso de respuestas correctas en una misma opción (ejemplo: no pongas 5 respuestas correctas en 'a' y solo 1 en 'b').
+
+
 
 TEXTO A ANALIZAR:
     ---
