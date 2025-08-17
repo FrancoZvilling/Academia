@@ -171,10 +171,7 @@ Al generar las preguntas de opción múltiple, asegurate de que:
 -Variá entre preguntas fáciles, medias y difíciles, pero en las fáciles evitá que la respuesta correcta sea demasiado evidente.
 -En las difíciles, asegurate de que todas las opciones requieran atención y comprensión del contenido, no solo memoria mecánica.
 -Las preguntas deben cubrir distintas partes y conceptos importantes del texto.
--Mezcla preguntas de distintos niveles de dificultad (fáciles, intermedias, difíciles).
--Mezcla las preguntas del multiple choice para que no se repitan patrones (ejemplo: no pongas siempre la respuesta correcta en la opción 'a'). 
--Distribuye las respuestas correctas entre 'a', 'b', 'c' y 'd' de forma aleatoria.
--Evita el exeso de respuestas correctas en una misma opción (ejemplo: no pongas 5 respuestas correctas en 'a' y solo 1 en 'b').
+-Mezcla preguntas de distintos niveles de dificultad (fáciles, intermedias, difíciles). 
 -Todas las preguntas deben basarse en el contenido del texto, pero redactadas como lo haría un profesor.
 
 CONTROL DE DISTRIBUCIÓN DE RESPUESTAS:
