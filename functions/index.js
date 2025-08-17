@@ -105,9 +105,11 @@ El usuario necesita un resumen exhaustivo para prepararse para un examen detalla
 3.  **CITAS Y AUTORES:** Preserva todas las menciones a autores y sus teorías. Si el texto original cita una frase, mantén la cita.
 
 4.  **ESTRUCTURA JERÁRQUICA:** A medida que procesas el texto, organízalo usando la siguiente estructura de formato. Esto es obligatorio para la legibilidad.
+    -   El cuerpo principal de cada sección, bajo los títulos y subtítulos, debe estar redactado en párrafos completos y fluidos.
     -   Usa ## para los títulos de los temas principales.
     -   Usa ### para los subtítulos dentro de un tema.
     -   Usa * para crear listas con viñetas para enumerar conceptos o detalles.
+    -   Prohibición: No conviertas la totalidad del resumen o secciones enteras en una lista de viñetas. El formato principal debe ser de prosa (párrafos). Puedes usar las viñetas cuando sea necesario para enumerar conceptos o detalles específicos, pero no para todo el contenido.
     -   Usa **negrita** para resaltar conceptos clave, nombres de autores y fechas importantes.
 
 5.  **CRITERIO DE EXTENSIÓN:**
