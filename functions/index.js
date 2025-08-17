@@ -175,6 +175,13 @@ Al generar las preguntas de opción múltiple, asegurate de que:
 -Evita el exeso de respuestas correctas en una misma opción (ejemplo: no pongas 5 respuestas correctas en 'a' y solo 1 en 'b').
 -Todas las preguntas deben basarse en el contenido del texto, pero redactadas como lo haría un profesor.
 
+CONTROL DE DISTRIBUCIÓN DE RESPUESTAS:
+-Al generar las 10 preguntas, asegúrate de que la letra de la respuesta correcta esté distribuida de manera equilibrada entre 'a', 'b', 'c' y 'd'. 
+-No concentres la mayoría de respuestas correctas en una misma opción (ejemplo: no más de 3 respuestas en la misma letra). 
+-Si al terminar detectas que hay un desbalance, reasigna de forma interna las letras de las respuestas correctas hasta lograr una distribución equitativa (aproximadamente 2 o 3 en cada letra). 
+-La reasignación de letras no debe alterar el contenido de las opciones, solo cuál de ellas es considerada la correcta. 
+
+
 REGLAS ESTRICTAS DE SALIDA:
 Tu respuesta debe ser EXCLUSIVAMENTE un string JSON válido, sin ningún texto antes o después.
 El JSON debe ser un array de 10 objetos.
