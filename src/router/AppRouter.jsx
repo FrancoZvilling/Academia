@@ -13,6 +13,7 @@ import ContactPage from '../pages/ContactPage';
 import AIPage from '../pages/AIPage';
 import PremiumPage from '../pages/PremiumPage';
 import AdminPage from '../pages/AdminPage';
+import NotificationsPage from '../pages/NotificationsPage';
 
 const AppRouter = () => {
   return (
@@ -25,6 +26,7 @@ const AppRouter = () => {
         <Route path="eventos" element={<GeneralEventsPage />} />
         <Route path="libreta" element={<NotebookPage />} />
         <Route path="ia" element={<AIPage />} />
+        <Route path="notificaciones" element={<NotificationsPage />} />
         <Route path="contacto" element={<ContactPage />} />
         <Route path="premium" element={<PremiumPage />} />
         <Route path="perfil" element={<ProfilePage />} />

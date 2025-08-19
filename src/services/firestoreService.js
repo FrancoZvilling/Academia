@@ -298,3 +298,31 @@ export const saveFcmToken = (userId, token) => {
         fcmTokens: arrayUnion(token)
     });
 };
+
+// --- NUEVAS FUNCIONES PARA EL CENTRO DE NOTIFICACIONES ---
+
+/**
+ * Obtiene las notificaciones de un usuario, ordenadas por fecha.
+ * @param {string} userId
+ */
+export const getNotifications = (userId) => {
+    const notificationsRef = collection(db, 'users', userId, 'notifications');
+    const q = query(notificationsRef, orderBy('createdAt', 'desc')); // Las más nuevas primero
+    return getDocs(q);
+};
+
+/**
+ * Marca todas las notificaciones no leídas de un usuario como leídas.
+ * @param {string} userId
+ * @param {Array<string>} unreadIds - IDs de las notificaciones a marcar.
+ */
+export const markNotificationsAsRead = (userId, unreadIds) => {
+    if (unreadIds.length === 0) return Promise.resolve();
+    
+    const batch = writeBatch(db);
+    unreadIds.forEach(id => {
+        const docRef = doc(db, 'users', userId, 'notifications', id);
+        batch.update(docRef, { read: true });
+    });
+    return batch.commit();
+};

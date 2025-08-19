@@ -4,7 +4,7 @@ import ThemeSwitcher from "../ui/ThemeSwitcher";
 import { FaTachometerAlt, FaCalendarAlt, FaUserCircle, FaSignOutAlt, FaRegCalendarAlt, FaBookOpen, FaTimes, FaRobot } from "react-icons/fa";
 import { IoSchool } from "react-icons/io5";
 import { useAuth } from "../../contexts/AuthContext";
-import { FaEnvelope, FaStar } from "react-icons/fa";
+import { FaEnvelope, FaStar, FaBell } from "react-icons/fa";
 
 // El componente ahora recibe 'onClose' (para el menú móvil) y 'onConfirmLogout' (para el botón)
 const Sidebar = ({ onClose, onConfirmLogout }) => {
@@ -66,6 +66,10 @@ const Sidebar = ({ onClose, onConfirmLogout }) => {
         <NavLink to="/ia" className={getNavLinkClass}>
             <FaRobot />
             <span>Inteligencia Artificial</span>
+        </NavLink>
+          <NavLink to="/notificaciones" className={`hidden lg:flex ${getNavLinkClass({ isActive: location.pathname === '/notificaciones' })}`}>
+            <FaBell />
+            <span>Notificaciones</span>
           </NavLink>
         <NavLink to="/contacto" className={getNavLinkClass}> {/* <-- Añadir enlace */}
           <FaEnvelope />
