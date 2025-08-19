@@ -7,6 +7,7 @@ const { defineSecret } = require("firebase-functions/params");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const admin = require("firebase-admin");
 const mercadopago = require("mercadopago");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 
 // --- INICIALIZACIÓN ---
 admin.initializeApp();
@@ -362,3 +363,101 @@ exports.adminTasks = onCall({
             throw new HttpsError("invalid-argument", "Acción no reconocida.");
     }
 });
+
+// --- ¡NUEVA FUNCIÓN PROGRAMADA PARA NOTIFICACIONES! ---
+
+// Se ejecutará cada hora, en el minuto 0. ("0 * * * *")
+exports.checkScheduledNotifications = onSchedule({
+    schedule: "every 1 hours",
+    region: "southamerica-east1"
+}, async (event) => {
+    logger.info("Ejecutando chequeo de notificaciones programadas...");
+
+    const now = new Date();
+    
+    // 1. Obtener todos los usuarios
+    const usersSnap = await db.collection('users').get();
+    
+    for (const userDoc of usersSnap.docs) {
+        const user = userDoc.data();
+        const userId = user.uid;
+
+        if (!user.fcmTokens || user.fcmTokens.length === 0) {
+            continue; // Si el usuario no tiene tokens, pasamos al siguiente
+        }
+
+        // --- Lógica de comprobación para cada tipo de recordatorio ---
+
+        // A. Eventos de Materia y Generales (1 semana, 3 días, 24 horas, 12 horas antes)
+        const eventsCollections = ['events', 'generalEvents'];
+        for (const coll of eventsCollections) {
+            const eventsSnap = await db.collectionGroup(coll).where('userId', '==', userId).get();
+
+            eventsSnap.forEach(eventDoc => {
+                const eventData = eventDoc.data();
+                const eventStart = eventData.start.toDate();
+                const hoursUntil = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+                let message = null;
+                // Comprobamos si estamos en el rango correcto (ej. entre 23 y 24 horas)
+                if (hoursUntil > 23 && hoursUntil <= 24) {
+                    message = `RECORDATORIO: Mañana tienes "${eventData.title}"`;
+                } else if (hoursUntil > 71 && hoursUntil <= 72) {
+                    message = `AVISO: En 3 días tienes "${eventData.title}"`;
+                } else if (hoursUntil > 167 && hoursUntil <= 168) {
+                    message = `AVISO: En una semana tienes "${eventData.title}"`;
+                }
+                // Añadimos el chequeo para 12 horas solo para eventos generales
+                if (coll === 'generalEvents' && hoursUntil > 11 && hoursUntil <= 12) {
+                    message = `RECORDATORIO: En 12 horas: "${eventData.title}"`;
+                }
+
+                if (message) {
+                    sendNotificationToUser(userId, user.fcmTokens, "Recordatorio de Evento", message);
+                }
+            });
+        }
+        
+        // B. Clases (12 horas antes)
+        // (Esta lógica es más compleja, la implementaremos en una mejora futura si es necesario,
+        // ya que requiere calcular las ocurrencias de los horarios recurrentes)
+    }
+
+    logger.info("Chequeo de notificaciones finalizado.");
+    return null;
+});
+
+/**
+ * Función auxiliar para enviar una notificación a un usuario
+ * @param {string} userId
+ * @param {Array<string>} tokens - Array de tokens de FCM del usuario
+ * @param {string} title - Título de la notificación
+ * @param {string} body - Cuerpo del mensaje
+ */
+const sendNotificationToUser = async (userId, tokens, title, body) => {
+    const payload = {
+        notification: {
+            title: title,
+            body: body,
+            icon: '/defaults/default-avatar.png', // Ícono que se mostrará en la notificación
+            click_action: 'https://www.estud-ia.com.ar' // URL que se abre al hacer clic
+        }
+    };
+
+    try {
+        await admin.messaging().sendToDevice(tokens, payload);
+        logger.info(`Notificación enviada a ${userId}: "${body}"`);
+        
+        // Guardamos una copia en el centro de notificaciones de Firestore
+        const notificationsRef = db.collection('users').doc(userId).collection('notifications');
+        await notificationsRef.add({
+            title,
+            body,
+            read: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (error) {
+        logger.error(`Error al enviar notificación a ${userId}:`, error);
+        // Aquí podríamos tener lógica para limpiar tokens inválidos
+    }
+};

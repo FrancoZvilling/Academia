@@ -5,6 +5,7 @@ import useConfirm from "../../hooks/useConfirm"; // Importar useConfirm
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import BetaAnnouncementModal from "../ui/BetaAnnouncementModal";
+import NotificationManager from '../NotificationManager';
 
 const MainLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -58,6 +59,7 @@ const MainLayout = () => {
     <>
       {/* Renderizamos el diálogo aquí, a nivel superior */}
       <ConfirmationDialog />
+      <NotificationManager />
       <BetaAnnouncementModal isOpen={showBetaModal} onClose={handleCloseBetaModal} />
       <div className="flex h-screen bg-background text-text-primary">
         <div 

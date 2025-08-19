@@ -275,10 +275,26 @@ export const createUserDocument = async (userId, additionalData = {}) => {
                 uid: userId,
                 plan: 'free', // Todos los usuarios empiezan con el plan gratuito
                 createdAt: createdAt,
+                fcmTokens: [],
                 ...additionalData
             });
         } catch (error) {
             console.error("Error al crear el documento de usuario:", error);
         }
     }
+};
+
+// --- AÑADIR NUEVA FUNCIÓN PARA GUARDAR EL TOKEN ---
+/**
+ * Añade un nuevo token de FCM al array de tokens de un usuario.
+ * @param {string} userId
+ * @param {string} token
+ */
+export const saveFcmToken = (userId, token) => {
+    if (!userId || !token) return;
+    const userDocRef = doc(db, 'users', userId);
+    // Usamos arrayUnion para añadir el token solo si no existe ya
+    return updateDoc(userDocRef, {
+        fcmTokens: arrayUnion(token)
+    });
 };
