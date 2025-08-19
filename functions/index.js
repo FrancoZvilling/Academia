@@ -431,7 +431,7 @@ exports.checkScheduledNotifications = onSchedule({
                 }
             });
         }
-    }
+    
         
         // B. Clases (12 horas antes)
         // (Esta lógica es más compleja, la implementaremos en una mejora futura si es necesario,
