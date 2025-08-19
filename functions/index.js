@@ -369,7 +369,8 @@ exports.adminTasks = onCall({
 // Se ejecutará cada hora, en el minuto 0. ("0 * * * *")
 exports.checkScheduledNotifications = onSchedule({
     schedule: "every 1 hours",
-    region: "southamerica-east1"
+    region: "southamerica-east1",
+    timeZone: "America/Argentina/Buenos_Aires"
 }, async (event) => {
     logger.info("Ejecutando chequeo de notificaciones programadas...");
 
@@ -395,20 +396,33 @@ exports.checkScheduledNotifications = onSchedule({
 
             eventsSnap.forEach(eventDoc => {
                 const eventData = eventDoc.data();
-                const eventStart = eventData.start.toDate();
+
+                // --- ¡LÓGICA DE FECHA FINAL Y CORRECTA! ---
+                if (!eventData.start || typeof eventData.start !== 'string') {
+                    return; // Ignora eventos sin fecha
+                }
+                
+                // Creamos un objeto Date a partir del string. JavaScript lo interpretará
+                // en la zona horaria del servidor (que hemos forzado a Argentina).
+                const eventStart = new Date(eventData.start);
+                
+                if (isNaN(eventStart.getTime())) {
+                    return; // Ignora fechas inválidas
+                }
+                // ---------------------------------------------
+
                 const hoursUntil = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
 
                 let message = null;
-                // Comprobamos si estamos en el rango correcto (ej. entre 23 y 24 horas)
-                if (hoursUntil > 23 && hoursUntil <= 24) {
+                // Usamos un rango pequeño (ej. 1 hora) para "atrapar" la notificación
+                if (hoursUntil > 23.5 && hoursUntil <= 24.5) { 
                     message = `RECORDATORIO: Mañana tienes "${eventData.title}"`;
-                } else if (hoursUntil > 71 && hoursUntil <= 72) {
+                } else if (hoursUntil > 71.5 && hoursUntil <= 72.5) {
                     message = `AVISO: En 3 días tienes "${eventData.title}"`;
-                } else if (hoursUntil > 167 && hoursUntil <= 168) {
+                } else if (hoursUntil > 167.5 && hoursUntil <= 168.5) {
                     message = `AVISO: En una semana tienes "${eventData.title}"`;
                 }
-                // Añadimos el chequeo para 12 horas solo para eventos generales
-                if (coll === 'generalEvents' && hoursUntil > 11 && hoursUntil <= 12) {
+                if (coll === 'generalEvents' && hoursUntil > 11.5 && hoursUntil <= 12.5) {
                     message = `RECORDATORIO: En 12 horas: "${eventData.title}"`;
                 }
 
@@ -417,6 +431,7 @@ exports.checkScheduledNotifications = onSchedule({
                 }
             });
         }
+    }
         
         // B. Clases (12 horas antes)
         // (Esta lógica es más compleja, la implementaremos en una mejora futura si es necesario,
