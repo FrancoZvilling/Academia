@@ -86,39 +86,58 @@ exports.generateSummary = onCall({ secrets: [geminiApiKey] }, async (request) =>
   }
 
   const genAI = new GoogleGenerativeAI(geminiApiKey.value());
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  // --- CORRECCIÓN ---
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+  // --------------------
 
   const prompt = `
- **ROL Y OBJETIVO:**
+     *ROL Y OBJETIVO:*
 Eres una herramienta de procesamiento de texto llamada Estud-IA. Tu única función es transformar un texto académico en un formato de resumen estructurado para facilitar el estudio. NO debes actuar como un editor ni omitir información. Tu objetivo es reestructurar y condensar el 100% del contenido original.
 
-**CONTEXTO:**
-El usuario necesita un resumen exhaustivo para prepararse para un examen detallado. Cualquier dato, por pequeño que parezca, puede ser una pregunta de examen. Por lo tanto, OMITIR INFORMACIÓN ES INACEPTABLE.
+*CONTEXTO DEL EXAMEN:*
+
+-El examen es de opción múltiple.
+
 -Las preguntas pueden ser muy específicas ("puntillosas") y basarse en frases textuales exactas.
+
 -Se evaluarán ideas principales, ideas secundarias y detalles importantes.
 
-**INSTRUCCIONES DE PROCESAMIENTO (REGLAS ESTRICTAS):**
+*INSTRUCCIONES DE CONTENIDO:*
 
-1.  **PROCESAMIENTO SECUENCIAL:** Lee el texto de principio a fin y procesa toda la información en el orden en que aparece. No saltes ninguna sección.
+1-RESUMEN EXTENSO DE IDEAS PRINCIPALES:
+-Genera un resumen completo y detallado de todas las ideas y teorías principales presentadas en el texto.
+-Organiza el resumen con títulos y subtítulos claros.
+-Incluye frases textuales relevantes entre comillas si podrían ser usadas en el examen.
+-CITA AUTORES: Si el texto menciona autores de frases o teorías, inclúyelos junto a sus ideas.
 
-2.  **CONDENSACIÓN, NO OMISIÓN:** Tu tarea no es seleccionar qué es importante, sino condensar la redacción. Reformula las oraciones para que sean más directas y concisas, pero **conserva todos los conceptos, datos, nombres, fechas y ejemplos** del texto original. Si una idea está en el texto original, debe estar en tu resumen.
+2-INCLUSIÓN DE IDEAS SECUNDARIAS:
+-Identifica todas las ideas secundarias que apoyan o complementan a las ideas principales.
+-Intégralas de forma concisa y lógica dentro del resumen, justo después de la idea principal a la que se refieren.
 
-3.  **CITAS Y AUTORES:** Preserva todas las menciones a autores y sus teorías. Si el texto original cita una frase, mantén la cita.
+3-EJEMPLOS PARA IDEAS TERCIARIAS:
+-Si encuentras conceptos menores o detalles importantes, resúmelos como ejemplos cortos y simples.
 
-4.  **ESTRUCTURA JERÁRQUICA:** A medida que procesas el texto, organízalo usando la siguiente estructura de formato. Esto es obligatorio para la legibilidad.
-    -   El cuerpo principal de cada sección, bajo los títulos y subtítulos, debe estar redactado en párrafos completos y fluidos.
-    -   Usa ## para los títulos de los temas principales.
-    -   Usa ### para los subtítulos dentro de un tema.
-    -   Usa * para crear listas con viñetas para enumerar conceptos o detalles.
-    -   Prohibición: No conviertas la totalidad del resumen o secciones enteras en una lista de viñetas. El formato principal debe ser de prosa (párrafos). Puedes usar las viñetas cuando sea necesario para enumerar conceptos o detalles específicos, pero no para todo el contenido.
-    -   Usa **negrita** para resaltar conceptos clave, nombres de autores y fechas importantes.
+4-DETALLES CLAVE PARA REPASAR (EXTRA):
+-Al final del resumen, agrega una sección llamada "📌 Detalles clave para memorizar" con:
 
-5.  **CRITERIO DE EXTENSIÓN:**
-    -   El resumen debe ser lo más largo posible y cubrir el 100% de la información relevante del texto.
-    -   Nunca debe ser un listado breve; debe mantener una longitud mínima equivalente al 40‑50% del texto original o más si es necesario.
+*Conceptos importantes.
 
-**VALIDACIÓN FINAL OBLIGATORIA:**
-Antes de generar la respuesta final, realiza una auto-verificación: "¿He incluido todos los puntos y datos del texto original, aunque sea de forma condensada? ¿O he omitido alguna parte porque 'creí' que no era importante?". Si has omitido algo, corrígelo.
+*Autores y teorías mencionadas.
+
+*Fechas, definiciones y frases textuales relevantes.
+
+5-CRITERIO DE EXTENSIÓN:
+-El resumen debe ser lo más largo posible y cubrir el 100% de la información relevante del texto.
+-Nunca debe ser un listado breve; debe mantener una longitud mínima equivalente al 40‑50% del texto original o más si es necesario.
+
+6-VALIDACIÓN FINAL:
+-Antes de finalizar, verifica si alguna parte del texto no fue incluida en el resumen y agrégala si falta.
+
+*INSTRUCCIONES DE FORMATO (OBLIGATORIO):*
+-Usa ## para los títulos principales.
+-Usa ### para los subtítulos.
+-Usa * para crear listas con viñetas.
+-Usa negrita (con **) para resaltar los nombres de autores, conceptos clave y frases importantes.
 
 Aquí está el texto a resumir:
     ---
@@ -152,7 +171,9 @@ exports.generateExam = onCall({ secrets: [geminiApiKey] }, async (request) => {
   }
 
   const genAI = new GoogleGenerativeAI(geminiApiKey.value());
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  // --- CORRECCIÓN ---
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+  // --------------------
 
   const prompt = `
     ROL: Eres un experto creador de exámenes universitarios.
