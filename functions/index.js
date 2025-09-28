@@ -87,7 +87,7 @@ exports.generateSummary = onCall({ secrets: [geminiApiKey] }, async (request) =>
 
   const genAI = new GoogleGenerativeAI(geminiApiKey.value());
   // --- CORRECCIÓN ---
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
   // --------------------
 
   const prompt = `
@@ -172,7 +172,7 @@ exports.generateExam = onCall({ secrets: [geminiApiKey] }, async (request) => {
 
   const genAI = new GoogleGenerativeAI(geminiApiKey.value());
   // --- CORRECCIÓN ---
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
   // --------------------
 
   const prompt = `

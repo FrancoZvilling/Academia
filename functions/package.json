@@ -15,8 +15,7 @@
   "main": "index.js",
   "type": "commonjs",
   "dependencies": {
-    "@google/generative-ai": "^0.2.1",
-    "estud-ia": "file:..",
+    "@google/generative-ai": "^0.12.0",
     "firebase-admin": "^12.0.0",
     "firebase-functions": "^5.0.1",
     "mercadopago": "^2.0.8"
