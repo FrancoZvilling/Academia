@@ -22,7 +22,7 @@ const Sidebar = ({ onClose, onConfirmLogout }) => {
     <aside className="w-64 h-full flex-shrink-0 bg-surface-100 p-4 flex flex-col shadow-lg border-r border-surface-200">
       <div className="flex justify-between items-center py-4">
         <div className="text-2xl font-bold flex items-center justify-center gap-2 text-text-primary">
-          <IoSchool className="text-primary" size={28}/>
+          <IoSchool className="text-primary" size={28} />
           <span>Estud-IA</span>
         </div>
         <button onClick={onClose} className="btn btn-ghost btn-circle lg:hidden">
@@ -51,7 +51,7 @@ const Sidebar = ({ onClose, onConfirmLogout }) => {
           <FaCalendarAlt />
           <span>Calendario</span>
         </NavLink>
-        <NavLink to="/eventos" className={({ isActive }) => isActive ? "flex items-center gap-3 py-2 px-4 rounded-lg font-semibold transition-all duration-200 bg-primary text-text-accent shadow-lg" : "flex items-center gap-3 py-2 px-4 rounded-lg font-semibold transition-all duration-200 text-text-secondary hover:bg-surface-200 hover:text-text-primary"}> 
+        <NavLink to="/eventos" className={({ isActive }) => isActive ? "flex items-center gap-3 py-2 px-4 rounded-lg font-semibold transition-all duration-200 bg-primary text-text-accent shadow-lg" : "flex items-center gap-3 py-2 px-4 rounded-lg font-semibold transition-all duration-200 text-text-secondary hover:bg-surface-200 hover:text-text-primary"}>
           <FaRegCalendarAlt />
           <span>Eventos Generales</span>
         </NavLink>
@@ -59,25 +59,25 @@ const Sidebar = ({ onClose, onConfirmLogout }) => {
           <FaBookOpen />
           <span>Mi Libreta</span>
         </NavLink>
-        <NavLink to="/premium" className={({isActive}) => `${getNavLinkClass({isActive})} text-yellow-400 border border-yellow-400/50`}>
+        <NavLink to="/premium" className={({ isActive }) => `${getNavLinkClass({ isActive })} text-yellow-400 border border-yellow-400/50`}>
           <FaStar />
           <span>Premium</span>
         </NavLink>
         <NavLink to="/ia" className={getNavLinkClass}>
-            <FaRobot />
-            <span>Inteligencia Artificial</span>
+          <FaRobot />
+          <span>Inteligencia Artificial</span>
         </NavLink>
-          <NavLink to="/notificaciones" className={`hidden lg:flex ${getNavLinkClass({ isActive: location.pathname === '/notificaciones' })}`}>
-            <FaBell />
-            <span>Notificaciones</span>
-          </NavLink>
-        <NavLink to="/contacto" className={getNavLinkClass}> {/* <-- Añadir enlace */}
-          <FaEnvelope />
-          <span>Contacto</span>
+        <NavLink to="/notificaciones" className={`hidden lg:flex ${getNavLinkClass({ isActive: location.pathname === '/notificaciones' })}`}>
+          <FaBell />
+          <span>Notificaciones</span>
         </NavLink>
         <NavLink to="/perfil" className={({ isActive }) => isActive ? "flex items-center gap-3 py-2 px-4 rounded-lg font-semibold transition-all duration-200 bg-primary text-text-accent shadow-lg" : "flex items-center gap-3 py-2 px-4 rounded-lg font-semibold transition-all duration-200 text-text-secondary hover:bg-surface-200 hover:text-text-primary"}>
           <FaUserCircle />
           <span>Mi Perfil</span>
+        </NavLink>
+        <NavLink to="/contacto" className={getNavLinkClass}> {/* <-- Añadir enlace */}
+          <FaEnvelope />
+          <span>Contacto</span>
         </NavLink>
       </nav>
 

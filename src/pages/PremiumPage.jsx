@@ -1,188 +1,147 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useForm } from 'react-hook-form';
-import { FaCheckCircle, FaStar } from 'react-icons/fa';
+import { FaCheckCircle, FaStar, FaCrown, FaRocket } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'react-toastify';
 import Modal from '../components/ui/Modal';
 import emailjs from '@emailjs/browser';
 import { getFunctions, httpsCallable } from "firebase/functions";
-
-// --- SUB-COMPONENTE: Formulario de Activación ---
-const ActivationForm = ({ onFormSubmit }) => {
-    const { currentUser } = useAuth();
-    const { register, handleSubmit, formState: { isSubmitting } } = useForm({
-        defaultValues: {
-            user_email_estudia: currentUser?.email,
-        }
-    });
-
-    return (
-        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-            <div>
-                <label className="label"><span className="label-text text-text-secondary">Email de tu cuenta Estud-IA</span></label>
-                <input {...register("user_email_estudia")} readOnly className="input input-bordered w-full bg-surface-200" />
-            </div>
-            <div>
-                <label className="label"><span className="label-text text-text-secondary">Email que usas en Mercado Pago</span></label>
-                <input {...register("user_email_mp", { required: true })} type="email" placeholder="ejemplo@email.com" className="input input-bordered border-black w-full bg-surface-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
-            </div>
-             <div>
-                <label className="label"><span className="label-text text-text-secondary">Nombre y Apellido de Mercado Pago</span></label>
-                <input {...register("user_name_mp")} placeholder="Juan Pérez" className="input input-bordered border-black w-full bg-surface-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
-            </div>
-            
-            <button type="submit" className="btn btn-primary bg-primary w-full" disabled={isSubmitting}>
-                {isSubmitting ? <span className="loading loading-spinner"></span> : "Enviar Solicitud de Activación"}
-            </button>
-        </form>
-    );
-};
-
+import { motion } from 'framer-motion';
 
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA ---
 const PremiumPage = () => {
     const [isLoading, setIsLoading] = useState(false);
-    const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState(false);
-    
+
     const handleSubscribeClick = async () => {
         setIsLoading(true);
-        const mode = import.meta.env.VITE_SUBSCRIPTION_MODE;
+        // TODO: Implementar lógica de suscripción con Google Play
+        console.log("Iniciando flujo de suscripción con Google Play...");
 
-        if (mode === 'API') {
-            // --- FLUJO DE API ---
-            console.log("Modo de suscripción: API");
-            try {
-                const functions = getFunctions(undefined, "southamerica-east1");
-                const createSubscriptionLink = httpsCallable(functions, 'createSubscriptionLink');
-                const result = await createSubscriptionLink();
-                const checkoutUrl = result.data.url;
-                
-                if (checkoutUrl) {
-                    window.location.href = checkoutUrl;
-                } else {
-                    throw new Error("No se recibió una URL de pago desde el servidor.");
-                }
-            } catch (error) {
-                console.error("Error al obtener el link de suscripción (API):", error);
-                toast.error("No se pudo iniciar el proceso de pago con la API.");
-                setIsLoading(false);
-            }
-        } else {
-            // --- FLUJO MANUAL ---
-            console.log("Modo de suscripción: MANUAL");
-            setIsInstructionsModalOpen(true);
+        // Simulación temporal
+        setTimeout(() => {
             setIsLoading(false);
-        }
-    };
-
-    const handleFormSubmit = async (data) => {
-        try {
-            await emailjs.send(
-                import.meta.env.VITE_EMAILJS_SERVICE_ID,
-                import.meta.env.VITE_EMAILJS_ACTIVATION_TEMPLATE_ID,
-                data,
-                import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-            );
-            toast.success("¡Solicitud enviada! Activaremos tu cuenta en breve. Gracias.");
-            setIsInstructionsModalOpen(false);
-        } catch (error) {
-            console.error("Error al enviar el email de activación:", error);
-            toast.error("No se pudo enviar la solicitud. Por favor, contacta al soporte.");
-        }
-    };
-    
-    const redirectToMercadoPago = () => {
-        const subscriptionLink = import.meta.env.VITE_MERCADOPAGO_SUB_LINK;
-        if (subscriptionLink) {
-            window.open(subscriptionLink, '_blank', 'noopener,noreferrer');
-        } else {
-            toast.error("El link de pago no está configurado.");
-        }
+            toast.info("La integración con Google Play estará disponible pronto.");
+        }, 1000);
     };
 
     const benefits = [
         "**Resúmenes Automáticos:** Convierte apuntes largos en resúmenes concisos.",
         "**Modelos de Parcial:** Genera exámenes de práctica basados en tu material.",
-        "**Acceso Anticipado** a nuevas funcionalidades de IA.",
-        "**Aporte a la Facultad:** Un porcentaje de tu pago se invierte en tu educación."
+        "Elimina completamente los anuncios de la aplicación"
     ];
 
     return (
         <>
-            <div className="max-w-4xl mx-auto p-4 animate-fade-in">
-                <div className="text-center mb-12">
-                    <FaStar className="mx-auto text-yellow-400 text-5xl mb-4" />
-                    <h1 className="text-4xl sm:text-5xl font-extrabold text-text-primary tracking-tight">
-                        Desbloquea tu Potencial con <span className="text-primary">Estud-IA Premium</span>
-                    </h1>
-                    <p className="mt-4 text-lg text-text-secondary max-w-2xl mx-auto">
-                        Lleva tu organización y estudio al siguiente nivel con herramientas de Inteligencia Artificial diseñadas para ti.
-                    </p>
-                </div>
-
-                <div className="bg-surface-100 rounded-2xl shadow-2xl p-8 flex flex-col items-center">
-                    <h2 className="text-2xl font-bold text-text-primary mb-2">Plan Premium</h2>
-                    <p className="text-4xl font-bold text-primary mb-6">
-                        $4800 <span className="text-lg font-normal text-text-secondary">/ mes</span>
-                    </p>
-
-                    <ul className="space-y-4 text-left mb-8 w-full max-w-md">
-                        {benefits.map((benefit, index) => (
-                            <li key={index} className="flex items-start gap-3">
-                                <FaCheckCircle className="text-green-500 flex-shrink-0 mt-1" />
-                                <ReactMarkdown
-                                    components={{
-                                        p: ({node, ...props}) => <span className="text-text-primary" {...props} />,
-                                        strong: ({node, ...props}) => <strong className="font-bold text-text-primary" {...props} />
-                                    }}
-                                >
-                                    {benefit}
-                                </ReactMarkdown>
-                            </li>
-                        ))}
-                    </ul>
-
-                    <button 
-                        onClick={handleSubscribeClick}
-                        className="btn btn-primary btn-lg w-full max-w-md bg-primary text-text-accent shadow-lg hover:bg-secondary"
-                        disabled={isLoading}
+            <div className="max-w-6xl mx-auto p-4 lg:p-8">
+                {/* Hero Section */}
+                <div className="text-center mb-16 relative">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/20 rounded-full blur-3xl -z-10"></div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
                     >
-                        {isLoading ? <span className="loading loading-spinner"></span> : '¡Hacerme Premium Ahora!'}
-                    </button>
-
-                    <p className="text-xs text-text-secondary mt-2">Cancelación fácil en cualquier momento.</p>
+                        <span className="inline-block py-1 px-3 rounded-full bg-primary/10 text-primary font-semibold text-sm mb-4 border border-primary/20">
+                            <FaCrown className="inline mr-2 mb-1" />
+                            Experiencia Premium
+                        </span>
+                        <h1 className="text-4xl md:text-6xl font-extrabold text-text-primary tracking-tight mb-6">
+                            Lleva tu estudio al <br className="hidden md:block" />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">siguiente nivel</span>
+                        </h1>
+                        <p className="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed">
+                            Elimina todos los anuncios y desbloquea herramientas de Inteligencia Artificial diseñadas para potenciar tu aprendizaje.
+                        </p>
+                    </motion.div>
                 </div>
 
-                <div className="text-center mt-12 p-6 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
-                    <h3 className="font-semibold text-amber-800 dark:text-amber-200">Actualmente en Fase BETA</h3>
-                    <p className="text-sm text-amber-700 dark:text-amber-300 mt-2">
-                        Al suscribirte ahora, te aseguras de mantener este precio y todas las funcionalidades cuando la aplicación pase a su versión final. ¡Gracias por tu apoyo como usuario pionero!
-                    </p>
-                </div>
+                {/* Pricing Card */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="max-w-md mx-auto"
+                >
+                    <div className="relative group">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                        <div className="relative bg-surface-100 rounded-2xl p-8 shadow-xl border border-surface-200">
+                            <div className="flex justify-between items-start mb-8">
+                                <div>
+                                    <h3 className="text-2xl font-bold text-text-primary">Plan Estudiante</h3>
+                                    <p className="text-text-secondary text-sm mt-1">Todo lo que necesitas para aprobar</p>
+                                </div>
+                                <div className="bg-primary/10 p-3 rounded-xl">
+                                    <FaRocket className="text-primary text-xl" />
+                                </div>
+                            </div>
+
+                            <div className="mb-8">
+                                <div className="flex items-baseline justify-center">
+                                    <span className="text-5xl font-extrabold text-text-primary">$5500</span>
+                                    <span className="text-text-secondary ml-2">/ mes</span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 mb-8">
+                                {benefits.map((benefit, index) => (
+                                    <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-200/50 transition-colors">
+                                        <div className="mt-1 bg-green-100 dark:bg-green-900/30 p-1 rounded-full">
+                                            <FaCheckCircle className="text-green-500 text-sm" />
+                                        </div>
+                                        <div className="text-sm text-text-primary">
+                                            <ReactMarkdown
+                                                components={{
+                                                    p: ({ node, ...props }) => <span {...props} />,
+                                                    strong: ({ node, ...props }) => <span className="font-bold text-primary" {...props} />
+                                                }}
+                                            >
+                                                {benefit}
+                                            </ReactMarkdown>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <button
+                                onClick={handleSubscribeClick}
+                                className="btn w-full bg-gradient-to-r from-primary to-secondary border-none text-white shadow-lg hover:shadow-primary/25 hover:scale-[1.02] transition-all duration-300 py-4 h-auto text-lg font-bold rounded-xl"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? <span className="loading loading-spinner"></span> : 'Obtener Premium'}
+                            </button>
+
+                            <p className="text-center text-xs text-text-secondary mt-4">
+                                Cancelación fácil en cualquier momento
+                            </p>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Trust Indicators / Footer */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                    className="mt-16 text-center grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto"
+                >
+                    <div className="flex flex-col items-center">
+                        <div className="w-12 h-12 bg-surface-200 rounded-full flex items-center justify-center mb-3 text-2xl">🔒</div>
+                        <h4 className="font-bold text-text-primary">Pago Seguro</h4>
+                        <p className="text-xs text-text-secondary mt-1">Procesado por Google Play</p>
+                    </div>
+                    <div className="flex flex-col items-center">
+                        <div className="w-12 h-12 bg-surface-200 rounded-full flex items-center justify-center mb-3 text-2xl">⚡</div>
+                        <h4 className="font-bold text-text-primary">Activación Rápida</h4>
+                        <p className="text-xs text-text-secondary mt-1">Acceso inmediato a las funciones</p>
+                    </div>
+                    <div className="flex flex-col items-center">
+                        <div className="w-12 h-12 bg-surface-200 rounded-full flex items-center justify-center mb-3 text-2xl">🤝</div>
+                        <h4 className="font-bold text-text-primary">Soporte Directo</h4>
+                        <p className="text-xs text-text-secondary mt-1">Ayuda personalizada por WhatsApp</p>
+                    </div>
+                </motion.div>
             </div>
-
-            <Modal
-                isOpen={isInstructionsModalOpen}
-                onClose={() => setIsInstructionsModalOpen(false)}
-                title="Sincronización de cuenta (por única vez)"
-            >
-                <div className="space-y-6">
-                    <div>
-                        <h3 className="font-bold text-lg text-primary">Paso 1: Realiza el Pago</h3>
-                        <p className="text-sm text-text-secondary mt-1 mb-3">Haz clic en el botón para ir a la página segura de Mercado Pago y completar tu suscripción. Luego, vuelve aquí para el Paso 2.</p>
-                        <button onClick={redirectToMercadoPago} className="btn btn-secondary bg-primary w-full">
-                            Pagar con Mercado Pago
-                        </button>
-                    </div>
-                    
-                    <div>
-                        <h3 className="font-bold text-lg text-primary">Paso 2: Informa tu Pago</h3>
-                        <p className="text-sm text-text-secondary mt-1 mb-3">Una vez completado el pago, llena este formulario para que podamos sincronizar tu cuenta. Esto es solo por tu primera vez, los cobros siguientes serán automáticos.</p>
-                        <ActivationForm onFormSubmit={handleFormSubmit} />
-                    </div>
-                </div>
-            </Modal>
         </>
     );
 };

@@ -22,9 +22,9 @@ const ContactPage = () => {
         setIsSending(true);
         try {
             await emailjs.sendForm(
-                import.meta.env.VITE_EMAILJS_SERVICE_ID, 
-                import.meta.env.VITE_EMAILJS_TEMPLATE_ID, 
-                form.current, 
+                import.meta.env.VITE_EMAILJS_SERVICE_ID,
+                import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+                form.current,
                 import.meta.env.VITE_EMAILJS_PUBLIC_KEY
             );
             toast.success("¡Mensaje enviado con éxito! Gracias por tu contacto.");
@@ -49,6 +49,12 @@ const ContactPage = () => {
                             <label htmlFor="from_name" className="label"><span className="label-text">Tu Nombre y Apellido</span></label>
                             <input id="from_name" {...register("from_name", { required: true })} className="input input-bordered border-black w-full bg-surface-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" />
                         </div>
+
+                        <div>
+                            <label htmlFor="user_email" className="label"><span className="label-text">Tu Email (para poder responderte)</span></label>
+                            <input type="email" id="user_email" {...register("user_email", { required: true })} className="input input-bordered border-black w-full bg-surface-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300" placeholder="ejemplo@email.com" />
+                        </div>
+
                         <div>
                             <label htmlFor="subject" className="label"><span className="label-text">Asunto</span></label>
                             <input id="subject" {...register("subject")} readOnly className="input input-bordered w-full bg-surface-200" />
@@ -57,9 +63,7 @@ const ContactPage = () => {
                             <label htmlFor="message" className="label"><span className="label-text">Mensaje</span></label>
                             <textarea id="message" {...register("message", { required: true })} className="textarea textarea-bordered border-black w-full bg-surface-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 h-32" placeholder="Escribe tu mensaje aquí..."></textarea>
                         </div>
-                        {/* Campo oculto para enviar el email del usuario */}
-                        <input type="hidden" {...register("user_email")} />
-                        
+
                         <button type="submit" className="btn btn-primary w-full bg-primary border-primary text-text-accent hover:bg-secondary" disabled={isSending}>
                             {isSending ? <span className="loading loading-spinner"></span> : 'Enviar Mensaje'}
                         </button>
@@ -73,11 +77,11 @@ const ContactPage = () => {
                         <p className="text-text-secondary mb-4">Si preferís contactarte directamente con el desarrollador de esta web, podés hacerlo a través de:</p>
                         <div className="space-y-3">
                             <a href="https://wa.me/5493541315119" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-text-primary hover:text-primary transition-colors">
-                                <FaWhatsapp className="text-green-500" size={20}/>
+                                <FaWhatsapp className="text-green-500" size={20} />
                                 <span>+54 9 3541 31-5119</span>
                             </a>
                             <a href="mailto:francozvilling-programador@hotmail.com" className="flex items-center gap-3 text-text-primary hover:text-primary transition-colors">
-                                <FaEnvelope className="text-text-secondary" size={20}/>
+                                <FaEnvelope className="text-text-secondary" size={20} />
                                 <span>francozvilling-programador@hotmail.com</span>
                             </a>
                         </div>
