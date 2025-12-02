@@ -1,15 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { generateRecurringEvents } from '../utils/dateUtils';
-import { 
+import {
     getGeneralEvents,
-    getYearsForUser, 
-    getSubjectsForYear, 
-    getAllEventsForUser, 
-    deleteEvent 
+    getYearsForUser,
+    getSubjectsForYear,
+    getAllEventsForUser,
+    deleteEvent
 } from '../services/firestoreService';
+import { FaChevronLeft, FaChevronRight, FaCalendarDay, FaList, FaTh, FaCalendarWeek } from 'react-icons/fa';
 import useWindowSize from '../hooks/useWindowSize';
-import { toast } from 'react-toastify'; 
+import { toast } from 'react-toastify';
 import useConfirm from '../hooks/useConfirm';
 
 // Importaciones de FullCalendar
@@ -25,6 +26,9 @@ const CalendarPage = () => {
     const [loading, setLoading] = useState(true);
     const { width } = useWindowSize();
     const [ConfirmationDialog, confirm] = useConfirm();
+    const calendarRef = useRef(null);
+    const [currentTitle, setCurrentTitle] = useState('');
+    const [currentView, setCurrentView] = useState('dayGridMonth');
 
     useEffect(() => {
         const fetchAllCalendarData = async () => {
@@ -33,14 +37,14 @@ const CalendarPage = () => {
             try {
                 const processEventsForBlockDisplay = (event) => {
                     const hasTime = !event.allDay;
-                    const eventDate = new Date(event.start); 
-                    const timeString = hasTime 
-                        ? eventDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) 
+                    const eventDate = new Date(event.start);
+                    const timeString = hasTime
+                        ? eventDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
                         : '';
                     return {
                         ...event,
                         title: hasTime ? `${timeString} ${event.title}` : event.title,
-                        start: event.start.split('T')[0], 
+                        start: event.start.split('T')[0],
                         allDay: true,
                         display: 'block',
                         extendedProps: { ...event.extendedProps, hasTime, originalStart: event.start }
@@ -71,7 +75,7 @@ const CalendarPage = () => {
         };
         fetchAllCalendarData();
     }, [currentUser]);
-    
+
     const handleEventClick = async (clickInfo) => {
         const { extendedProps, title } = clickInfo.event;
         const eventType = extendedProps.type;
@@ -102,12 +106,46 @@ const CalendarPage = () => {
             }
         }
     };
-    
+
     const isMobile = width !== undefined && width < 768;
-    const calendarView = isMobile ? 'listWeek' : 'dayGridMonth';
-    const calendarHeader = isMobile ? { left: 'title', center: '', right: 'today' } : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' };
-    const calendarFooter = isMobile ? { left: 'prev,next', center: '', right: 'dayGridMonth,timeGridWeek,listWeek' } : false;
-    
+    // const calendarView = isMobile ? 'listWeek' : 'dayGridMonth'; // Ya no se usa para initialView dinámico en render, se controla por estado si se desea, o se deja que FullCalendar maneje la vista inicial y nosotros la sincronizamos.
+    // const calendarHeader = ... // Ya no se usa
+    // const calendarFooter = ... // Ya no se usa
+
+    const handlePrev = () => {
+        if (calendarRef.current) {
+            const calendarApi = calendarRef.current.getApi();
+            calendarApi.prev();
+        }
+    };
+
+    const handleNext = () => {
+        if (calendarRef.current) {
+            const calendarApi = calendarRef.current.getApi();
+            calendarApi.next();
+        }
+    };
+
+    const handleToday = () => {
+        if (calendarRef.current) {
+            const calendarApi = calendarRef.current.getApi();
+            calendarApi.today();
+        }
+    };
+
+    const handleViewChange = (viewName) => {
+        if (calendarRef.current) {
+            const calendarApi = calendarRef.current.getApi();
+            calendarApi.changeView(viewName);
+            setCurrentView(viewName);
+        }
+    };
+
+    const handleDatesSet = (arg) => {
+        setCurrentTitle(arg.view.title);
+        setCurrentView(arg.view.type);
+    };
+
     if (loading) return <div className="flex justify-center items-center h-full pt-20"><span className="loading loading-spinner loading-lg text-primary"></span></div>;
 
     return (
@@ -115,19 +153,65 @@ const CalendarPage = () => {
         <div className="flex flex-col h-full">
             <ConfirmationDialog />
             <h1 className="text-3xl font-bold mb-6 flex-shrink-0">Calendario General</h1>
-            
+
+            {/* --- TOOLBAR PERSONALIZADA --- */}
+            <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4 bg-surface-100 p-4 rounded-lg shadow-sm">
+
+                {/* Título y Navegación (Izquierda/Centro en móvil) */}
+                <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+                    <h2 className="text-xl md:text-2xl font-bold text-text-primary capitalize">{currentTitle}</h2>
+                    <div className="flex items-center gap-1">
+                        <button onClick={handlePrev} className="btn btn-circle btn-sm btn-ghost hover:bg-primary/10 text-text-secondary hover:text-primary transition-colors">
+                            <FaChevronLeft />
+                        </button>
+                        <button onClick={handleToday} className="btn btn-sm btn-ghost hover:bg-primary/10 text-primary font-semibold px-3">
+                            Hoy
+                        </button>
+                        <button onClick={handleNext} className="btn btn-circle btn-sm btn-ghost hover:bg-primary/10 text-text-secondary hover:text-primary transition-colors">
+                            <FaChevronRight />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Selector de Vistas (Derecha/Abajo en móvil) */}
+                <div className="flex bg-surface-50 p-1 rounded-lg border border-gray-200 dark:border-gray-700 w-full md:w-auto">
+                    <button
+                        onClick={() => handleViewChange('dayGridMonth')}
+                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${currentView === 'dayGridMonth' ? 'bg-white dark:bg-gray-700 text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                    >
+                        <FaTh className="text-lg" />
+                        <span className="hidden sm:inline">Mes</span>
+                    </button>
+                    <button
+                        onClick={() => handleViewChange('timeGridWeek')}
+                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${currentView === 'timeGridWeek' ? 'bg-white dark:bg-gray-700 text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                    >
+                        <FaCalendarWeek className="text-lg" />
+                        <span className="hidden sm:inline">Semana</span>
+                    </button>
+                    <button
+                        onClick={() => handleViewChange('listWeek')}
+                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${currentView === 'listWeek' ? 'bg-white dark:bg-gray-700 text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                    >
+                        <FaList className="text-lg" />
+                        <span className="hidden sm:inline">Lista</span>
+                    </button>
+                </div>
+            </div>
+
             {/* --- CONTENEDOR DEL CALENDARIO MODIFICADO --- */}
-            <div className="flex-grow overflow-hidden bg-surface-100 rounded-lg shadow-md" key={isMobile ? 'mobile' : 'desktop'}>
+            <div className="flex-grow overflow-hidden bg-surface-100 rounded-lg shadow-md relative z-0">
                 <FullCalendar
+                    ref={calendarRef}
                     plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-                    initialView={calendarView}
-                    headerToolbar={calendarHeader}
-                    footerToolbar={calendarFooter}
+                    initialView={isMobile ? 'listWeek' : 'dayGridMonth'}
+                    headerToolbar={false}
+                    footerToolbar={false}
                     events={events}
                     eventClick={handleEventClick}
+                    datesSet={handleDatesSet}
                     locale="es"
-                    buttonText={{ today: 'Hoy', month: 'Mes', week: 'Semana', day: 'Día', list: 'Lista' }}
-                    allDayText="Eventos"
+                    allDayText="Todo el día"
                     // --- PROPIEDAD DE ALTURA MODIFICADA ---
                     height="100%"
                     weekends={true}
@@ -135,8 +219,7 @@ const CalendarPage = () => {
                     listDayFormat={{ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }}
                     listDaySideFormat={false}
                     noEventsContent="No hay eventos para mostrar"
-                    titleFormat={{ month: isMobile ? 'short' : 'long', year: 'numeric' }}
-                    buttonIcons={{ prev: 'chevron-left', next: 'chevron-right' }}
+                    titleFormat={{ month: 'long', year: 'numeric' }}
                 />
             </div>
         </div>
