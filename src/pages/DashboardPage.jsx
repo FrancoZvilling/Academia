@@ -15,6 +15,7 @@ import { toast } from 'react-toastify';
 import useConfirm from '../hooks/useConfirm';
 import SubjectCard from '../components/SubjectCard';
 import Modal from '../components/ui/Modal';
+import AccordionItem from '../components/ui/AccordionItem';
 import { FaTrash, FaEdit } from "react-icons/fa";
 
 // --- SUB-COMPONENTE: Formulario para añadir Materia (VERSIÓN SIMPLIFICADA SIN COLOR) ---
@@ -245,37 +246,45 @@ const DashboardPage = () => {
             <div className="space-y-12">
                 {years.length > 0 ? (
                     years.map(year => (
-                        <div key={year.id}>
-                            <div className="mb-4">
-                                <div className="flex items-center gap-3">
-                                    <h2 className="text-2xl font-semibold">{year.name}</h2>
-
-                                    {/* --- BOTÓN DE EDITAR AÑADIDO --- */}
-                                    <button
-                                        onClick={() => openEditYearModal(year)}
-                                        className="text-text-secondary hover:text-primary transition-colors"
-                                        title={`Editar nombre de ${year.name}`}
-                                    >
-                                        <FaEdit />
-                                    </button>
-                                    {/* --------------------------------- */}
-
-                                    <button onClick={() => handleDeleteYear(year)} className="text-red-500 hover:text-red-700" title={`Eliminar ${year.name}`}>
-                                        <FaTrash />
-                                    </button>
+                        <div key={year.id} className="bg-surface-50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                            <AccordionItem
+                                title={year.name}
+                                defaultOpen={true}
+                                actions={
+                                    <>
+                                        <button
+                                            onClick={() => openEditYearModal(year)}
+                                            className="text-text-secondary hover:text-primary transition-colors p-2"
+                                            title={`Editar nombre de ${year.name}`}
+                                        >
+                                            <FaEdit size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteYear(year)}
+                                            className="text-red-500 hover:text-red-700 p-2"
+                                            title={`Eliminar ${year.name}`}
+                                        >
+                                            <FaTrash size={18} />
+                                        </button>
+                                    </>
+                                }
+                            >
+                                <div className="p-4">
+                                    <div className="mb-4">
+                                        <button onClick={() => handleOpenAddSubjectModal(year.id)} className="btn btn-secondary bg-secondary border-secondary text-text-accent btn-sm w-full sm:w-auto">
+                                            Añadir Materia
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                        {subjects[year.id]?.map(subject => (
+                                            <SubjectCard key={subject.id} subject={subject} onDelete={() => handleDeleteSubject(year.id, subject)} />
+                                        ))}
+                                    </div>
+                                    {(!subjects[year.id] || subjects[year.id].length === 0) && (
+                                        <p className="text-center text-gray-500 mt-8 mb-4">Aún no hay materias en este año. ¡Añade una!</p>
+                                    )}
                                 </div>
-                                <button onClick={() => handleOpenAddSubjectModal(year.id)} className="btn btn-secondary bg-secondary border-secondary text-text-accent btn-sm mt-2">
-                                    Añadir Materia
-                                </button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                {subjects[year.id]?.map(subject => (
-                                    <SubjectCard key={subject.id} subject={subject} onDelete={() => handleDeleteSubject(year.id, subject)} />
-                                ))}
-                            </div>
-                            {(!subjects[year.id] || subjects[year.id].length === 0) && (
-                                <p className="text-center text-gray-500 mt-4">Aún no hay materias en este año. ¡Añade una!</p>
-                            )}
+                            </AccordionItem>
                         </div>
                     ))
                 ) : (
