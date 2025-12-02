@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { FaFileUpload, FaSpinner, FaFilePdf, FaDownload, FaInfoCircle, FaFileWord, FaCopy, FaStar, FaClipboardList } from 'react-icons/fa';
+import { FaFileUpload, FaSpinner, FaFilePdf, FaDownload, FaInfoCircle, FaFileWord, FaCopy, FaStar, FaClipboardList, FaCloudUploadAlt } from 'react-icons/fa';
 import * as pdfjsLib from 'pdfjs-dist';
 import { callGenerateSummary, callGenerateExam } from '../services/firestoreService';
 import { marked } from 'marked';
@@ -185,32 +185,48 @@ const SummarizerTab = () => {
         </button>
       </div>
 
-      {/* --- FORMULARIO CORREGIDO CON GRID --- */}
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-surface-100 p-6 rounded-lg shadow-md grid grid-cols-[auto,1fr,auto] items-center gap-4 mb-8">
-        {/* Columna 1 */}
-        <label className="btn btn-primary bg-primary border-primary text-text-accent w-full sm:w-auto">
-          <FaFileUpload className="mr-2" />
-          <span>{fileName ? 'Cambiar PDF' : 'Seleccionar PDF'}</span>
-          <input type="file" {...register("pdfFile")} accept="application/pdf" className="hidden" />
-        </label>
+      {/* --- FORMULARIO REDISEÑADO (UPLOAD ZONE) --- */}
+      <form onSubmit={handleSubmit(onSubmit)} className="mb-8 animate-fade-in">
+        <div className="mb-6">
+          <label
+            className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-300 ${fileName ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary hover:bg-gray-50 dark:border-gray-600 dark:hover:border-primary dark:hover:bg-gray-800'}`}
+          >
+            <div className="flex flex-col items-center justify-center pt-5 pb-6 w-full max-w-full">
+              {fileName ? (
+                <>
+                  <FaFilePdf className="text-5xl text-red-500 mb-3 animate-bounce-short" />
+                  <p className="mb-2 text-lg font-semibold text-text-primary truncate max-w-[15rem] sm:max-w-md px-4 text-center" title={fileName}>{fileName}</p>
+                  <p className="text-sm text-text-secondary">Clic para cambiar archivo</p>
+                </>
+              ) : (
+                <>
+                  <FaCloudUploadAlt className="text-5xl text-gray-400 mb-3" />
+                  <p className="mb-2 text-lg font-semibold text-text-primary">Haz clic para subir tu PDF</p>
+                  <p className="text-xs text-text-secondary">Soporta archivos PDF</p>
+                </>
+              )}
+            </div>
+            <input type="file" {...register("pdfFile")} accept="application/pdf" className="hidden" />
+          </label>
+        </div>
 
-        {/* Columna 2 */}
-        {fileName ? (
-          <div className="flex items-center gap-2 text-text-secondary text-sm min-w-0">
-            <FaFilePdf className="text-red-500 flex-shrink-0" />
-            <span className="truncate" title={fileName}>{fileName}</span>
-          </div>
-        ) : (
-          <div></div> // Placeholder
-        )}
-
-        {/* Columna 3 */}
-        <button type="submit" className="btn btn-secondary bg-secondary border-secondary  hover:bg-primary" disabled={isLoading || !fileName}>
-          {isLoading ? <span className="loading loading-spinner"></span> : 'Generar Resumen'}
+        <button
+          type="submit"
+          className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary w-full btn-lg text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 rounded-xl"
+          disabled={isLoading || !fileName}
+        >
+          {isLoading ? (
+            <>
+              <span className="loading loading-spinner"></span>
+              <span className="ml-2">Analizando Documento...</span>
+            </>
+          ) : (
+            'Generar Resumen'
+          )}
         </button>
       </form>
 
-      {isLoading && (<div className="text-center p-8"><FaSpinner className="animate-spin text-primary mx-auto" size={48} /><p className="mt-4 text-text-secondary">Analizando "{fileName}" y resumiendo... Por favor, espera.</p></div>)}
+      {isLoading && (<div className="text-center p-8"><FaSpinner className="animate-spin text-primary mx-auto" size={48} /><div className="mt-4 text-text-secondary flex flex-wrap items-center justify-center gap-1 w-full max-w-full px-4"><span>Analizando</span><span className="font-semibold truncate max-w-[15rem] sm:max-w-md" title={fileName}>"{fileName}"</span><span>y resumiendo... Por favor, espera.</span></div></div>)}
       {summary && (
         <div className="mt-8 animate-fade-in">
           <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
@@ -274,12 +290,9 @@ const ExamGeneratorTab = () => {
       const jsonString = rawResponse.substring(firstBracket, lastBracket + 1);
       const parsedQuestions = JSON.parse(jsonString);
 
-      // --- ¡CAMBIO APLICADO AQUÍ! ---
-      // Barajamos las preguntas antes de guardarlas en el estado.
       const shuffledQuestions = shuffleExam(parsedQuestions);
 
       setQuestions(shuffledQuestions);
-      // -----------------------------
 
       toast.success("¡Examen generado! Es hora de practicar.");
 
@@ -334,67 +347,79 @@ const ExamGeneratorTab = () => {
         </p>
       </div>
 
-      {/* --- FORMULARIO CORREGIDO CON GRID --- */}
-      <form onSubmit={handleSubmitFile(onGenerateExam)} className="bg-surface-100 p-6 rounded-lg shadow-md grid grid-cols-[auto,1fr,auto] items-center gap-4 mb-8">
-        {/* Columna 1 */}
-        <label className="btn btn-primary bg-primary border-primary text-text-accent w-full sm:w-auto">
-          <FaFileUpload className="mr-2" />
-          <span>{fileName ? 'Cambiar PDF' : 'Seleccionar PDF'}</span>
-          <input type="file" {...registerFile("pdfFile")} accept="application/pdf" className="hidden" />
-        </label >
-
-        {/* Columna 2 */}
-        {
-          fileName ? (
-            <div className="flex items-center gap-2 text-text-secondary text-sm min-w-0">
-              <FaFilePdf className="text-red-500 flex-shrink-0" />
-              <span className="truncate" title={fileName}>{fileName}</span>
+      {/* --- FORMULARIO REDISEÑADO (UPLOAD ZONE) --- */}
+      <form onSubmit={handleSubmitFile(onGenerateExam)} className="mb-8 animate-fade-in">
+        <div className="mb-6">
+          <label
+            className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-300 ${fileName ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary hover:bg-gray-50 dark:border-gray-600 dark:hover:border-primary dark:hover:bg-gray-800'}`}
+          >
+            <div className="flex flex-col items-center justify-center pt-5 pb-6 w-full max-w-full">
+              {fileName ? (
+                <>
+                  <FaFilePdf className="text-5xl text-red-500 mb-3 animate-bounce-short" />
+                  <p className="mb-2 text-lg font-semibold text-text-primary truncate max-w-[15rem] sm:max-w-md px-4 text-center" title={fileName}>{fileName}</p>
+                  <p className="text-sm text-text-secondary">Clic para cambiar archivo</p>
+                </>
+              ) : (
+                <>
+                  <FaCloudUploadAlt className="text-5xl text-gray-400 mb-3" />
+                  <p className="mb-2 text-lg font-semibold text-text-primary">Haz clic para subir tu PDF</p>
+                  <p className="text-xs text-text-secondary">Soporta archivos PDF</p>
+                </>
+              )}
             </div>
+            <input type="file" {...registerFile("pdfFile")} accept="application/pdf" className="hidden" />
+          </label>
+        </div>
+
+        <button
+          type="submit"
+          className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary w-full btn-lg text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 rounded-xl"
+          disabled={isLoading || !fileName}
+        >
+          {isLoading ? (
+            <>
+              <span className="loading loading-spinner"></span>
+              <span className="ml-2">Creando Examen...</span>
+            </>
           ) : (
-            <div></div> // Placeholder
-          )
-        }
-
-        {/* Columna 3 */}
-        <button type="submit" className="btn btn-secondary bg-secondary border-secondary  hover:bg-primary" disabled={isLoading || !fileName}>
-          {isLoading ? <span className="loading loading-spinner"></span> : 'Generar Examen'}
+            'Generar Examen'
+          )}
         </button>
-      </form >
+      </form>
 
-      {isLoading && (<div className="text-center p-8"><FaSpinner className="animate-spin text-primary mx-auto" size={48} /><p className="mt-4 text-text-secondary">Generando un nuevo examen con "{fileName}"...</p></div>)}
+      {isLoading && (<div className="text-center p-8"><FaSpinner className="animate-spin text-primary mx-auto" size={48} /><div className="mt-4 text-text-secondary flex flex-wrap items-center justify-center gap-1 w-full max-w-full px-4"><span>Generando un nuevo examen con</span><span className="font-semibold truncate max-w-[15rem] sm:max-w-md" title={fileName}>"{fileName}"</span><span>...</span></div></div>)}
 
-      {
-        questions.length > 0 && !isLoading && (
-          <form onSubmit={handleSubmitExam(onCorrectExam)} className="space-y-8 animate-fade-in">
-            {questions.map((q, index) => (
-              <div key={index} className="p-6 bg-surface-100 rounded-lg shadow-md">
-                <p className="font-semibold mb-4">{index + 1}. {q.question}</p>
-                <div className="space-y-2">
-                  {q.options.map((option, optionIndex) => {
-                    const optionLetter = String.fromCharCode(97 + optionIndex);
-                    return (
-                      <label key={optionIndex} className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-colors ${getOptionStyle(index, optionLetter)}`}>
-                        <input type="radio" {...registerExam(`question_${index}`, { required: true })} value={optionLetter} className="radio radio-primary" disabled={isCorrected} />
-                        <span>{option}</span>
-                      </label>
-                    );
-                  })}
-                </div>
+      {questions.length > 0 && !isLoading && (
+        <form onSubmit={handleSubmitExam(onCorrectExam)} className="space-y-8 animate-fade-in">
+          {questions.map((q, index) => (
+            <div key={index} className="p-6 bg-surface-100 rounded-lg shadow-md">
+              <p className="font-semibold mb-4">{index + 1}. {q.question}</p>
+              <div className="space-y-2">
+                {q.options.map((option, optionIndex) => {
+                  const optionLetter = String.fromCharCode(97 + optionIndex);
+                  return (
+                    <label key={optionIndex} className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-colors ${getOptionStyle(index, optionLetter)}`}>
+                      <input type="radio" {...registerExam(`question_${index}`, { required: true })} value={optionLetter} className="radio radio-primary" disabled={isCorrected} />
+                      <span>{option}</span>
+                    </label>
+                  );
+                })}
               </div>
-            ))}
-            {!isCorrected ? (
-              <button type="submit" className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary w-full">Corregir Examen</button>
-            ) : (
-              <div className="p-6 bg-surface-100 rounded-lg shadow-md text-center">
-                <h3 className="text-xl font-bold">Resultado Final</h3>
-                <p className={`text-4xl font-extrabold mt-2 ${score >= 7 ? 'text-success' : 'text-error'}`}>{score.toFixed(2)} / 10</p>
-                <button type="button" onClick={handleRetry} className="btn btn-outline mt-4">Intentar de Nuevo</button>
-              </div>
-            )}
-          </form>
-        )
-      }
-    </div >
+            </div>
+          ))}
+          {!isCorrected ? (
+            <button type="submit" className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary w-full">Corregir Examen</button>
+          ) : (
+            <div className="p-6 bg-surface-100 rounded-lg shadow-md text-center">
+              <h3 className="text-xl font-bold">Resultado Final</h3>
+              <p className={`text-4xl font-extrabold mt-2 ${score >= 7 ? 'text-success' : 'text-error'}`}>{score.toFixed(2)} / 10</p>
+              <button type="button" onClick={handleRetry} className="btn btn-outline mt-4">Intentar de Nuevo</button>
+            </div>
+          )}
+        </form>
+      )}
+    </div>
   );
 };
 

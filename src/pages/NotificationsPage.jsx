@@ -11,7 +11,7 @@ const NotificationsPage = () => {
 
     useEffect(() => {
         if (!currentUser) return;
-        
+
         getNotifications(currentUser.uid).then(snapshot => {
             const notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setNotifications(notifs);
@@ -24,7 +24,7 @@ const NotificationsPage = () => {
         }).finally(() => setLoading(false));
 
     }, [currentUser]);
-    
+
     if (loading) return <div>Cargando notificaciones...</div>;
 
     return (
@@ -44,7 +44,7 @@ const NotificationsPage = () => {
                 ) : (
                     <div className="text-center p-10 text-text-secondary">
                         <FaBellSlash size={48} className="mx-auto mb-4" />
-                        <p>No tienes notificaciones.</p>
+                        <p>Actualmente en desarrollo. Proximamente tendrás notificaciones</p>
                     </div>
                 )}
             </div>
