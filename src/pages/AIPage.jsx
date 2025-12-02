@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { FaFileUpload, FaSpinner, FaFilePdf, FaDownload, FaInfoCircle, FaFileWord, FaCopy, FaStar } from 'react-icons/fa';
+import { FaFileUpload, FaSpinner, FaFilePdf, FaDownload, FaInfoCircle, FaFileWord, FaCopy, FaStar, FaClipboardList } from 'react-icons/fa';
 import * as pdfjsLib from 'pdfjs-dist';
 import { callGenerateSummary, callGenerateExam } from '../services/firestoreService';
 import { marked } from 'marked';
@@ -9,7 +9,7 @@ import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } fro
 import { saveAs } from 'file-saver';
 import Modal from '../components/ui/Modal';
 import AIInstructions from '../components/ui/AIInstructions';
-import { useAuth } from '../contexts/AuthContext'; 
+import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { shuffleExam } from '../utils/examUtils';
 
@@ -58,103 +58,101 @@ const SummarizerTab = () => {
     }
   };
 
- const handleDownloadDOCX = () => {
+  const handleDownloadDOCX = () => {
     if (!summary) return;
     toast.info("Generando .docx...");
 
     const docChildren = summary.split('\n').filter(line => line.trim() !== '').map(line => {
-        const trimmedLine = line.trim();
+      const trimmedLine = line.trim();
 
-        // Manejo de encabezados
-        if (trimmedLine.startsWith('## ')) {
-            return new Paragraph({
-                children: [new TextRun({ text: trimmedLine.substring(3), bold: true, size: 32 })],
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 360, after: 180 }
-            });
-        }
-        if (trimmedLine.startsWith('### ')) {
-            return new Paragraph({
-                children: [new TextRun({ text: trimmedLine.substring(4), bold: true, size: 28 })],
-                heading: HeadingLevel.HEADING_3,
-                spacing: { before: 240, after: 120 }
-            });
-        }
-        
-        // Manejo de ítems de lista
-        if (trimmedLine.startsWith('* ')) {
-            return new Paragraph({
-                children: parseMarkdownBold(trimmedLine.substring(2)),
-                bullet: { level: 0 },
-                spacing: { after: 120 }
-            });
-        }
-
-        // Párrafo normal
+      // Manejo de encabezados
+      if (trimmedLine.startsWith('## ')) {
         return new Paragraph({
-            children: parseMarkdownBold(trimmedLine),
-            spacing: { after: 120 }
+          children: [new TextRun({ text: trimmedLine.substring(3), bold: true, size: 32 })],
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 360, after: 180 }
         });
+      }
+      if (trimmedLine.startsWith('### ')) {
+        return new Paragraph({
+          children: [new TextRun({ text: trimmedLine.substring(4), bold: true, size: 28 })],
+          heading: HeadingLevel.HEADING_3,
+          spacing: { before: 240, after: 120 }
+        });
+      }
+
+      // Manejo de ítems de lista
+      if (trimmedLine.startsWith('* ')) {
+        return new Paragraph({
+          children: parseMarkdownBold(trimmedLine.substring(2)),
+          bullet: { level: 0 },
+          spacing: { after: 120 }
+        });
+      }
+
+      // Párrafo normal
+      return new Paragraph({
+        children: parseMarkdownBold(trimmedLine),
+        spacing: { after: 120 }
+      });
     });
 
     // Función para procesar **negritas** en texto
     function parseMarkdownBold(text) {
-        const textRuns = [];
-        const regex = /\*\*(.+?)\*\*/g;
-        let lastIndex = 0;
-        let match;
+      const textRuns = [];
+      const regex = /\*\*(.+?)\*\*/g;
+      let lastIndex = 0;
+      let match;
 
-        while ((match = regex.exec(text)) !== null) {
-            // Texto normal antes de la negrita
-            if (match.index > lastIndex) {
-                textRuns.push(new TextRun({
-                    text: text.substring(lastIndex, match.index),
-                    bold: false,
-                    size: 24
-                }));
-            }
-
-            // Texto en negrita (sin los **)
-            textRuns.push(new TextRun({
-                text: match[1],
-                bold: true,
-                size: 24
-            }));
-
-            lastIndex = regex.lastIndex;
+      while ((match = regex.exec(text)) !== null) {
+        // Texto normal antes de la negrita
+        if (match.index > lastIndex) {
+          textRuns.push(new TextRun({
+            text: text.substring(lastIndex, match.index),
+            bold: false,
+            size: 24
+          }));
         }
 
-        // Texto restante después de la última negrita
-        if (lastIndex < text.length) {
-            textRuns.push(new TextRun({
-                text: text.substring(lastIndex),
-                bold: false,
-                size: 24
-            }));
-        }
+        // Texto en negrita (sin los **)
+        textRuns.push(new TextRun({
+          text: match[1],
+          bold: true,
+          size: 24
+        }));
 
-        return textRuns;
+        lastIndex = regex.lastIndex;
+      }
+      // Texto restante después de la última negrita
+      if (lastIndex < text.length) {
+        textRuns.push(new TextRun({
+          text: text.substring(lastIndex),
+          bold: false,
+          size: 24
+        }));
+      }
+
+      return textRuns;
     }
 
     const doc = new Document({
-        sections: [{
-            children: [
-                new Paragraph({
-                    children: [new TextRun({ text: `Resumen de: ${fileName || 'Documento'}`, bold: true, size: 40 })],
-                    alignment: AlignmentType.CENTER,
-                    spacing: { after: 480 }
-                }),
-                ...docChildren
-            ],
-        }],
+      sections: [{
+        children: [
+          new Paragraph({
+            children: [new TextRun({ text: `Resumen de: ${fileName || 'Documento'}`, bold: true, size: 40 })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 480 }
+          }),
+          ...docChildren
+        ],
+      }],
     });
-    
-    Packer.toBlob(doc).then(blob => {
-        saveAs(blob, `Resumen - ${fileName.replace('.pdf', '') || 'Estud-IA'}.docx`);
-        toast.success(".docx descargado.");
-    });
-};
 
+    Packer.toBlob(doc).then(blob => {
+      saveAs(blob, `Resumen - ${fileName.replace('.pdf', '') || 'Estud-IA'}.docx`);
+      toast.success(".docx descargado.");
+    });
+  };
 
   const handleCopyText = () => {
     if (!summary) return;
@@ -170,25 +168,32 @@ const SummarizerTab = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-2xl font-bold">Crear un Resumen</h2>
-        <button onClick={() => setIsInstructionsModalOpen(true)} className="btn btn-outline btn-sm">Instrucciones</button>
+      <div className="text-center mb-10 animate-fade-in">
+        <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4">
+          <FaFilePdf className="text-3xl text-primary" />
+        </div>
+        <h2 className="text-3xl font-bold mb-3 text-text-primary">Generador de Resúmenes</h2>
+        <p className="text-text-secondary max-w-xl mx-auto text-lg mb-4">
+          Transforma tus apuntes PDF en resúmenes estructurados y listos para estudiar en segundos.
+        </p>
+        <button
+          onClick={() => setIsInstructionsModalOpen(true)}
+          className="btn btn-ghost btn-sm text-primary hover:bg-primary/10 font-medium"
+        >
+          <FaInfoCircle className="mr-2" />
+          Ver instrucciones y consejos
+        </button>
       </div>
-      <p className="text-text-secondary mb-4">Sube un apunte en formato PDF y Gemini creará un resumen para ti.</p>
-      <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/50 p-3 rounded-md mb-8">
-        <FaInfoCircle className="flex-shrink-0" />
-        <span><strong>Aviso:</strong> Este es un servicio en fase BETA. Si recibes un error, puede que nuestros servidores de IA estén ocupados. Por favor, espera unos minutos y vuelve a intentarlo.</span>
-      </div>
-      
+
       {/* --- FORMULARIO CORREGIDO CON GRID --- */}
       <form onSubmit={handleSubmit(onSubmit)} className="bg-surface-100 p-6 rounded-lg shadow-md grid grid-cols-[auto,1fr,auto] items-center gap-4 mb-8">
         {/* Columna 1 */}
         <label className="btn btn-primary bg-primary border-primary text-text-accent w-full sm:w-auto">
-            <FaFileUpload className="mr-2" />
-            <span>{fileName ? 'Cambiar PDF' : 'Seleccionar PDF'}</span>
-            <input type="file" {...register("pdfFile")} accept="application/pdf" className="hidden" />
+          <FaFileUpload className="mr-2" />
+          <span>{fileName ? 'Cambiar PDF' : 'Seleccionar PDF'}</span>
+          <input type="file" {...register("pdfFile")} accept="application/pdf" className="hidden" />
         </label>
-        
+
         {/* Columna 2 */}
         {fileName ? (
           <div className="flex items-center gap-2 text-text-secondary text-sm min-w-0">
@@ -196,15 +201,15 @@ const SummarizerTab = () => {
             <span className="truncate" title={fileName}>{fileName}</span>
           </div>
         ) : (
-            <div></div> // Placeholder para mantener la estructura de la grilla
+          <div></div> // Placeholder
         )}
 
         {/* Columna 3 */}
         <button type="submit" className="btn btn-secondary bg-secondary border-secondary  hover:bg-primary" disabled={isLoading || !fileName}>
-            {isLoading ? <span className="loading loading-spinner"></span> : 'Generar Resumen'}
+          {isLoading ? <span className="loading loading-spinner"></span> : 'Generar Resumen'}
         </button>
       </form>
-      
+
       {isLoading && (<div className="text-center p-8"><FaSpinner className="animate-spin text-primary mx-auto" size={48} /><p className="mt-4 text-text-secondary">Analizando "{fileName}" y resumiendo... Por favor, espera.</p></div>)}
       {summary && (
         <div className="mt-8 animate-fade-in">
@@ -219,9 +224,6 @@ const SummarizerTab = () => {
     </>
   );
 };
-
-
-
 
 // --- Sub-componente para la pestaña de MODELOS DE PARCIAL ---
 const ExamGeneratorTab = () => {
@@ -239,59 +241,59 @@ const ExamGeneratorTab = () => {
   const onGenerateExam = async (data) => {
     const file = data.pdfFile[0];
     if (!file) {
-        toast.warn("Por favor, selecciona un archivo PDF.");
-        return;
+      toast.warn("Por favor, selecciona un archivo PDF.");
+      return;
     }
-    
+
     setIsLoading(true);
     setQuestions([]);
     setIsCorrected(false);
     setScore(0);
     resetExam();
-    
+
     try {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-        let fullText = '';
-        for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const textContent = await page.getTextContent();
-            fullText += textContent.items.map(item => item.str).join(' ');
-        }
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+      let fullText = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        fullText += textContent.items.map(item => item.str).join(' ');
+      }
 
-        toast.info("La IA está generando tu examen...");
-        const rawResponse = await callGenerateExam(fullText);
+      toast.info("La IA está generando tu examen...");
+      const rawResponse = await callGenerateExam(fullText);
 
-        const firstBracket = rawResponse.indexOf('[');
-        const lastBracket = rawResponse.lastIndexOf(']');
+      const firstBracket = rawResponse.indexOf('[');
+      const lastBracket = rawResponse.lastIndexOf(']');
 
-        if (firstBracket === -1 || lastBracket === -1) {
-            throw new Error("La respuesta de la IA no contiene un formato JSON válido.");
-        }
+      if (firstBracket === -1 || lastBracket === -1) {
+        throw new Error("La respuesta de la IA no contiene un formato JSON válido.");
+      }
 
-        const jsonString = rawResponse.substring(firstBracket, lastBracket + 1);
-        const parsedQuestions = JSON.parse(jsonString);
+      const jsonString = rawResponse.substring(firstBracket, lastBracket + 1);
+      const parsedQuestions = JSON.parse(jsonString);
 
-        // --- ¡CAMBIO APLICADO AQUÍ! ---
-        // Barajamos las preguntas antes de guardarlas en el estado.
-        const shuffledQuestions = shuffleExam(parsedQuestions);
-        
-        setQuestions(shuffledQuestions);
-        // -----------------------------
-        
-        toast.success("¡Examen generado! Es hora de practicar.");
+      // --- ¡CAMBIO APLICADO AQUÍ! ---
+      // Barajamos las preguntas antes de guardarlas en el estado.
+      const shuffledQuestions = shuffleExam(parsedQuestions);
+
+      setQuestions(shuffledQuestions);
+      // -----------------------------
+
+      toast.success("¡Examen generado! Es hora de practicar.");
 
     } catch (error) {
-        console.error("Error al procesar el examen:", error);
-        if (error instanceof SyntaxError) {
-            toast.error("La IA devolvió un formato inesperado. Por favor, inténtalo de nuevo.");
-        } else {
-            toast.error(error.message || "No se pudo generar el examen.");
-        }
+      console.error("Error al procesar el examen:", error);
+      if (error instanceof SyntaxError) {
+        toast.error("La IA devolvió un formato inesperado. Por favor, inténtalo de nuevo.");
+      } else {
+        toast.error(error.message || "No se pudo generar el examen.");
+      }
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
-};
+  };
 
   const onCorrectExam = () => {
     const userAnswers = getValues();
@@ -322,11 +324,14 @@ const ExamGeneratorTab = () => {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold">Crear un Modelo de examen</h2>
-      <p className="text-text-secondary mb-4">Sube tu material de estudio y la IA generará un examen de opción múltiple para que pongas a prueba tus conocimientos.</p>
-      <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/50 p-3 rounded-md mb-8">
-        <FaInfoCircle className="flex-shrink-0" />
-        <span><strong>Aviso:</strong> Este es un servicio en fase BETA. Si recibes un error, puede que nuestros servidores de IA estén ocupados. Por favor, espera unos minutos y vuelve a intentarlo.</span>
+      <div className="text-center mb-10 animate-fade-in">
+        <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4">
+          <FaClipboardList className="text-3xl text-primary" />
+        </div>
+        <h2 className="text-3xl font-bold mb-3 text-text-primary">Generador de Exámenes</h2>
+        <p className="text-text-secondary max-w-xl mx-auto text-lg mb-4">
+          Sube tu material de estudio y la IA generará un examen de opción múltiple para que pongas a prueba tus conocimientos.
+        </p>
       </div>
 
       {/* --- FORMULARIO CORREGIDO CON GRID --- */}
@@ -336,56 +341,60 @@ const ExamGeneratorTab = () => {
           <FaFileUpload className="mr-2" />
           <span>{fileName ? 'Cambiar PDF' : 'Seleccionar PDF'}</span>
           <input type="file" {...registerFile("pdfFile")} accept="application/pdf" className="hidden" />
-        </label>
-        
+        </label >
+
         {/* Columna 2 */}
-        {fileName ? (
-          <div className="flex items-center gap-2 text-text-secondary text-sm min-w-0">
-            <FaFilePdf className="text-red-500 flex-shrink-0" />
-            <span className="truncate" title={fileName}>{fileName}</span>
-          </div>
-        ) : (
+        {
+          fileName ? (
+            <div className="flex items-center gap-2 text-text-secondary text-sm min-w-0">
+              <FaFilePdf className="text-red-500 flex-shrink-0" />
+              <span className="truncate" title={fileName}>{fileName}</span>
+            </div>
+          ) : (
             <div></div> // Placeholder
-        )}
+          )
+        }
 
         {/* Columna 3 */}
         <button type="submit" className="btn btn-secondary bg-secondary border-secondary  hover:bg-primary" disabled={isLoading || !fileName}>
           {isLoading ? <span className="loading loading-spinner"></span> : 'Generar Examen'}
         </button>
-      </form>
+      </form >
 
       {isLoading && (<div className="text-center p-8"><FaSpinner className="animate-spin text-primary mx-auto" size={48} /><p className="mt-4 text-text-secondary">Generando un nuevo examen con "{fileName}"...</p></div>)}
 
-      {questions.length > 0 && !isLoading && (
-        <form onSubmit={handleSubmitExam(onCorrectExam)} className="space-y-8 animate-fade-in">
-          {questions.map((q, index) => (
-            <div key={index} className="p-6 bg-surface-100 rounded-lg shadow-md">
-              <p className="font-semibold mb-4">{index + 1}. {q.question}</p>
-              <div className="space-y-2">
-                {q.options.map((option, optionIndex) => {
-                  const optionLetter = String.fromCharCode(97 + optionIndex);
-                  return (
-                    <label key={optionIndex} className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-colors ${getOptionStyle(index, optionLetter)}`}>
-                      <input type="radio" {...registerExam(`question_${index}`, { required: true })} value={optionLetter} className="radio radio-primary" disabled={isCorrected} />
-                      <span>{option}</span>
-                    </label>
-                  );
-                })}
+      {
+        questions.length > 0 && !isLoading && (
+          <form onSubmit={handleSubmitExam(onCorrectExam)} className="space-y-8 animate-fade-in">
+            {questions.map((q, index) => (
+              <div key={index} className="p-6 bg-surface-100 rounded-lg shadow-md">
+                <p className="font-semibold mb-4">{index + 1}. {q.question}</p>
+                <div className="space-y-2">
+                  {q.options.map((option, optionIndex) => {
+                    const optionLetter = String.fromCharCode(97 + optionIndex);
+                    return (
+                      <label key={optionIndex} className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-colors ${getOptionStyle(index, optionLetter)}`}>
+                        <input type="radio" {...registerExam(`question_${index}`, { required: true })} value={optionLetter} className="radio radio-primary" disabled={isCorrected} />
+                        <span>{option}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-          {!isCorrected ? (
-            <button type="submit" className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary w-full">Corregir Examen</button>
-          ) : (
-            <div className="p-6 bg-surface-100 rounded-lg shadow-md text-center">
-              <h3 className="text-xl font-bold">Resultado Final</h3>
-              <p className={`text-4xl font-extrabold mt-2 ${score >= 7 ? 'text-success' : 'text-error'}`}>{score.toFixed(2)} / 10</p>
-              <button type="button" onClick={handleRetry} className="btn btn-outline mt-4">Intentar de Nuevo</button>
-            </div>
-          )}
-        </form>
-      )}
-    </div>
+            ))}
+            {!isCorrected ? (
+              <button type="submit" className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary w-full">Corregir Examen</button>
+            ) : (
+              <div className="p-6 bg-surface-100 rounded-lg shadow-md text-center">
+                <h3 className="text-xl font-bold">Resultado Final</h3>
+                <p className={`text-4xl font-extrabold mt-2 ${score >= 7 ? 'text-success' : 'text-error'}`}>{score.toFixed(2)} / 10</p>
+                <button type="button" onClick={handleRetry} className="btn btn-outline mt-4">Intentar de Nuevo</button>
+              </div>
+            )}
+          </form>
+        )
+      }
+    </div >
   );
 };
 
@@ -403,16 +412,16 @@ const AIPage = () => {
   // Si tenemos los datos y el plan no es 'premium', mostramos el componente de upgrade
   if (userData && userData.plan !== 'premium') {
     return (
-        <div className="text-center p-6 sm:p-10 bg-surface-100 rounded-lg shadow-xl flex flex-col items-center">
-            <FaStar className="text-yellow-400 text-5xl mb-4" />
-            <h1 className="text-3xl font-bold mb-4">Desbloquea las Funciones de IA</h1>
-            <p className="text-text-secondary mb-8 max-w-md">
-                Las herramientas de Resúmenes y Modelos de Parcial son exclusivas para usuarios Premium. ¡Lleva tu estudio al siguiente nivel!
-            </p>
-            <Link to="/premium" className="btn btn-primary btn-lg bg-primary text-text-accent">
-                Ver Beneficios Premium
-            </Link>
-        </div>
+      <div className="text-center p-6 sm:p-10 bg-surface-100 rounded-lg shadow-xl flex flex-col items-center">
+        <FaStar className="text-yellow-400 text-5xl mb-4" />
+        <h1 className="text-3xl font-bold mb-4">Desbloquea las Funciones de IA</h1>
+        <p className="text-text-secondary mb-8 max-w-md">
+          Las herramientas de Resúmenes y Modelos de Parcial son exclusivas para usuarios Premium. ¡Lleva tu estudio al siguiente nivel!
+        </p>
+        <Link to="/premium" className="btn btn-primary btn-lg bg-primary text-text-accent">
+          Ver Beneficios Premium
+        </Link>
+      </div>
     );
   }
   // ------------------------------------
@@ -423,14 +432,29 @@ const AIPage = () => {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-3xl font-bold">Inteligencia Artificial</h1>
       </div>
-      <div role="tablist" className="tabs tabs-boxed bg-surface-100 mb-8">
-        <a role="tab" className={`tab tab-lg ${activeTab === 'summarizer' ? 'tab-active !bg-primary !text-text-accent' : 'tab-active'}`} onClick={() => setActiveTab('summarizer')}>
+
+      {/* --- PESTAÑAS MODERNAS TIPO TWITTER --- */}
+      <div className="flex w-full border-b border-gray-200 dark:border-gray-700 mb-6">
+        <div
+          className={`flex-1 text-center py-4 cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 relative ${activeTab === 'summarizer' ? 'font-bold text-text-primary' : 'font-medium text-text-secondary'}`}
+          onClick={() => setActiveTab('summarizer')}
+        >
           Resúmenes
-        </a>
-        <a role="tab" className={`tab tab-lg ${activeTab === 'exam' ? 'tab-active !bg-primary !text-text-accent' : 'tab-active'}`} onClick={() => setActiveTab('exam')}>
+          {activeTab === 'summarizer' && (
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-primary rounded-t-full"></div>
+          )}
+        </div>
+        <div
+          className={`flex-1 text-center py-4 cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 relative ${activeTab === 'exam' ? 'font-bold text-text-primary' : 'font-medium text-text-secondary'}`}
+          onClick={() => setActiveTab('exam')}
+        >
           Modelos de Parcial
-        </a>
+          {activeTab === 'exam' && (
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-primary rounded-t-full"></div>
+          )}
+        </div>
       </div>
+
       <div>
         {activeTab === 'summarizer' && <SummarizerTab />}
         {activeTab === 'exam' && <ExamGeneratorTab />}
