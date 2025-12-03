@@ -44,7 +44,7 @@ const NotificationsPage = () => {
                 ) : (
                     <div className="text-center p-10 text-text-secondary">
                         <FaBellSlash size={48} className="mx-auto mb-4" />
-                        <p>Actualmente en desarrollo. Proximamente tendrás notificaciones</p>
+                        <p>No tienes notificaciones por el momento.</p>
                     </div>
                 )}
             </div>

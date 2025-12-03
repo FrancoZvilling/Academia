@@ -19,78 +19,78 @@ const mpAccessToken = defineSecret("MERCADOPAGO_ACCESS_TOKEN");
 
 // --- FUNCIÓN: Borrar Año y su Contenido (V2) ---
 exports.deleteYearAndContent = onDocumentDeleted("users/{userId}/years/{yearId}", async (event) => {
-  const { userId, yearId } = event.params;
-  logger.info(`(V2) Iniciando limpieza para el año ${yearId}`);
+    const { userId, yearId } = event.params;
+    logger.info(`(V2) Iniciando limpieza para el año ${yearId}`);
 
-  const subjectsRef = db.collection("users").doc(userId).collection("years").doc(yearId).collection("subjects");
-  const subjectsSnap = await subjectsRef.get();
+    const subjectsRef = db.collection("users").doc(userId).collection("years").doc(yearId).collection("subjects");
+    const subjectsSnap = await subjectsRef.get();
 
-  if (subjectsSnap.empty) {
-    logger.info("No hay materias que limpiar para este año.");
-    return;
-  }
+    if (subjectsSnap.empty) {
+        logger.info("No hay materias que limpiar para este año.");
+        return;
+    }
 
-  const batch = db.batch();
-  const deletePromises = [];
+    const batch = db.batch();
+    const deletePromises = [];
 
-  for (const doc of subjectsSnap.docs) {
-    const eventsRef = doc.ref.collection("events");
-    const eventsSnap = await eventsRef.get();
-    eventsSnap.forEach((d) => batch.delete(d.ref));
+    for (const doc of subjectsSnap.docs) {
+        const eventsRef = doc.ref.collection("events");
+        const eventsSnap = await eventsRef.get();
+        eventsSnap.forEach((d) => batch.delete(d.ref));
 
-    const bucket = storage.bucket();
-    const folderPath = `users/${userId}/subjects/${doc.id}/`;
-    deletePromises.push(bucket.deleteFiles({ prefix: folderPath }));
+        const bucket = storage.bucket();
+        const folderPath = `users/${userId}/subjects/${doc.id}/`;
+        deletePromises.push(bucket.deleteFiles({ prefix: folderPath }));
 
-    batch.delete(doc.ref);
-  }
+        batch.delete(doc.ref);
+    }
 
-  deletePromises.push(batch.commit());
-  await Promise.all(deletePromises);
-  logger.info(`(V2) Limpieza de año completada.`);
+    deletePromises.push(batch.commit());
+    await Promise.all(deletePromises);
+    logger.info(`(V2) Limpieza de año completada.`);
 });
 
 
 // --- FUNCIÓN: Borrar Usuario y su Contenido (usando v1/auth) ---
 exports.deleteUserAndContent = user().onDelete(async (userRecord) => {
-  const uid = userRecord.uid;
-  logger.info(`(Auth v1) Iniciando limpieza completa para usuario ${uid}`);
-  try {
-    const userDocRef = db.collection("users").doc(uid);
-    await db.recursiveDelete(userDocRef);
-    logger.info(`(Auth v1) Documentos de Firestore eliminados.`);
+    const uid = userRecord.uid;
+    logger.info(`(Auth v1) Iniciando limpieza completa para usuario ${uid}`);
+    try {
+        const userDocRef = db.collection("users").doc(uid);
+        await db.recursiveDelete(userDocRef);
+        logger.info(`(Auth v1) Documentos de Firestore eliminados.`);
 
-    const bucket = storage.bucket();
-    const folderPath = `users/${uid}/`;
-    await bucket.deleteFiles({ prefix: folderPath });
-    logger.info(`(Auth v1) Archivos de Storage eliminados.`);
-  } catch (error) {
-    if (error.code === 5) {
-      logger.info(`(Auth v1) No se encontraron datos para el usuario ${uid}.`);
-    } else {
-      logger.error(`(Auth v1) Error en limpieza de usuario ${uid}:`, error);
+        const bucket = storage.bucket();
+        const folderPath = `users/${uid}/`;
+        await bucket.deleteFiles({ prefix: folderPath });
+        logger.info(`(Auth v1) Archivos de Storage eliminados.`);
+    } catch (error) {
+        if (error.code === 5) {
+            logger.info(`(Auth v1) No se encontraron datos para el usuario ${uid}.`);
+        } else {
+            logger.error(`(Auth v1) Error en limpieza de usuario ${uid}:`, error);
+        }
     }
-  }
 });
 
 
 // --- FUNCIÓN: Generar Resumen con Gemini (V2) ---
 exports.generateSummary = onCall({ secrets: [geminiApiKey] }, async (request) => {
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "La función debe ser llamada por un usuario autenticado.");
-  }
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "La función debe ser llamada por un usuario autenticado.");
+    }
 
-  const textToSummarize = request.data.text;
-  if (!textToSummarize || typeof textToSummarize !== "string" || textToSummarize.length === 0) {
-    throw new HttpsError("invalid-argument", "La función debe ser llamada con un campo 'text' válido.");
-  }
+    const textToSummarize = request.data.text;
+    if (!textToSummarize || typeof textToSummarize !== "string" || textToSummarize.length === 0) {
+        throw new HttpsError("invalid-argument", "La función debe ser llamada con un campo 'text' válido.");
+    }
 
-  const genAI = new GoogleGenerativeAI(geminiApiKey.value());
-  // --- CORRECCIÓN ---
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-  // --------------------
+    const genAI = new GoogleGenerativeAI(geminiApiKey.value());
+    // --- CORRECCIÓN ---
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+    // --------------------
 
-  const prompt = `
+    const prompt = `
      *ROL Y OBJETIVO:*
 Eres una herramienta de procesamiento de texto llamada Estud-IA. Tu única función es transformar un texto académico en un formato de resumen estructurado para facilitar el estudio. NO debes actuar como un editor ni omitir información. Tu objetivo es reestructurar y condensar el 100% del contenido original.
 
@@ -145,37 +145,37 @@ Aquí está el texto a resumir:
     ---
   `;
 
-  logger.info("Llamando a la API de Gemini...");
-  try {
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const summary = response.text();
+    logger.info("Llamando a la API de Gemini...");
+    try {
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        const summary = response.text();
 
-    return { summary };
-  } catch (error) {
-    logger.error("Error al llamar a la API de Gemini:", error);
-    throw new HttpsError("internal", "No se pudo generar el resumen.");
-  }
+        return { summary };
+    } catch (error) {
+        logger.error("Error al llamar a la API de Gemini:", error);
+        throw new HttpsError("internal", "No se pudo generar el resumen.");
+    }
 });
 
 
 // --- FUNCIÓN: Generar Modelo de Parcial (V2) ---
 exports.generateExam = onCall({ secrets: [geminiApiKey] }, async (request) => {
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "La función debe ser llamada por un usuario autenticado.");
-  }
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "La función debe ser llamada por un usuario autenticado.");
+    }
 
-  const textForExam = request.data.text;
-  if (!textForExam || typeof textForExam !== "string" || textForExam.length === 0) {
-    throw new HttpsError("invalid-argument", "La función debe ser llamada con un campo 'text' válido.");
-  }
+    const textForExam = request.data.text;
+    if (!textForExam || typeof textForExam !== "string" || textForExam.length === 0) {
+        throw new HttpsError("invalid-argument", "La función debe ser llamada con un campo 'text' válido.");
+    }
 
-  const genAI = new GoogleGenerativeAI(geminiApiKey.value());
-  // --- CORRECCIÓN ---
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-  // --------------------
+    const genAI = new GoogleGenerativeAI(geminiApiKey.value());
+    // --- CORRECCIÓN ---
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+    // --------------------
 
-  const prompt = `
+    const prompt = `
     ROL: Eres un experto creador de exámenes universitarios.
     TAREA: Analiza el siguiente texto de un apunte universitario y genera un examen de opción múltiple (multiple choice) de 10 preguntas.
 
@@ -217,29 +217,29 @@ TEXTO A ANALIZAR:
     ---
   `;
 
-  logger.info("Llamando a la API de Gemini para generar un examen...");
-  try {
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const jsonText = response.text();
-    
-    return { examData: jsonText };
+    logger.info("Llamando a la API de Gemini para generar un examen...");
+    try {
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        const jsonText = response.text();
 
-  } catch (error) {
-    logger.error("Error al llamar a la API de Gemini para generar el examen:", error);
-    if (error.message && error.message.toLowerCase().includes('overloaded')) {
-        throw new HttpsError("resource-exhausted", "Nuestros servidores de IA están ocupados. Por favor, inténtalo de nuevo en unos minutos.");
+        return { examData: jsonText };
+
+    } catch (error) {
+        logger.error("Error al llamar a la API de Gemini para generar el examen:", error);
+        if (error.message && error.message.toLowerCase().includes('overloaded')) {
+            throw new HttpsError("resource-exhausted", "Nuestros servidores de IA están ocupados. Por favor, inténtalo de nuevo en unos minutos.");
+        }
+        throw new HttpsError("internal", "No se pudo generar el modelo de parcial.");
     }
-    throw new HttpsError("internal", "No se pudo generar el modelo de parcial.");
-  }
 });
 
 
 // --- FUNCIÓN PARA CREAR LINK DE SUSCRIPCIÓN (V2) ---
 // --- FUNCIÓN PARA CREAR LINK DE SUSCRIPCIÓN (CON DEPURACIÓN AGRESIVA) ---
-exports.createSubscriptionLink = onCall({ 
+exports.createSubscriptionLink = onCall({
     secrets: [mpAccessToken],
-    region: "southamerica-east1" 
+    region: "southamerica-east1"
 }, async (request) => {
     // 1. Loguear inicio y datos del usuario
     logger.info("Iniciando 'createSubscriptionLink'...");
@@ -264,12 +264,12 @@ exports.createSubscriptionLink = onCall({
     logger.info(`Access Token cargado correctamente. Comienza con: ${accessToken.substring(0, 15)}...`);
 
     // 3. Configurar el cliente de Mercado Pago
-    const client = new mercadopago.MercadoPagoConfig({ 
+    const client = new mercadopago.MercadoPagoConfig({
         accessToken: accessToken,
         options: { timeout: 5000 }
     });
     const preapproval = new mercadopago.PreApproval(client);
-    
+
     const planData = {
         reason: "Suscripción Premium Estud-IA",
         auto_recurring: {
@@ -287,11 +287,11 @@ exports.createSubscriptionLink = onCall({
     try {
         // 4. Loguear los datos exactos que se envían a Mercado Pago
         logger.info("Enviando los siguientes datos a la API de Mercado Pago:", JSON.stringify(planData, null, 2));
-        
+
         const result = await preapproval.create({ body: planData });
-        
+
         logger.info("Respuesta exitosa recibida de Mercado Pago:", result);
-        
+
         if (result && result.init_point) {
             return { url: result.init_point };
         } else {
@@ -307,9 +307,9 @@ exports.createSubscriptionLink = onCall({
     }
 });
 
-exports.adminTasks = onCall({ 
+exports.adminTasks = onCall({
     secrets: [/* ... */],
-    region: "southamerica-east1" 
+    region: "southamerica-east1"
 }, async (request) => {
     const adminUID = "40HuVxGw1KfO73hqJDiOb9OERIp1";
     if (request.auth?.uid !== adminUID) {
@@ -324,7 +324,7 @@ exports.adminTasks = onCall({
             try {
                 // Obtenemos los usuarios de Auth
                 const listUsersResult = await admin.auth().listUsers(1000);
-                
+
                 // Obtenemos los datos adicionales de Firestore
                 const firestoreUsersSnap = await db.collection('users').get();
                 const firestoreUsersData = {};
@@ -339,21 +339,21 @@ exports.adminTasks = onCall({
                     displayName: user.displayName,
                     photoURL: user.photoURL,
                     // Añadimos los datos de Firestore (plan, premiumUntil, etc.)
-                    ...firestoreUsersData[user.uid] 
+                    ...firestoreUsersData[user.uid]
                 }));
                 return { users };
             } catch (error) {
                 logger.error("Error al listar usuarios:", error);
                 throw new HttpsError("internal", "No se pudo listar los usuarios.");
             }
-        
+
         case 'UPDATE_USER_PLAN':
             try {
                 const { userId, plan, mercadopagoEmail } = payload;
                 if (!userId || !plan) throw new HttpsError("invalid-argument", "Faltan datos.");
-                
+
                 const userDocRef = db.collection("users").doc(userId);
-                
+
                 const dataToUpdate = { plan };
 
                 if (plan === 'premium') {
@@ -396,10 +396,10 @@ exports.checkScheduledNotifications = onSchedule({
     logger.info("Ejecutando chequeo de notificaciones programadas...");
 
     const now = new Date();
-    
+
     // 1. Obtener todos los usuarios
     const usersSnap = await db.collection('users').get();
-    
+
     for (const userDoc of usersSnap.docs) {
         const user = userDoc.data();
         const userId = user.uid;
@@ -413,7 +413,7 @@ exports.checkScheduledNotifications = onSchedule({
         // A. Eventos de Materia y Generales (1 semana, 3 días, 24 horas, 12 horas antes)
         const eventsCollections = ['events', 'generalEvents'];
         for (const coll of eventsCollections) {
-            const eventsSnap = await db.collectionGroup(coll).where('userId', '==', userId).get();
+            const eventsSnap = await db.collectionGroup(coll).where('userId', '==', userId).orderBy('start').get();
 
             eventsSnap.forEach(eventDoc => {
                 const eventData = eventDoc.data();
@@ -422,24 +422,26 @@ exports.checkScheduledNotifications = onSchedule({
                 if (!eventData.start || typeof eventData.start !== 'string') {
                     return; // Ignora eventos sin fecha
                 }
-                
-                // Creamos un objeto Date a partir del string. JavaScript lo interpretará
-                // en la zona horaria del servidor (que hemos forzado a Argentina).
-                const eventStart = new Date(eventData.start);
-                
+
+                // Creamos un objeto Date a partir del string.
+                // CORRECCIÓN: Si el string no tiene zona horaria (ej: "2023-12-25T15:00"), 
+                // asumimos que es hora local de Argentina (-03:00).
+                let dateString = eventData.start;
+
+                // Si es formato "YYYY-MM-DD" (todo el día), le agregamos hora 00:00
+                if (dateString.length === 10) {
+                    dateString += "T00:00:00";
+                }
+
+                // Si no tiene offset de zona horaria (Z, +HH:mm, -HH:mm), le agregamos -03:00
+                if (!dateString.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(dateString)) {
+                    dateString += "-03:00";
+                }
+
+                const eventStart = new Date(dateString);
+
                 if (isNaN(eventStart.getTime())) {
                     return; // Ignora fechas inválidas
-                }
-                // ---------------------------------------------
-
-                const hoursUntil = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-                let message = null;
-                // Usamos un rango pequeño (ej. 1 hora) para "atrapar" la notificación
-                if (hoursUntil > 23.5 && hoursUntil <= 24.5) { 
-                    message = `RECORDATORIO: Mañana tienes "${eventData.title}"`;
-                } else if (hoursUntil > 71.5 && hoursUntil <= 72.5) {
-                    message = `AVISO: En 3 días tienes "${eventData.title}"`;
                 } else if (hoursUntil > 167.5 && hoursUntil <= 168.5) {
                     message = `AVISO: En una semana tienes "${eventData.title}"`;
                 }
@@ -452,8 +454,8 @@ exports.checkScheduledNotifications = onSchedule({
                 }
             });
         }
-    
-        
+
+
         // B. Clases (12 horas antes)
         // (Esta lógica es más compleja, la implementaremos en una mejora futura si es necesario,
         // ya que requiere calcular las ocurrencias de los horarios recurrentes)
@@ -471,20 +473,38 @@ exports.checkScheduledNotifications = onSchedule({
  * @param {string} body - Cuerpo del mensaje
  */
 const sendNotificationToUser = async (userId, tokens, title, body) => {
-    const payload = {
+    // Construimos el mensaje multicast (un mensaje para múltiples tokens)
+    const message = {
         notification: {
             title: title,
             body: body,
-            icon: '/defaults/default-avatar.png', // Ícono que se mostrará en la notificación
-            click_action: 'https://www.estud-ia.com.ar' // URL que se abre al hacer clic
-        }
+        },
+        data: {
+            click_action: 'https://www.estud-ia.com.ar',
+            icon: '/defaults/default-avatar.png'
+        },
+        tokens: tokens // Array de tokens
     };
 
     try {
-        await admin.messaging().sendToDevice(tokens, payload);
-        logger.info(`Notificación enviada a ${userId}: "${body}"`);
-        
+        // Usamos la API moderna sendEachForMulticast
+        const response = await admin.messaging().sendEachForMulticast(message);
+
+        logger.info(`Notificación enviada a ${userId}: "${body}" | Success: ${response.successCount} | Failure: ${response.failureCount}`);
+
+        if (response.failureCount > 0) {
+            const failedTokens = [];
+            response.responses.forEach((resp, idx) => {
+                if (!resp.success) {
+                    failedTokens.push(tokens[idx]);
+                    // Podríamos loguear el error específico de cada token: resp.error
+                }
+            });
+            logger.warn(`Tokens fallidos para ${userId}:`, failedTokens);
+        }
+
         // Guardamos una copia en el centro de notificaciones de Firestore
+        // (Solo si al menos una notificación se envió o intentó enviar)
         const notificationsRef = db.collection('users').doc(userId).collection('notifications');
         await notificationsRef.add({
             title,
@@ -492,8 +512,8 @@ const sendNotificationToUser = async (userId, tokens, title, body) => {
             read: false,
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
+
     } catch (error) {
-        logger.error(`Error al enviar notificación a ${userId}:`, error);
-        // Aquí podríamos tener lógica para limpiar tokens inválidos
+        logger.error(`Error CRÍTICO al enviar notificación a ${userId}:`, error);
     }
 };
