@@ -392,96 +392,93 @@ exports.checkScheduledNotifications = onSchedule({
     region: "southamerica-east1",
     timeZone: "America/Argentina/Buenos_Aires"
 }, async (event) => {
-    logger.info("Ejecutando chequeo de notificaciones programadas...");
+    // Generamos un ID único para esta ejecución para rastrearla en los logs
+    const executionId = Math.random().toString(36).substring(7);
+    logger.info(`[EXEC_ID: ${executionId}] INICIO de chequeo de notificaciones.`);
 
     const now = new Date();
 
     // 1. Obtener todos los usuarios
     const usersSnap = await db.collection('users').get();
 
+    const notificationPromises = [];
+
     for (const userDoc of usersSnap.docs) {
         const user = userDoc.data();
         const userId = user.uid;
 
         if (!user.fcmTokens || user.fcmTokens.length === 0) {
-            continue; // Si el usuario no tiene tokens, pasamos al siguiente
+            continue;
         }
 
         // --- Lógica de comprobación para cada tipo de recordatorio ---
 
-        // A. Eventos de Materia y Generales (1 semana, 3 días, 24 horas, 12 horas antes)
+        // A. Eventos de Materia y Generales
         const eventsCollections = ['events', 'generalEvents'];
         for (const coll of eventsCollections) {
             const eventsSnap = await db.collectionGroup(coll).where('userId', '==', userId).orderBy('start').get();
 
-            eventsSnap.forEach(eventDoc => {
+            eventsSnap.forEach(async (eventDoc) => { // Async para poder hacer await adentro
                 const eventData = eventDoc.data();
+                if (!eventData.start || typeof eventData.start !== 'string') return;
 
-                // --- ¡LÓGICA DE FECHA FINAL Y CORRECTA! ---
-                if (!eventData.start || typeof eventData.start !== 'string') {
-                    return; // Ignora eventos sin fecha
-                }
-
-                // Creamos un objeto Date a partir del string.
-                // CORRECCIÓN: Si el string no tiene zona horaria (ej: "2023-12-25T15:00"), 
-                // asumimos que es hora local de Argentina (-03:00).
                 let dateString = eventData.start;
-
-                // Si es formato "YYYY-MM-DD" (todo el día), le agregamos hora 00:00
-                if (dateString.length === 10) {
-                    dateString += "T00:00:00";
-                }
-
-                // Si no tiene offset de zona horaria (Z, +HH:mm, -HH:mm), le agregamos -03:00
-                if (!dateString.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(dateString)) {
-                    dateString += "-03:00";
-                }
+                if (dateString.length === 10) dateString += "T00:00:00";
+                if (!dateString.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(dateString)) dateString += "-03:00";
 
                 const eventStart = new Date(dateString);
-
-                if (isNaN(eventStart.getTime())) {
-                    return; // Ignora fechas inválidas
-                }
-                // ---------------------------------------------
+                if (isNaN(eventStart.getTime())) return;
 
                 const hoursUntil = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
 
                 let message = null;
-                let title = "Recordatorio de Evento"; // Título por defecto
+                let title = "Recordatorio de Evento";
+                let color = null; // Variable para el color
 
                 const isSubjectEvent = coll === 'events';
                 const isGeneralEvent = coll === 'generalEvents';
 
-                // 1. Mañana (24 horas antes): Para TODOS (Materias y Generales)
                 if (hoursUntil > 23.5 && hoursUntil <= 24.5) {
-                    message = `RECORDATORIO: Mañana tienes "${eventData.title}"`;
-                    title = isSubjectEvent ? "Examen / Entrega" : "Recordatorio";
-                }
-
-                // 2. En 3 días: SOLO para Materias
-                else if (isSubjectEvent && hoursUntil > 71.5 && hoursUntil <= 72.5) {
-                    message = `AVISO: En 3 días tienes "${eventData.title}"`;
+                    message = `Mañana tienes "${eventData.title}"`;
+                    title = isSubjectEvent ? "Examen / Entrega" : "Evento General";
+                } else if (isSubjectEvent && hoursUntil > 71.5 && hoursUntil <= 72.5) {
+                    message = `En 3 días tienes "${eventData.title}"`;
                     title = "Examen / Entrega";
-                }
-
-                // 3. En 1 semana: SOLO para Materias
-                else if (isSubjectEvent && hoursUntil > 167.5 && hoursUntil <= 168.5) {
-                    message = `AVISO: En una semana tienes "${eventData.title}"`;
+                } else if (isSubjectEvent && hoursUntil > 167.5 && hoursUntil <= 168.5) {
+                    message = `En una semana tienes "${eventData.title}"`;
                     title = "Examen / Entrega";
-                }
-
-                // 4. En 12 horas: SOLO para Eventos Generales
-                else if (isGeneralEvent && hoursUntil > 11.5 && hoursUntil <= 12.5) {
-                    message = `RECORDATORIO: En 12 horas: "${eventData.title}"`;
-                    title = "Recordatorio";
+                } else if (isGeneralEvent && hoursUntil > 11.5 && hoursUntil <= 12.5) {
+                    message = `En 12 horas: "${eventData.title}"`;
+                    title = "Evento General";
                 }
 
                 if (message) {
-                    sendNotificationToUser(userId, user.fcmTokens, title, message);
+                    // Lógica de Color y Título
+                    if (isGeneralEvent) {
+                        color = '#f59e0b'; // Dorado para eventos generales
+                    } else if (isSubjectEvent) {
+                        // Para eventos de materia, necesitamos buscar el color de la materia padre
+                        // La estructura es: users/{uid}/years/{yearId}/subjects/{subjectId}/events/{eventId}
+                        try {
+                            const subjectDoc = await eventDoc.ref.parent.parent.get();
+                            const subjectData = subjectDoc.data();
+                            color = subjectData?.color || '#3b82f6'; // Azul por defecto si falla
+
+                            // Si tenemos el nombre de la materia, lo usamos como título
+                            if (subjectData?.name) {
+                                title = subjectData.name;
+                            }
+                        } catch (err) {
+                            logger.error(`Error al obtener datos de materia para evento ${eventDoc.id}`, err);
+                            color = '#3b82f6';
+                        }
+                    }
+
+                    // Agregamos la promesa al array, pasando el executionId y el color
+                    notificationPromises.push(sendNotificationToUser(userId, user.fcmTokens, title, message, executionId, color));
                 }
             });
         }
-
 
         // B. Clases (24 horas antes)
         const yearsSnap = await db.collection('users').doc(userId).collection('years').get();
@@ -492,109 +489,175 @@ exports.checkScheduledNotifications = onSchedule({
                 const subject = subjectDoc.data();
                 if (!subject.schedule || !subject.startDate) return;
 
-                // Calculamos la fecha objetivo (Mañana a esta misma hora)
-                // Usamos la hora actual + 24hs
                 const targetDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-
-                // Obtenemos los datos de la fecha objetivo en Argentina
                 const options = { timeZone: 'America/Argentina/Buenos_Aires' };
-                const targetDayName = targetDate.toLocaleDateString('es-AR', { ...options, weekday: 'long' }).toLowerCase(); // "lunes"
+                const targetDayName = targetDate.toLocaleDateString('es-AR', { ...options, weekday: 'long' }).toLowerCase();
 
-                // Formato YYYY-MM-DD para comparar rangos
-                // Truco: usar sv-SE suele dar YYYY-MM-DD, pero para asegurar usamos parts
                 const dateParts = new Intl.DateTimeFormat('es-AR', { ...options, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(targetDate);
                 const day = dateParts.find(p => p.type === 'day').value;
                 const month = dateParts.find(p => p.type === 'month').value;
                 const year = dateParts.find(p => p.type === 'year').value;
                 const targetDateString = `${year}-${month}-${day}`;
 
-                // Verificar rango de fechas
                 if (targetDateString < subject.startDate) return;
                 if (subject.endDate && targetDateString > subject.endDate) return;
 
-                // Verificar si hay clase ese día
-                // El array schedule tiene { day: "Lunes", startTime: "10:00", ... }
                 const classToday = subject.schedule.find(slot => slot.day.toLowerCase() === targetDayName);
 
                 if (classToday && classToday.startTime) {
-                    // Verificar la hora (con margen de error de ~30 min para asegurar que el scheduler lo agarre)
-                    // targetDate tiene la hora actual. classToday.startTime tiene la hora de la clase.
                     const [classHour, classMinute] = classToday.startTime.split(':').map(Number);
-
-                    // Hora objetivo en Argentina
                     const targetHourStr = targetDate.toLocaleTimeString('es-AR', { ...options, hour: '2-digit', hour12: false });
                     const targetMinuteStr = targetDate.toLocaleTimeString('es-AR', { ...options, minute: '2-digit' });
                     const targetHour = parseInt(targetHourStr);
                     const targetMinute = parseInt(targetMinuteStr);
 
-                    // Convertimos todo a minutos para comparar
                     const classTotalMinutes = classHour * 60 + classMinute;
                     const targetTotalMinutes = targetHour * 60 + targetMinute;
-
                     const diff = Math.abs(classTotalMinutes - targetTotalMinutes);
 
-                    // Si la diferencia es menor a 55 minutos (el scheduler corre cada 60)
                     if (diff < 55) {
-                        sendNotificationToUser(userId, user.fcmTokens, "Mañana tienes clases", `Mañana tienes clases de ${subject.name} a las ${classToday.startTime} hs.`);
+                        // Pasamos el color de la materia
+                        const color = subject.color || '#3b82f6';
+                        notificationPromises.push(sendNotificationToUser(userId, user.fcmTokens, "Clases", `Mañana tienes clases de ${subject.name} a las ${classToday.startTime} hs.`, executionId, color));
                     }
                 }
             });
         }
     }
 
-    logger.info("Chequeo de notificaciones finalizado.");
+    // Esperamos a que todas las notificaciones se envíen
+    await Promise.all(notificationPromises);
+    logger.info(`[EXEC_ID: ${executionId}] Chequeo finalizado. Total notificaciones enviadas: ${notificationPromises.length}`);
     return null;
 });
 
 /**
  * Función auxiliar para enviar una notificación a un usuario
- * @param {string} userId
- * @param {Array<string>} tokens - Array de tokens de FCM del usuario
- * @param {string} title - Título de la notificación
- * @param {string} body - Cuerpo del mensaje
  */
-const sendNotificationToUser = async (userId, tokens, title, body) => {
-    // Construimos el mensaje multicast (un mensaje para múltiples tokens)
+const sendNotificationToUser = async (userId, tokens, title, body, executionId, color = null) => {
+    // 1. Deduplicar tokens
+    const uniqueTokens = [...new Set(tokens)];
+
+    if (uniqueTokens.length === 0) return;
+
+    // LOG DE DEBUG: Ver cuántos tokens hay antes y después
+    logger.info(`[EXEC_ID: ${executionId}] [DEBUG] Enviando a ${userId}. Tokens originales: ${tokens.length} (${JSON.stringify(tokens)}), Únicos: ${uniqueTokens.length} (${JSON.stringify(uniqueTokens)})`);
+
     const message = {
-        notification: {
-            title: title,
-            body: body,
-        },
-        data: {
-            click_action: 'https://www.estud-ia.com.ar',
-            icon: '/defaults/default-avatar.png'
-        },
-        tokens: tokens // Array de tokens
+        notification: { title, body },
+        data: { click_action: 'https://www.estud-ia.com.ar', icon: '/defaults/default-avatar.png' },
+        tokens: uniqueTokens
     };
 
     try {
-        // Usamos la API moderna sendEachForMulticast
         const response = await admin.messaging().sendEachForMulticast(message);
 
-        logger.info(`Notificación enviada a ${userId}: "${body}" | Success: ${response.successCount} | Failure: ${response.failureCount}`);
+        logger.info(`[EXEC_ID: ${executionId}] Notificación enviada a ${userId}: "${body}" | Success: ${response.successCount} | Failure: ${response.failureCount}`);
 
+        // 2. Limpieza de tokens inválidos
         if (response.failureCount > 0) {
             const failedTokens = [];
+            const tokensToRemove = [];
+
             response.responses.forEach((resp, idx) => {
                 if (!resp.success) {
-                    failedTokens.push(tokens[idx]);
-                    // Podríamos loguear el error específico de cada token: resp.error
+                    const error = resp.error;
+                    const failedToken = uniqueTokens[idx];
+                    failedTokens.push(failedToken);
+
+                    // Si el error indica que el token no sirve, lo marcamos para borrar
+                    if (error.code === 'messaging/registration-token-not-registered' ||
+                        error.code === 'messaging/invalid-argument') {
+                        tokensToRemove.push(failedToken);
+                    }
                 }
             });
-            logger.warn(`Tokens fallidos para ${userId}:`, failedTokens);
+
+            if (tokensToRemove.length > 0) {
+                logger.info(`[EXEC_ID: ${executionId}] Eliminando ${tokensToRemove.length} tokens inválidos para el usuario ${userId}...`);
+                await db.collection('users').doc(userId).update({
+                    fcmTokens: admin.firestore.FieldValue.arrayRemove(...tokensToRemove)
+                });
+            }
+
+            logger.warn(`[EXEC_ID: ${executionId}] Tokens fallidos para ${userId}:`, failedTokens);
         }
 
-        // Guardamos una copia en el centro de notificaciones de Firestore
-        // (Solo si al menos una notificación se envió o intentó enviar)
         const notificationsRef = db.collection('users').doc(userId).collection('notifications');
-        await notificationsRef.add({
+        const notificationData = {
             title,
             body,
             read: false,
             createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+        };
+
+        // Si tenemos color, lo guardamos
+        if (color) {
+            notificationData.color = color;
+        }
+
+        await notificationsRef.add(notificationData);
 
     } catch (error) {
-        logger.error(`Error CRÍTICO al enviar notificación a ${userId}:`, error);
+        logger.error(`[EXEC_ID: ${executionId}] Error CRÍTICO al enviar notificación a ${userId}:`, error);
     }
 };
+
+// --- FUNCIÓN DE LIMPIEZA AUTOMÁTICA (DIARIA) ---
+// Se ejecuta todos los días a las 03:00 AM (Hora Argentina)
+exports.cleanupOldNotifications = onSchedule({
+    schedule: "0 3 * * *",
+    region: "southamerica-east1",
+    timeZone: "America/Argentina/Buenos_Aires"
+}, async (event) => {
+    logger.info("Iniciando limpieza de notificaciones antiguas...");
+
+    // 1. Calcular fecha límite (7 días atrás)
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+
+    // Convertimos a Timestamp de Firestore para la query
+    const thresholdTimestamp = admin.firestore.Timestamp.fromDate(sevenDaysAgo);
+
+    try {
+        // 2. Buscar notificaciones viejas en TODAS las subcolecciones 'notifications'
+        // Nota: Esto requiere un índice de exención o compuesto si hay muchos datos, 
+        // pero para 'createdAt' suele funcionar directo o el log nos dará el link para crearlo.
+        const oldNotificationsSnap = await db.collectionGroup('notifications')
+            .where('createdAt', '<', thresholdTimestamp)
+            .get();
+
+        if (oldNotificationsSnap.empty) {
+            logger.info("No se encontraron notificaciones antiguas para borrar.");
+            return;
+        }
+
+        logger.info(`Se encontraron ${oldNotificationsSnap.size} notificaciones antiguas. Eliminando...`);
+
+        // 3. Eliminar en lotes (Batches de a 500)
+        const batchSize = 500;
+        let batch = db.batch();
+        let operationCounter = 0;
+
+        for (const doc of oldNotificationsSnap.docs) {
+            batch.delete(doc.ref);
+            operationCounter++;
+
+            if (operationCounter >= batchSize) {
+                await batch.commit();
+                batch = db.batch();
+                operationCounter = 0;
+            }
+        }
+
+        // Commit final de los restantes
+        if (operationCounter > 0) {
+            await batch.commit();
+        }
+
+        logger.info("Limpieza de notificaciones completada con éxito.");
+
+    } catch (error) {
+        logger.error("Error durante la limpieza de notificaciones:", error);
+    }
+});

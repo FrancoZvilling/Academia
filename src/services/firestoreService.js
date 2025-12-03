@@ -1,22 +1,22 @@
 import { db } from '../config/firebase-config';
-import { 
-    collection, 
-    addDoc, 
-    getDocs, 
-    query, 
-    orderBy, 
-    doc, 
-    deleteDoc,
-    getDoc,
-    updateDoc,
-    arrayUnion,
-    arrayRemove,
-    collectionGroup,
-    where,
-    serverTimestamp,
-    Timestamp, 
-    writeBatch,
-    setDoc
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy,
+  doc,
+  deleteDoc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+  collectionGroup,
+  where,
+  serverTimestamp,
+  Timestamp,
+  writeBatch,
+  setDoc
 } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from "firebase/functions";
 
@@ -31,7 +31,7 @@ export const deleteSubjectAndItsGrades = async (userId, subjectId) => {
   const gradesRef = collection(db, 'users', userId, 'notebook');
   // 1. Creamos una consulta para encontrar todas las notas de esa materia
   const q = query(gradesRef, where('subjectId', '==', subjectId));
-  
+
   const querySnapshot = await getDocs(q);
 
   if (querySnapshot.empty) {
@@ -51,13 +51,13 @@ export const deleteSubjectAndItsGrades = async (userId, subjectId) => {
 
 // --- GESTIÓN DE AÑOS ---
 export const addYearForUser = (userId, yearName) => {
-    const yearsCollectionRef = collection(db, 'users', userId, 'years');
-    return addDoc(yearsCollectionRef, { name: yearName, createdAt: serverTimestamp() });
+  const yearsCollectionRef = collection(db, 'users', userId, 'years');
+  return addDoc(yearsCollectionRef, { name: yearName, createdAt: serverTimestamp() });
 };
 export const getYearsForUser = (userId) => {
-    const yearsCollectionRef = collection(db, 'users', userId, 'years');
-    const q = query(yearsCollectionRef, orderBy('createdAt', 'asc'));
-    return getDocs(q);
+  const yearsCollectionRef = collection(db, 'users', userId, 'years');
+  const q = query(yearsCollectionRef, orderBy('createdAt', 'asc'));
+  return getDocs(q);
 };
 export const deleteYear = (userId, yearId) => {
   const yearDocRef = doc(db, 'users', userId, 'years', yearId);
@@ -79,22 +79,22 @@ export const updateYearName = (userId, yearId, newName) => {
 
 // --- GESTIÓN DE MATERIAS ---
 export const addSubjectToYear = (userId, yearId, subjectData) => {
-    const subjectsCollectionRef = collection(db, 'users', userId, 'years', yearId, 'subjects');
-    return addDoc(subjectsCollectionRef, { ...subjectData, yearId, createdAt: serverTimestamp() });
+  const subjectsCollectionRef = collection(db, 'users', userId, 'years', yearId, 'subjects');
+  return addDoc(subjectsCollectionRef, { ...subjectData, yearId, createdAt: serverTimestamp() });
 };
 export const getSubjectsForYear = (userId, yearId) => {
-    const subjectsCollectionRef = collection(db, 'users', userId, 'years', yearId, 'subjects');
-    const q = query(subjectsCollectionRef, orderBy('name', 'asc'));
-    return getDocs(q);
+  const subjectsCollectionRef = collection(db, 'users', userId, 'years', yearId, 'subjects');
+  const q = query(subjectsCollectionRef, orderBy('name', 'asc'));
+  return getDocs(q);
 };
 export const getSubjectById = async (userId, subjectId) => {
-    const yearsSnapshot = await getYearsForUser(userId);
-    for (const yearDoc of yearsSnapshot.docs) {
-        const subjectDocRef = doc(db, 'users', userId, 'years', yearDoc.id, 'subjects', subjectId);
-        const subjectDoc = await getDoc(subjectDocRef);
-        if (subjectDoc.exists()) { return { id: subjectDoc.id, ...subjectDoc.data() }; }
-    }
-    return null;
+  const yearsSnapshot = await getYearsForUser(userId);
+  for (const yearDoc of yearsSnapshot.docs) {
+    const subjectDocRef = doc(db, 'users', userId, 'years', yearDoc.id, 'subjects', subjectId);
+    const subjectDoc = await getDoc(subjectDocRef);
+    if (subjectDoc.exists()) { return { id: subjectDoc.id, ...subjectDoc.data() }; }
+  }
+  return null;
 };
 export const deleteSubject = (userId, yearId, subjectId) => {
   const subjectDocRef = doc(db, 'users', userId, 'years', yearId, 'subjects', subjectId);
@@ -114,10 +114,10 @@ export const addEventToSubject = (userId, yearId, subjectId, eventData) => {
 };
 
 export const getEventsForSubject = async (userId, yearId, subjectId) => {
-    const eventsCollectionRef = collection(db, 'users', userId, 'years', yearId, 'subjects', subjectId, 'events');
-    const q = query(eventsCollectionRef, orderBy('start', 'asc'));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const eventsCollectionRef = collection(db, 'users', userId, 'years', yearId, 'subjects', subjectId, 'events');
+  const q = query(eventsCollectionRef, orderBy('start', 'asc'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
 export const getAllEventsForUser = async (userId) => {
@@ -151,25 +151,25 @@ export const getGeneralEvents = async (userId) => {
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 export const addGeneralEvent = (userId, eventData) => {
-    const eventsRef = collection(db, 'users', userId, 'generalEvents');
-    // CORRECCIÓN: Agregamos userId explícitamente para que funcione el collectionGroup query
-    const dataToSave = { ...eventData, userId, type: 'general', color: '#f59e0b', createdAt: serverTimestamp() };
-    return addDoc(eventsRef, dataToSave);
+  const eventsRef = collection(db, 'users', userId, 'generalEvents');
+  // CORRECCIÓN: Agregamos userId explícitamente para que funcione el collectionGroup query
+  const dataToSave = { ...eventData, userId, type: 'general', color: '#f59e0b', createdAt: serverTimestamp() };
+  return addDoc(eventsRef, dataToSave);
 };
 export const updateGeneralEvent = (userId, eventId, updatedData) => {
-    const eventRef = doc(db, 'users', userId, 'generalEvents', eventId);
-    return updateDoc(eventRef, updatedData);
+  const eventRef = doc(db, 'users', userId, 'generalEvents', eventId);
+  return updateDoc(eventRef, updatedData);
 };
 export const deleteGeneralEvent = (userId, eventId) => {
-    const eventRef = doc(db, 'users', userId, 'generalEvents', eventId);
-    return deleteDoc(eventRef);
+  const eventRef = doc(db, 'users', userId, 'generalEvents', eventId);
+  return deleteDoc(eventRef);
 };
 
 
 // --- GESTIÓN DE NOTAS (PARA "MI LIBRETA") ---
 export const addGradeToNotebook = (userId, gradeData) => {
-    const gradesRef = collection(db, 'users', userId, 'notebook');
-    return addDoc(gradesRef, { ...gradeData, date: Timestamp.now() });
+  const gradesRef = collection(db, 'users', userId, 'notebook');
+  return addDoc(gradesRef, { ...gradeData, date: Timestamp.now() });
 };
 export const getNotebookGrades = (userId) => {
   const gradesRef = collection(db, 'users', userId, 'notebook');
@@ -177,13 +177,13 @@ export const getNotebookGrades = (userId) => {
   return getDocs(q);
 };
 export const getGradesForSubject = (userId, subjectId) => {
-    const gradesRef = collection(db, 'users', userId, 'notebook');
-    const q = query(gradesRef, where('subjectId', '==', subjectId), orderBy('date', 'asc'));
-    return getDocs(q);
+  const gradesRef = collection(db, 'users', userId, 'notebook');
+  const q = query(gradesRef, where('subjectId', '==', subjectId), orderBy('date', 'asc'));
+  return getDocs(q);
 };
 export const deleteGradeFromNotebook = (userId, gradeId) => {
-    const gradeRef = doc(db, 'users', userId, 'notebook', gradeId);
-    return deleteDoc(gradeRef);
+  const gradeRef = doc(db, 'users', userId, 'notebook', gradeId);
+  return deleteDoc(gradeRef);
 };
 
 
@@ -207,8 +207,8 @@ export const updateSubjectNotes = (userId, yearId, subjectId, notesContent) => {
 
 // --- GESTIÓN DE ARCHIVOS ---
 export const addFileToSubject = (userId, yearId, subjectId, fileData) => {
-    const subjectDocRef = doc(db, 'users', userId, 'years', yearId, 'subjects', subjectId);
-    return updateDoc(subjectDocRef, { files: arrayUnion(fileData) });
+  const subjectDocRef = doc(db, 'users', userId, 'years', yearId, 'subjects', subjectId);
+  return updateDoc(subjectDocRef, { files: arrayUnion(fileData) });
 };
 export const removeFileFromSubject = (userId, yearId, subjectId, fileData) => {
   const subjectDocRef = doc(db, 'users', userId, 'years', yearId, 'subjects', subjectId);
@@ -225,15 +225,15 @@ const functions = getFunctions();
  * @returns {Promise<string>} - Una promesa que resuelve al resumen generado.
  */
 export const callGenerateSummary = async (text) => {
-    try {
-        const generateSummaryFunction = httpsCallable(functions, 'generateSummary');
-        const result = await generateSummaryFunction({ text });
-        return result.data.summary;
-    } catch (error) {
-        console.error("Error al llamar a la Cloud Function 'generateSummary':", error);
-        // Lanza el error de nuevo para que el componente que llama pueda manejarlo
-        throw new Error(error.message || "No se pudo generar el resumen.");
-    }
+  try {
+    const generateSummaryFunction = httpsCallable(functions, 'generateSummary');
+    const result = await generateSummaryFunction({ text });
+    return result.data.summary;
+  } catch (error) {
+    console.error("Error al llamar a la Cloud Function 'generateSummary':", error);
+    // Lanza el error de nuevo para que el componente que llama pueda manejarlo
+    throw new Error(error.message || "No se pudo generar el resumen.");
+  }
 };
 
 /**
@@ -242,15 +242,15 @@ export const callGenerateSummary = async (text) => {
  * @returns {Promise<string>} - Una promesa que resuelve al string JSON con los datos del examen.
  */
 export const callGenerateExam = async (text) => {
-    try {
-        const generateExamFunction = httpsCallable(functions, 'generateExam');
-        const result = await generateExamFunction({ text });
-        // La Cloud Function devuelve un objeto { examData: '...' }
-        return result.data.examData;
-    } catch (error) {
-        console.error("Error al llamar a la Cloud Function 'generateExam':", error);
-        throw new Error(error.message || "No se pudo generar el modelo de parcial.");
-    }
+  try {
+    const generateExamFunction = httpsCallable(functions, 'generateExam');
+    const result = await generateExamFunction({ text });
+    // La Cloud Function devuelve un objeto { examData: '...' }
+    return result.data.examData;
+  } catch (error) {
+    console.error("Error al llamar a la Cloud Function 'generateExam':", error);
+    throw new Error(error.message || "No se pudo generar el modelo de parcial.");
+  }
 };
 
 // --- NUEVA FUNCIÓN PARA GESTIÓN DE DATOS DE USUARIO ---
@@ -262,27 +262,27 @@ export const callGenerateExam = async (text) => {
  * @param {object} additionalData - Datos extra como email o displayName.
  */
 export const createUserDocument = async (userId, additionalData = {}) => {
-    if (!userId) return;
-    
-    const userDocRef = doc(db, 'users', userId);
+  if (!userId) return;
 
-    // Verificamos si el documento ya existe para no sobrescribirlo
-    const userSnapshot = await getDoc(userDocRef);
+  const userDocRef = doc(db, 'users', userId);
 
-    if (!userSnapshot.exists()) {
-        const createdAt = new Date();
-        try {
-            await setDoc(userDocRef, {
-                uid: userId,
-                plan: 'free', // Todos los usuarios empiezan con el plan gratuito
-                createdAt: createdAt,
-                fcmTokens: [],
-                ...additionalData
-            });
-        } catch (error) {
-            console.error("Error al crear el documento de usuario:", error);
-        }
+  // Verificamos si el documento ya existe para no sobrescribirlo
+  const userSnapshot = await getDoc(userDocRef);
+
+  if (!userSnapshot.exists()) {
+    const createdAt = new Date();
+    try {
+      await setDoc(userDocRef, {
+        uid: userId,
+        plan: 'free', // Todos los usuarios empiezan con el plan gratuito
+        createdAt: createdAt,
+        fcmTokens: [],
+        ...additionalData
+      });
+    } catch (error) {
+      console.error("Error al crear el documento de usuario:", error);
     }
+  }
 };
 
 // --- AÑADIR NUEVA FUNCIÓN PARA GUARDAR EL TOKEN ---
@@ -292,12 +292,13 @@ export const createUserDocument = async (userId, additionalData = {}) => {
  * @param {string} token
  */
 export const saveFcmToken = (userId, token) => {
-    if (!userId || !token) return;
-    const userDocRef = doc(db, 'users', userId);
-    // Usamos arrayUnion para añadir el token solo si no existe ya
-    return updateDoc(userDocRef, {
-        fcmTokens: arrayUnion(token)
-    });
+  if (!userId || !token) return;
+  const userDocRef = doc(db, 'users', userId);
+  // CAMBIO: Sobrescribimos el array para que solo haya 1 token (el del dispositivo actual)
+  // Esto elimina duplicados y tokens viejos de otras sesiones.
+  return updateDoc(userDocRef, {
+    fcmTokens: [token]
+  });
 };
 
 // --- NUEVAS FUNCIONES PARA EL CENTRO DE NOTIFICACIONES ---
@@ -307,9 +308,9 @@ export const saveFcmToken = (userId, token) => {
  * @param {string} userId
  */
 export const getNotifications = (userId) => {
-    const notificationsRef = collection(db, 'users', userId, 'notifications');
-    const q = query(notificationsRef, orderBy('createdAt', 'desc')); // Las más nuevas primero
-    return getDocs(q);
+  const notificationsRef = collection(db, 'users', userId, 'notifications');
+  const q = query(notificationsRef, orderBy('createdAt', 'desc')); // Las más nuevas primero
+  return getDocs(q);
 };
 
 /**
@@ -318,12 +319,33 @@ export const getNotifications = (userId) => {
  * @param {Array<string>} unreadIds - IDs de las notificaciones a marcar.
  */
 export const markNotificationsAsRead = (userId, unreadIds) => {
-    if (unreadIds.length === 0) return Promise.resolve();
-    
-    const batch = writeBatch(db);
-    unreadIds.forEach(id => {
-        const docRef = doc(db, 'users', userId, 'notifications', id);
-        batch.update(docRef, { read: true });
-    });
-    return batch.commit();
+  if (unreadIds.length === 0) return Promise.resolve();
+
+  const batch = writeBatch(db);
+  unreadIds.forEach(id => {
+    const docRef = doc(db, 'users', userId, 'notifications', id);
+    batch.update(docRef, { read: true });
+  });
+  return batch.commit();
+};
+
+/**
+ * Elimina todas las notificaciones leídas de un usuario.
+ * @param {string} userId 
+ */
+export const deleteReadNotifications = async (userId) => {
+  const notificationsRef = collection(db, 'users', userId, 'notifications');
+  // Consultamos solo las que están leídas (read == true)
+  const q = query(notificationsRef, where('read', '==', true));
+
+  const snapshot = await getDocs(q);
+
+  if (snapshot.empty) return;
+
+  const batch = writeBatch(db);
+  snapshot.docs.forEach(doc => {
+    batch.delete(doc.ref);
+  });
+
+  return batch.commit();
 };
