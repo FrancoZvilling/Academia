@@ -61,20 +61,20 @@ const SubjectForm = ({ onSubmit, onCancel, defaultValues = {}, isEditing = false
             </div>
             <div className="flex gap-4"><div className="w-1/2"><label className="text-sm font-semibold block mb-1">Inicio Cursada*:</label><input type="date" {...register("startDate", { required: true })} className="input input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div><div className="w-1/2"><label className="text-sm font-semibold block mb-1">Fin Cursada:</label><input type="date" {...register("endDate")} className="input input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div></div>
             <div><div className="text-sm font-semibold mb-2">Días de Cursada:</div><div className="grid grid-cols-3 gap-x-4 gap-y-2">{daysOfWeek.map(day => (<label key={day} className="flex items-center gap-2 text-sm cursor-pointer"><div className="relative flex items-center justify-center">
-        {/* Input real, pero visualmente oculto */}
-        <input 
-            type="checkbox" 
-            {...register(`days.${day}`)} 
-            onClick={(e) => e.target.blur()}
-            className="appearance-none h-4 w-4 border border-gray-400 dark:border-gray-500 rounded-sm "
-        />
-        {/* El tilde (tick) personalizado, se muestra solo cuando el input está 'checked' */}
-        <div className="absolute left-0 top-0 h-4 w-4 flex items-center justify-center pointer-events-none">
-            <svg className="h-3 w-3 hidden peer-checked:block fill-current text-black dark:text-gray-300" viewBox="0 0 16 16">
-                <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z"></path>
-            </svg>
-        </div>
-    </div><span>{day}</span></label>))}</div></div>
+                {/* Input real, pero visualmente oculto */}
+                <input
+                    type="checkbox"
+                    {...register(`days.${day}`)}
+                    onClick={(e) => e.target.blur()}
+                    className="appearance-none h-4 w-4 border border-gray-400 dark:border-gray-500 rounded-sm "
+                />
+                {/* El tilde (tick) personalizado, se muestra solo cuando el input está 'checked' */}
+                <div className="absolute left-0 top-0 h-4 w-4 flex items-center justify-center pointer-events-none">
+                    <svg className="h-3 w-3 hidden peer-checked:block fill-current text-black dark:text-gray-300" viewBox="0 0 16 16">
+                        <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z"></path>
+                    </svg>
+                </div>
+            </div><span>{day}</span></label>))}</div></div>
             <div className="flex gap-4"><div className="w-1/2"><label className="text-sm block mb-1">Desde:</label><input type="time" {...register("startTime")} className="input input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div><div className="w-1/2"><label className="text-sm block mb-1">Hasta:</label><input type="time" {...register("endTime")} className="input input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div></div>
             <div><label className="text-sm font-semibold block mb-2">Color de la Materia</label><div className="flex flex-wrap gap-3">{subjectColors.map(color => (<div key={color.value} onClick={() => setSelectedColor(color.value)} className="w-8 h-8 rounded-full transition-all duration-200 transform cursor-pointer" style={{ backgroundColor: color.value }}>{selectedColor === color.value && (<div className="w-full h-full rounded-full flex items-center justify-center bg-black/30"><svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg></div>)}</div>))}</div><input {...register('color')} type="hidden" /></div>
             <div className="flex justify-end gap-4 mt-4"><button type="button" onClick={onCancel} className="btn btn-ghost">Cancelar</button><button type="submit" className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary">{isEditing ? 'Guardar Cambios' : 'Añadir Materia'}</button></div>

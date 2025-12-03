@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { FaFileUpload, FaSpinner, FaFilePdf, FaDownload, FaInfoCircle, FaFileWord, FaCopy, FaStar, FaClipboardList, FaCloudUploadAlt } from 'react-icons/fa';
+import { FaFileUpload, FaSpinner, FaFilePdf, FaDownload, FaInfoCircle, FaFileWord, FaCopy, FaStar, FaClipboardList, FaCloudUploadAlt, FaCheckCircle, FaTimesCircle, FaRedo, FaArrowRight } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
 import * as pdfjsLib from 'pdfjs-dist';
 import { callGenerateSummary, callGenerateExam } from '../services/firestoreService';
 import { marked } from 'marked';
@@ -244,7 +245,7 @@ const SummarizerTab = () => {
 // --- Sub-componente para la pestaña de MODELOS DE PARCIAL ---
 const ExamGeneratorTab = () => {
   const { register: registerFile, handleSubmit: handleSubmitFile, watch: watchFile, reset: resetFile } = useForm();
-  const { register: registerExam, handleSubmit: handleSubmitExam, getValues, reset: resetExam } = useForm();
+  const { register: registerExam, handleSubmit: handleSubmitExam, getValues, reset: resetExam, watch: watchExam } = useForm();
 
   const [questions, setQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -253,6 +254,9 @@ const ExamGeneratorTab = () => {
 
   const selectedFile = watchFile('pdfFile');
   const fileName = selectedFile && selectedFile.length > 0 ? selectedFile[0].name : '';
+
+  // Observamos las respuestas para actualizar la UI en tiempo real
+  const userAnswers = watchExam();
 
   const onGenerateExam = async (data) => {
     const file = data.pdfFile[0];
@@ -308,31 +312,65 @@ const ExamGeneratorTab = () => {
     }
   };
 
+  const resultRef = useRef(null);
+  const firstQuestionRef = useRef(null);
+
   const onCorrectExam = () => {
-    const userAnswers = getValues();
+    const currentAnswers = getValues();
     let correctAnswers = 0;
     questions.forEach((q, index) => {
-      if (userAnswers[`question_${index}`] === q.answer) {
+      if (currentAnswers[`question_${index}`] === q.answer) {
         correctAnswers++;
       }
     });
     const finalScore = (correctAnswers / questions.length) * 10;
     setScore(finalScore);
     setIsCorrected(true);
+
+    // Scroll suave hacia el resultado
+    setTimeout(() => {
+      resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
   };
 
   const handleRetry = () => {
+    setIsCorrected(false);
+    setScore(0);
+    // Scroll suave hacia la primera pregunta
+    setTimeout(() => {
+      firstQuestionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
+
+  const handleNewExam = () => {
+    setQuestions([]);
+    setIsCorrected(false);
+    setScore(0);
     resetExam();
-    onGenerateExam({ pdfFile: selectedFile });
+    resetFile();
   };
 
   const getOptionStyle = (questionIndex, optionLetter) => {
-    if (!isCorrected) return '';
-    const userAnswer = getValues(`question_${questionIndex}`);
-    const correctAnswer = questions[questionIndex].answer;
-    if (optionLetter === correctAnswer) return 'bg-success/30 border-success';
-    if (optionLetter === userAnswer) return 'bg-error/30 border-error';
-    return 'border-transparent';
+    const userAnswer = userAnswers[`question_${questionIndex}`];
+    const isSelected = userAnswer === optionLetter;
+
+    if (isCorrected) {
+      const correctAnswer = questions[questionIndex].answer;
+
+      if (optionLetter === correctAnswer) {
+        return 'bg-green-100 border-green-500 text-green-800 dark:bg-green-900/30 dark:border-green-500 dark:text-green-300 ring-1 ring-green-500';
+      }
+      if (isSelected && optionLetter !== correctAnswer) {
+        return 'bg-red-100 border-red-500 text-red-800 dark:bg-red-900/30 dark:border-red-500 dark:text-red-300 ring-1 ring-red-500';
+      }
+      return 'opacity-50 border-transparent';
+    }
+
+    if (isSelected) {
+      return 'bg-primary/10 border-primary text-primary ring-1 ring-primary';
+    }
+
+    return 'bg-surface-50 border-surface-300 hover:bg-surface-200 hover:border-primary/50';
   };
 
   return (
@@ -348,76 +386,162 @@ const ExamGeneratorTab = () => {
       </div>
 
       {/* --- FORMULARIO REDISEÑADO (UPLOAD ZONE) --- */}
-      <form onSubmit={handleSubmitFile(onGenerateExam)} className="mb-8 animate-fade-in">
-        <div className="mb-6">
-          <label
-            className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-300 ${fileName ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary hover:bg-gray-50 dark:border-gray-600 dark:hover:border-primary dark:hover:bg-gray-800'}`}
-          >
-            <div className="flex flex-col items-center justify-center pt-5 pb-6 w-full max-w-full">
-              {fileName ? (
-                <>
-                  <FaFilePdf className="text-5xl text-red-500 mb-3 animate-bounce-short" />
-                  <p className="mb-2 text-lg font-semibold text-text-primary truncate max-w-[15rem] sm:max-w-md px-4 text-center" title={fileName}>{fileName}</p>
-                  <p className="text-sm text-text-secondary">Clic para cambiar archivo</p>
-                </>
-              ) : (
-                <>
-                  <FaCloudUploadAlt className="text-5xl text-gray-400 mb-3" />
-                  <p className="mb-2 text-lg font-semibold text-text-primary">Haz clic para subir tu PDF</p>
-                  <p className="text-xs text-text-secondary">Soporta archivos PDF</p>
-                </>
-              )}
-            </div>
-            <input type="file" {...registerFile("pdfFile")} accept="application/pdf" className="hidden" />
-          </label>
-        </div>
+      {!questions.length && (
+        <form onSubmit={handleSubmitFile(onGenerateExam)} className="mb-8 animate-fade-in">
+          <div className="mb-6">
+            <label
+              className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-300 ${fileName ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary hover:bg-gray-50 dark:border-gray-600 dark:hover:border-primary dark:hover:bg-gray-800'}`}
+            >
+              <div className="flex flex-col items-center justify-center pt-5 pb-6 w-full max-w-full">
+                {fileName ? (
+                  <>
+                    <FaFilePdf className="text-5xl text-red-500 mb-3 animate-bounce-short" />
+                    <p className="mb-2 text-lg font-semibold text-text-primary truncate max-w-[15rem] sm:max-w-md px-4 text-center" title={fileName}>{fileName}</p>
+                    <p className="text-sm text-text-secondary">Clic para cambiar archivo</p>
+                  </>
+                ) : (
+                  <>
+                    <FaCloudUploadAlt className="text-5xl text-gray-400 mb-3" />
+                    <p className="mb-2 text-lg font-semibold text-text-primary">Haz clic para subir tu PDF</p>
+                    <p className="text-xs text-text-secondary">Soporta archivos PDF</p>
+                  </>
+                )}
+              </div>
+              <input type="file" {...registerFile("pdfFile")} accept="application/pdf" className="hidden" />
+            </label>
+          </div>
 
-        <button
-          type="submit"
-          className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary w-full btn-lg text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 rounded-xl"
-          disabled={isLoading || !fileName}
-        >
-          {isLoading ? (
-            <>
-              <span className="loading loading-spinner"></span>
-              <span className="ml-2">Creando Examen...</span>
-            </>
-          ) : (
-            'Generar Examen'
-          )}
-        </button>
-      </form>
+          <button
+            type="submit"
+            className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary w-full btn-lg text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 rounded-xl"
+            disabled={isLoading || !fileName}
+          >
+            {isLoading ? (
+              <>
+                <span className="loading loading-spinner"></span>
+                <span className="ml-2">Creando Examen...</span>
+              </>
+            ) : (
+              'Generar Examen'
+            )}
+          </button>
+        </form>
+      )}
 
       {isLoading && (<div className="text-center p-8"><FaSpinner className="animate-spin text-primary mx-auto" size={48} /><div className="mt-4 text-text-secondary flex flex-wrap items-center justify-center gap-1 w-full max-w-full px-4"><span>Generando un nuevo examen con</span><span className="font-semibold truncate max-w-[15rem] sm:max-w-md" title={fileName}>"{fileName}"</span><span>...</span></div></div>)}
 
       {questions.length > 0 && !isLoading && (
-        <form onSubmit={handleSubmitExam(onCorrectExam)} className="space-y-8 animate-fade-in">
-          {questions.map((q, index) => (
-            <div key={index} className="p-6 bg-surface-100 rounded-lg shadow-md">
-              <p className="font-semibold mb-4">{index + 1}. {q.question}</p>
-              <div className="space-y-2">
-                {q.options.map((option, optionIndex) => {
-                  const optionLetter = String.fromCharCode(97 + optionIndex);
-                  return (
-                    <label key={optionIndex} className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-colors ${getOptionStyle(index, optionLetter)}`}>
-                      <input type="radio" {...registerExam(`question_${index}`, { required: true })} value={optionLetter} className="radio radio-primary" disabled={isCorrected} />
-                      <span>{option}</span>
-                    </label>
-                  );
-                })}
+        <div className="animate-fade-in max-w-3xl mx-auto">
+
+          {/* Cabecera del Examen */}
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold text-text-primary">Examen de Práctica</h3>
+            <button onClick={handleNewExam} className="btn btn-sm btn-ghost text-text-secondary">
+              Cancelar
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmitExam(onCorrectExam)} className="space-y-6">
+            {questions.map((q, index) => (
+              <motion.div
+                key={index}
+                ref={index === 0 ? firstQuestionRef : null}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="p-5 sm:p-6 bg-surface-100 rounded-2xl shadow-sm border border-surface-200"
+              >
+                <div className="flex gap-3 mb-4">
+                  <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-sm">
+                    {index + 1}
+                  </span>
+                  <p className="font-bold text-lg text-text-primary leading-tight pt-1">{q.question}</p>
+                </div>
+
+                <div className="space-y-3 pl-0 sm:pl-11">
+                  {q.options.map((option, optionIndex) => {
+                    const optionLetter = String.fromCharCode(97 + optionIndex);
+                    const styleClass = getOptionStyle(index, optionLetter);
+                    const isCorrect = isCorrected && optionLetter === q.answer;
+                    const isWrong = isCorrected && userAnswers[`question_${index}`] === optionLetter && optionLetter !== q.answer;
+
+                    return (
+                      <label
+                        key={optionIndex}
+                        className={`relative flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${styleClass}`}
+                      >
+                        <input
+                          type="radio"
+                          {...registerExam(`question_${index}`, { required: true })}
+                          value={optionLetter}
+                          className="hidden" // Ocultamos el radio nativo
+                          disabled={isCorrected}
+                        />
+
+                        <span className="font-bold text-lg mr-3 text-text-secondary group-hover:text-primary transition-colors">
+                          {optionLetter.toUpperCase()}.
+                        </span>
+
+                        <div className="flex-grow font-medium">{option}</div>
+
+                        {/* Iconos de Feedback */}
+                        {isCorrect && <FaCheckCircle className="text-green-600 text-xl ml-2 flex-shrink-0" />}
+                        {isWrong && <FaTimesCircle className="text-red-500 text-xl ml-2 flex-shrink-0" />}
+                      </label>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            ))}
+
+            {/* Resultado Final (Si está corregido) - MOVIDO AL FINAL */}
+            {isCorrected && (
+              <motion.div
+                ref={resultRef}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-8 p-6 bg-surface-100 rounded-2xl shadow-lg border border-surface-200 text-center relative overflow-hidden"
+              >
+                <div className={`absolute top-0 left-0 w-full h-2 ${score >= 6 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <h4 className="text-lg font-medium text-text-secondary mb-2">Tu Calificación</h4>
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <span className={`text-5xl font-extrabold ${score >= 6 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {score.toFixed(1)}
+                  </span>
+                  <span className="text-2xl text-text-secondary font-bold">/ 10</span>
+                </div>
+                <p className="text-lg mb-6 font-medium">
+                  {score === 10 ? "¡Perfecto! 🏆 Eres un experto." :
+                    score >= 8 ? "¡Excelente trabajo! 🌟 Estás muy bien preparado." :
+                      score >= 6 ? "¡Aprobado! 👍 Pero puedes mejorar." :
+                        "A seguir estudiando 📚. ¡Tú puedes!"}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button onClick={handleRetry} className="btn btn-outline gap-2">
+                    <FaRedo /> Intentar de Nuevo
+                  </button>
+                  <button onClick={handleNewExam} className="btn bg-primary hover:bg-primary/90 text-white border-none gap-2 shadow-lg shadow-primary/20">
+                    <FaFileUpload /> Generar Otro Examen
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {!isCorrected && (
+              <div className="sticky bottom-4 z-10 pt-4">
+                <button
+                  type="submit"
+                  className={`btn w-full btn-lg shadow-xl rounded-xl text-lg font-bold transition-all duration-300 ${Object.entries(userAnswers).filter(([k, v]) => k.startsWith('question_') && v).length === questions.length
+                    ? 'bg-primary hover:bg-primary/90 text-white border-none shadow-primary/30'
+                    : 'btn-secondary bg-secondary border-secondary text-text-accent hover:bg-secondary/80'
+                    }`}
+                >
+                  Corregir Examen <FaArrowRight className="ml-2" />
+                </button>
               </div>
-            </div>
-          ))}
-          {!isCorrected ? (
-            <button type="submit" className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary w-full">Corregir Examen</button>
-          ) : (
-            <div className="p-6 bg-surface-100 rounded-lg shadow-md text-center">
-              <h3 className="text-xl font-bold">Resultado Final</h3>
-              <p className={`text-4xl font-extrabold mt-2 ${score >= 7 ? 'text-success' : 'text-error'}`}>{score.toFixed(2)} / 10</p>
-              <button type="button" onClick={handleRetry} className="btn btn-outline mt-4">Intentar de Nuevo</button>
-            </div>
-          )}
-        </form>
+            )}
+          </form>
+        </div>
       )}
     </div>
   );
