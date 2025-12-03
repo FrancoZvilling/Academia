@@ -236,7 +236,6 @@ TEXTO A ANALIZAR:
 
 
 // --- FUNCIÓN PARA CREAR LINK DE SUSCRIPCIÓN (V2) ---
-// --- FUNCIÓN PARA CREAR LINK DE SUSCRIPCIÓN (CON DEPURACIÓN AGRESIVA) ---
 exports.createSubscriptionLink = onCall({
     secrets: [mpAccessToken],
     region: "southamerica-east1"
@@ -442,23 +441,105 @@ exports.checkScheduledNotifications = onSchedule({
 
                 if (isNaN(eventStart.getTime())) {
                     return; // Ignora fechas inválidas
-                } else if (hoursUntil > 167.5 && hoursUntil <= 168.5) {
-                    message = `AVISO: En una semana tienes "${eventData.title}"`;
                 }
-                if (coll === 'generalEvents' && hoursUntil > 11.5 && hoursUntil <= 12.5) {
+                // ---------------------------------------------
+
+                const hoursUntil = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+                let message = null;
+                let title = "Recordatorio de Evento"; // Título por defecto
+
+                const isSubjectEvent = coll === 'events';
+                const isGeneralEvent = coll === 'generalEvents';
+
+                // 1. Mañana (24 horas antes): Para TODOS (Materias y Generales)
+                if (hoursUntil > 23.5 && hoursUntil <= 24.5) {
+                    message = `RECORDATORIO: Mañana tienes "${eventData.title}"`;
+                    title = isSubjectEvent ? "Examen / Entrega" : "Recordatorio";
+                }
+
+                // 2. En 3 días: SOLO para Materias
+                else if (isSubjectEvent && hoursUntil > 71.5 && hoursUntil <= 72.5) {
+                    message = `AVISO: En 3 días tienes "${eventData.title}"`;
+                    title = "Examen / Entrega";
+                }
+
+                // 3. En 1 semana: SOLO para Materias
+                else if (isSubjectEvent && hoursUntil > 167.5 && hoursUntil <= 168.5) {
+                    message = `AVISO: En una semana tienes "${eventData.title}"`;
+                    title = "Examen / Entrega";
+                }
+
+                // 4. En 12 horas: SOLO para Eventos Generales
+                else if (isGeneralEvent && hoursUntil > 11.5 && hoursUntil <= 12.5) {
                     message = `RECORDATORIO: En 12 horas: "${eventData.title}"`;
+                    title = "Recordatorio";
                 }
 
                 if (message) {
-                    sendNotificationToUser(userId, user.fcmTokens, "Recordatorio de Evento", message);
+                    sendNotificationToUser(userId, user.fcmTokens, title, message);
                 }
             });
         }
 
 
-        // B. Clases (12 horas antes)
-        // (Esta lógica es más compleja, la implementaremos en una mejora futura si es necesario,
-        // ya que requiere calcular las ocurrencias de los horarios recurrentes)
+        // B. Clases (24 horas antes)
+        const yearsSnap = await db.collection('users').doc(userId).collection('years').get();
+        for (const yearDoc of yearsSnap.docs) {
+            const subjectsSnap = await yearDoc.ref.collection('subjects').get();
+
+            subjectsSnap.forEach(subjectDoc => {
+                const subject = subjectDoc.data();
+                if (!subject.schedule || !subject.startDate) return;
+
+                // Calculamos la fecha objetivo (Mañana a esta misma hora)
+                // Usamos la hora actual + 24hs
+                const targetDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+                // Obtenemos los datos de la fecha objetivo en Argentina
+                const options = { timeZone: 'America/Argentina/Buenos_Aires' };
+                const targetDayName = targetDate.toLocaleDateString('es-AR', { ...options, weekday: 'long' }).toLowerCase(); // "lunes"
+
+                // Formato YYYY-MM-DD para comparar rangos
+                // Truco: usar sv-SE suele dar YYYY-MM-DD, pero para asegurar usamos parts
+                const dateParts = new Intl.DateTimeFormat('es-AR', { ...options, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(targetDate);
+                const day = dateParts.find(p => p.type === 'day').value;
+                const month = dateParts.find(p => p.type === 'month').value;
+                const year = dateParts.find(p => p.type === 'year').value;
+                const targetDateString = `${year}-${month}-${day}`;
+
+                // Verificar rango de fechas
+                if (targetDateString < subject.startDate) return;
+                if (subject.endDate && targetDateString > subject.endDate) return;
+
+                // Verificar si hay clase ese día
+                // El array schedule tiene { day: "Lunes", startTime: "10:00", ... }
+                const classToday = subject.schedule.find(slot => slot.day.toLowerCase() === targetDayName);
+
+                if (classToday && classToday.startTime) {
+                    // Verificar la hora (con margen de error de ~30 min para asegurar que el scheduler lo agarre)
+                    // targetDate tiene la hora actual. classToday.startTime tiene la hora de la clase.
+                    const [classHour, classMinute] = classToday.startTime.split(':').map(Number);
+
+                    // Hora objetivo en Argentina
+                    const targetHourStr = targetDate.toLocaleTimeString('es-AR', { ...options, hour: '2-digit', hour12: false });
+                    const targetMinuteStr = targetDate.toLocaleTimeString('es-AR', { ...options, minute: '2-digit' });
+                    const targetHour = parseInt(targetHourStr);
+                    const targetMinute = parseInt(targetMinuteStr);
+
+                    // Convertimos todo a minutos para comparar
+                    const classTotalMinutes = classHour * 60 + classMinute;
+                    const targetTotalMinutes = targetHour * 60 + targetMinute;
+
+                    const diff = Math.abs(classTotalMinutes - targetTotalMinutes);
+
+                    // Si la diferencia es menor a 55 minutos (el scheduler corre cada 60)
+                    if (diff < 55) {
+                        sendNotificationToUser(userId, user.fcmTokens, "Mañana tienes clases", `Mañana tienes clases de ${subject.name} a las ${classToday.startTime} hs.`);
+                    }
+                }
+            });
+        }
     }
 
     logger.info("Chequeo de notificaciones finalizado.");

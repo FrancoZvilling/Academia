@@ -152,7 +152,8 @@ export const getGeneralEvents = async (userId) => {
 };
 export const addGeneralEvent = (userId, eventData) => {
     const eventsRef = collection(db, 'users', userId, 'generalEvents');
-    const dataToSave = { ...eventData, color: '#f59e0b', createdAt: serverTimestamp() };
+    // CORRECCIÓN: Agregamos userId explícitamente para que funcione el collectionGroup query
+    const dataToSave = { ...eventData, userId, type: 'general', color: '#f59e0b', createdAt: serverTimestamp() };
     return addDoc(eventsRef, dataToSave);
 };
 export const updateGeneralEvent = (userId, eventId, updatedData) => {

@@ -327,7 +327,7 @@ const CalendarPage = () => {
                             <div>
                                 <h3 className="text-xl font-bold text-text-primary leading-tight">{selectedEvent.displayTitle}</h3>
                                 <span className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide ${selectedEvent.type === 'class' ? 'bg-blue-100 text-blue-700' : selectedEvent.type === 'general' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
-                                    {selectedEvent.type === 'class' ? 'Clase' : selectedEvent.type === 'general' ? 'Evento General' : 'Examen / Entrega'}
+                                    {selectedEvent.type === 'class' ? 'Clase' : selectedEvent.type === 'general' ? 'Recordatorio' : 'Examen / Entrega'}
                                 </span>
                             </div>
                         </div>
