@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Estud-IA</string>
+    <string name="title_activity_main">Estud-IA</string>
+    <string name="package_name">com.estudia.app</string>
+    <string name="custom_url_scheme">com.estudia.app</string>
+    <string name="default_web_client_id">214777208525-sd1of3lmoi8a4k9pja5pj8bgfn71ht2g.apps.googleusercontent.com</string>
+</resources>

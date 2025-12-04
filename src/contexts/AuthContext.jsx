@@ -3,6 +3,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithCredential, // Importamos esto
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
@@ -16,6 +17,8 @@ import {
 import { auth, db } from '../config/firebase-config';
 import { createUserDocument } from '../services/firestoreService';
 import { doc, onSnapshot } from 'firebase/firestore';
+import { Capacitor } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 
 const AuthContext = createContext();
 
@@ -40,17 +43,40 @@ export const AuthProvider = ({ children }) => {
     await updateProfile(user, { photoURL: '/defaults/default-avatar.png' });
     return userCredential;
   };
-  
+
   const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
-  
+
   const loginWithGoogle = async () => {
-    const googleProvider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-    await createUserDocument(user.uid, { email: user.email, displayName: user.displayName, photoURL: user.photoURL });
-    return result;
+    let user;
+    let result;
+
+    try {
+      const isNative = Capacitor.isNativePlatform();
+
+      if (isNative) {
+        // --- LÓGICA NATIVA (Android/iOS) ---
+        const googleResult = await FirebaseAuthentication.signInWithGoogle();
+
+        const credential = GoogleAuthProvider.credential(googleResult.credential.idToken);
+        result = await signInWithCredential(auth, credential);
+        user = result.user;
+      } else {
+        // --- LÓGICA WEB ---
+        const googleProvider = new GoogleAuthProvider();
+        result = await signInWithPopup(auth, googleProvider);
+        user = result.user;
+      }
+
+      // Guardar documento de usuario si es nuevo o actualizar datos
+      await createUserDocument(user.uid, { email: user.email, displayName: user.displayName, photoURL: user.photoURL });
+      return result;
+    } catch (error) {
+      console.error("Error en Google Login:", error);
+      alert(`Error Login: ${error.message}`); // DEBUG: Mostrar error en pantalla
+      throw error;
+    }
   };
-  
+
   const logout = () => signOut(auth);
 
   const updateUserProfile = (profileData) => {
@@ -66,7 +92,7 @@ export const AuthProvider = ({ children }) => {
     }
     return Promise.reject(new Error("No hay usuario autenticado."));
   };
-  
+
   const deleteCurrentUserAccount = async (password) => {
     if (auth.currentUser) {
       if (auth.currentUser.providerData.some(p => p.providerId === 'password')) {
@@ -95,17 +121,17 @@ export const AuthProvider = ({ children }) => {
           // La carga termina DESPUÉS de intentar obtener los datos de Firestore
           setLoadingAuth(false);
         }, (error) => {
-            console.error("Error al obtener datos del usuario:", error);
-            setLoadingAuth(false);
+          console.error("Error al obtener datos del usuario:", error);
+          setLoadingAuth(false);
         });
-        
+
         return () => unsubscribeSnapshot();
       } else {
         setUserData(null);
         setLoadingAuth(false);
       }
     });
-    
+
     return () => unsubscribeAuth();
   }, []);
 

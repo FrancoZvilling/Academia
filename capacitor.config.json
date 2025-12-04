@@ -1,0 +1,13 @@
+{
+  "appId": "com.estudia.app",
+  "appName": "Estud-IA",
+  "webDir": "dist",
+  "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": false,
+      "providers": [
+        "google.com"
+      ]
+    }
+  }
+}

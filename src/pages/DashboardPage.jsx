@@ -17,6 +17,7 @@ import SubjectCard from '../components/SubjectCard';
 import Modal from '../components/ui/Modal';
 import AccordionItem from '../components/ui/AccordionItem';
 import { FaTrash, FaEdit } from "react-icons/fa";
+import AdBanner from '../components/AdBanner';
 
 // --- SUB-COMPONENTE: Formulario para añadir Materia (VERSIÓN SIMPLIFICADA SIN COLOR) ---
 const AddSubjectForm = ({ onSubmit, onCancel }) => {
@@ -316,6 +317,8 @@ const DashboardPage = () => {
                 </form>
             </Modal>
             {/* ------------------------------------------- */}
+            {/* Banner de Publicidad */}
+            <AdBanner />
         </div>
     );
 };

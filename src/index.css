@@ -32,29 +32,44 @@ select {
 /* Paletas de colores pastel con mejor contraste */
 
 /* --- TEMA CELESTE PASTEL (CORREGIDO) --- */
-:root, .theme-celeste {
-  --color-primary: 37 99 235;     /* blue-600 (Más oscuro para contraste) */
-  --color-secondary: 59 130 246;   /* blue-500 */
-  --color-accent: 96 165 250;    /* blue-400 */
-  
-  --color-background: 239 246 255; /* blue-50 (Fondo muy claro) */
-  --color-surface-100: 255 255 255; /* white */
-  --color-surface-200: 219 234 254; /* blue-100 */
+:root,
+.theme-celeste {
+  --color-primary: 37 99 235;
+  /* blue-600 (Más oscuro para contraste) */
+  --color-secondary: 59 130 246;
+  /* blue-500 */
+  --color-accent: 96 165 250;
+  /* blue-400 */
 
-  --color-text-primary: 15 23 42;   /* slate-900 */
-  --color-text-secondary: 71 85 105; /* slate-500 */
-  --color-text-accent: 255 255 255;  /* white (para texto sobre fondos oscuros/primarios) */
+  --color-background: 239 246 255;
+  /* blue-50 (Fondo muy claro) */
+  --color-surface-100: 255 255 255;
+  /* white */
+  --color-surface-200: 219 234 254;
+  /* blue-100 */
+
+  --color-text-primary: 15 23 42;
+  /* slate-900 */
+  --color-text-secondary: 71 85 105;
+  /* slate-500 */
+  --color-text-accent: 255 255 255;
+  /* white (para texto sobre fondos oscuros/primarios) */
 }
 
 /* --- TEMA VERDE PASTEL (CORREGIDO) --- */
 .theme-verde {
-  --color-primary: 22 101 52;      /* green-800 */
-  --color-secondary: 22 163 74;    /* green-600 */
-  --color-accent: 74 222 128;     /* green-400 */
-  
-  --color-background: 240 253 244; /* green-50 */
+  --color-primary: 22 101 52;
+  /* green-800 */
+  --color-secondary: 22 163 74;
+  /* green-600 */
+  --color-accent: 74 222 128;
+  /* green-400 */
+
+  --color-background: 240 253 244;
+  /* green-50 */
   --color-surface-100: 255 255 255;
-  --color-surface-200: 220 252 231; /* green-100 */
+  --color-surface-200: 220 252 231;
+  /* green-100 */
 
   --color-text-primary: 15 23 42;
   --color-text-secondary: 71 85 105;
@@ -63,13 +78,18 @@ select {
 
 /* --- TEMA ROSA PASTEL (CORREGIDO) --- */
 .theme-rosa {
-  --color-primary: 190 24 93;      /* pink-700 */
-  --color-secondary: 219 39 119;   /* pink-600 */
-  --color-accent: 244 114 182;    /* pink-400 */
-  
-  --color-background: 253 242 248; /* pink-50 */
+  --color-primary: 190 24 93;
+  /* pink-700 */
+  --color-secondary: 219 39 119;
+  /* pink-600 */
+  --color-accent: 244 114 182;
+  /* pink-400 */
+
+  --color-background: 253 242 248;
+  /* pink-50 */
   --color-surface-100: 255 255 255;
-  --color-surface-200: 252 231 243; /* pink-100 */
+  --color-surface-200: 252 231 243;
+  /* pink-100 */
 
   --color-text-primary: 15 23 42;
   --color-text-secondary: 71 85 105;
@@ -78,13 +98,18 @@ select {
 
 /* --- TEMA CLARO (BLANCO/GRIS) (CORREGIDO) --- */
 .theme-blanco {
-  --color-primary: 55 65 81;       /* gray-700 */
-  --color-secondary: 75 85 99;    /* gray-600 */
-  --color-accent: 156 163 175;     /* gray-400 */
-  
-  --color-background: 249 250 251; /* gray-50 */
+  --color-primary: 55 65 81;
+  /* gray-700 */
+  --color-secondary: 75 85 99;
+  /* gray-600 */
+  --color-accent: 156 163 175;
+  /* gray-400 */
+
+  --color-background: 249 250 251;
+  /* gray-50 */
   --color-surface-100: 255 255 255;
-  --color-surface-200: 243 244 246; /* gray-100 */
+  --color-surface-200: 243 244 246;
+  /* gray-100 */
 
   --color-text-primary: 17 24 39;
   --color-text-secondary: 55 65 81;
@@ -92,23 +117,34 @@ select {
 }
 
 /* --- TEMA OSCURO (sin cambios, ya funcionaba bien) --- */
-.dark, .theme-oscuro {
-  --color-primary: 96 165 250; /* blue-400 */
-  --color-secondary: 59 130 246; /* blue-500 */
-  --color-accent: 147 197 253; /* blue-300 */
-  
-  --color-background: 17 24 39; /* gray-900 */
-  --color-surface-100: 31 41 55; /* gray-800 */
-  --color-surface-200: 55 65 81; /* gray-700 */
+.dark,
+.theme-oscuro {
+  --color-primary: 96 165 250;
+  /* blue-400 */
+  --color-secondary: 59 130 246;
+  /* blue-500 */
+  --color-accent: 147 197 253;
+  /* blue-300 */
 
-  --color-text-primary: 243 244 246; /* gray-100 */
-  --color-text-secondary: 156 163 175; /* gray-400 */
-  --color-text-accent: 17 24 39; /* gray-900 */
+  --color-background: 17 24 39;
+  /* gray-900 */
+  --color-surface-100: 31 41 55;
+  /* gray-800 */
+  --color-surface-200: 55 65 81;
+  /* gray-700 */
+
+  --color-text-primary: 243 244 246;
+  /* gray-100 */
+  --color-text-secondary: 156 163 175;
+  /* gray-400 */
+  --color-text-accent: 17 24 39;
+  /* gray-900 */
 }
 
 /* Pequeños ajustes base */
 body {
   font-family: 'Inter', sans-serif;
+  padding-top: env(safe-area-inset-top);
 }
 
 /* 1. Corrección para el Popover de "más eventos" en la vista de mes */
@@ -116,34 +152,31 @@ body {
   background-color: rgb(var(--color-surface-200));
   border-color: rgb(var(--color-surface-100));
 }
+
 .dark .fc-popover .fc-popover-header {
   background-color: rgb(var(--color-surface-100));
   color: rgb(var(--color-text-primary));
 }
+
 .dark .fc-popover .fc-popover-body {
   color: rgb(var(--color-text-primary));
 }
+
 /* Cambia el color del texto del evento dentro del popover */
 .dark .fc-daygrid-event-dot {
-  border-color: currentColor; /* Usa el color del texto del evento */
+  border-color: currentColor;
+  /* Usa el color del texto del evento */
 }
 
 
 /* 2. Corrección para los encabezados en la Vista de Lista */
-.dark .fc-list-day-text, 
+.dark .fc-list-day-text,
 .dark .fc-list-day-side-text {
-  color: rgb(var(--color-text-primary)) !important; /* Forzamos el color del texto principal */
+  color: rgb(var(--color-text-primary)) !important;
+  /* Forzamos el color del texto principal */
 }
 
 /* Le damos un fondo a la fila del encabezado para que se distinga */
 .dark .fc-list-day-cushion {
   background-color: rgb(var(--color-surface-200));
 }
-
-
-
-
-
-
-
-

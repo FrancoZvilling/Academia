@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "214777208525",
+    "project_id": "estud-ia-a94a3",
+    "storage_bucket": "estud-ia-a94a3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:214777208525:android:4c521c3d10f63610525384",
+        "android_client_info": {
+          "package_name": "com.estudia.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "214777208525-qj9l1j2f33mfj7d1esm5ajbou44mu6d7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.estudia.app",
+            "certificate_hash": "8b80514ab27b1421d0dde19dc0ae53fd81a1ca74"
+          }
+        },
+        {
+          "client_id": "214777208525-sd1of3lmoi8a4k9pja5pj8bgfn71ht2g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQmu7hJT6mVQ-J9X0Tz3f4Z3w7SMmuKTg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "214777208525-sd1of3lmoi8a4k9pja5pj8bgfn71ht2g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
