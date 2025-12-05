@@ -317,8 +317,7 @@ const DashboardPage = () => {
                 </form>
             </Modal>
             {/* ------------------------------------------- */}
-            {/* Banner de Publicidad */}
-            <AdBanner />
+
         </div>
     );
 };

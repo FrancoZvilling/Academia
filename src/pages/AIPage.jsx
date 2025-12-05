@@ -561,15 +561,56 @@ const AIPage = () => {
   // Si tenemos los datos y el plan no es 'premium', mostramos el componente de upgrade
   if (userData && userData.plan !== 'premium') {
     return (
-      <div className="text-center p-6 sm:p-10 bg-surface-100 rounded-lg shadow-xl flex flex-col items-center">
-        <FaStar className="text-yellow-400 text-5xl mb-4" />
-        <h1 className="text-3xl font-bold mb-4">Desbloquea las Funciones de IA</h1>
-        <p className="text-text-secondary mb-8 max-w-md">
-          Las herramientas de Resúmenes y Modelos de Parcial son exclusivas para usuarios Premium. ¡Lleva tu estudio al siguiente nivel!
-        </p>
-        <Link to="/premium" className="btn btn-primary btn-lg bg-primary text-text-accent">
-          Ver Beneficios Premium
-        </Link>
+      <div className="flex flex-col items-center justify-center min-h-[80vh] p-6 text-center space-y-8 animate-fade-in">
+
+        {/* Hero Section */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full transform scale-150 pointer-events-none"></div>
+          <FaStar className="text-primary text-7xl relative z-10 drop-shadow-lg animate-pulse-slow" />
+        </div>
+
+        <div className="space-y-4 max-w-lg relative z-10">
+          <h1 className="text-4xl font-extrabold text-text-primary tracking-tight">
+            Potencia tu Estudio con <span className="text-primary">IA</span>
+          </h1>
+          <p className="text-lg text-text-secondary leading-relaxed">
+            Desbloquea el poder de la inteligencia artificial para resumir tus apuntes y crear exámenes personalizados en segundos.
+          </p>
+        </div>
+
+        {/* Feature Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
+          <div className="bg-surface-100 dark:bg-surface-200 p-5 rounded-2xl shadow-sm border border-surface-200 dark:border-surface-300 flex flex-col items-center gap-3 hover:shadow-md transition-shadow">
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
+              <FaFilePdf size={24} />
+            </div>
+            <h3 className="font-bold text-text-primary">Resúmenes Inteligentes</h3>
+            <p className="text-sm text-text-secondary">Sube tus PDFs y obtén lo importante al instante.</p>
+          </div>
+
+          <div className="bg-surface-100 dark:bg-surface-200 p-5 rounded-2xl shadow-sm border border-surface-200 dark:border-surface-300 flex flex-col items-center gap-3 hover:shadow-md transition-shadow">
+            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full">
+              <FaClipboardList size={24} />
+            </div>
+            <h3 className="font-bold text-text-primary">Simulacros de Examen</h3>
+            <p className="text-sm text-text-secondary">Practica con preguntas reales de tus materias.</p>
+          </div>
+
+        </div>
+
+        {/* CTA Section */}
+        <div className="w-full max-w-md space-y-4 pt-4">
+          <Link
+            to="/premium"
+            className="btn w-full bg-gradient-to-r from-primary to-secondary border-none text-white py-4 h-auto text-lg font-bold rounded-full shadow-xl shadow-primary/30 transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2"
+          >
+            <FaStar className="text-yellow-300" /> Desbloquear Premium
+          </Link>
+          <p className="text-xs text-text-secondary">
+            Cancela cuando quieras. Sin compromisos.
+          </p>
+        </div>
+
       </div>
     );
   }

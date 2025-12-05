@@ -150,7 +150,7 @@ const GradesManager = ({ subject, grades, onAddGrade, onDeleteGrade }) => {
     }, [grades]);
     return (
         <div className="bg-surface-100 p-6 rounded-lg shadow-md sticky top-8">
-            <h3 className="font-bold text-lg mb-4">Notas de la Cursada</h3>
+            <h3 className="font-bold text-lg mb-4">Calificaciones</h3>
             <form onSubmit={handleSubmit(handleFormSubmit)} className="flex items-start gap-2 mb-6">
                 <div className="flex-grow"><input {...register("gradeTitle", { required: true })} placeholder="Ej: Primer Parcial" className="input input-sm input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div>
                 <div className="w-20"><input type="number" step="0.01" {...register("gradeScore", { required: true })} placeholder="Nota" className="input input-sm input-bordered border-black bg-surface-100 w-full dark:bg-gray-700 text-gray-700 dark:text-gray-300" /></div>

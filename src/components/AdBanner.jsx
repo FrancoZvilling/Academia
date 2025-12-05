@@ -1,14 +1,17 @@
 import { useEffect } from 'react';
 import { AdMob, BannerAdSize, BannerAdPosition, BannerAdPluginEvents } from '@capacitor-community/admob';
 
-const AdBanner = () => {
+const AdBanner = ({ position = BannerAdPosition.BOTTOM_CENTER }) => {
   useEffect(() => {
     const showBanner = async () => {
+      // Esperar 2 segundos para asegurar que AdMob.initialize() en App.jsx haya terminado
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       try {
         const options = {
           adId: 'ca-app-pub-3940256099942544/6300978111', // TEST ID oficial de Android
-          adSize: BannerAdSize.BANNER,
-          position: BannerAdPosition.BOTTOM_CENTER,
+          adSize: BannerAdSize.ADAPTIVE_BANNER,
+          position: position,
           margin: 0,
           isTesting: true
         };

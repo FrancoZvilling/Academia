@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import Modal from '../components/ui/Modal';
 import TermsContent from '../components/TermsContent';
+import { FaEnvelope, FaLock, FaGoogle, FaUser, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const LoginPage = () => {
   const { login, signup, loginWithGoogle, resetPassword } = useAuth();
@@ -15,6 +16,7 @@ const LoginPage = () => {
   const [view, setView] = useState('login');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -66,42 +68,100 @@ const LoginPage = () => {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-start min-h-screen bg-background p-4 pt-20 pb-8">
-        <div className="mb-8">
-          <img src={logo} alt="Logo de Estud-IA" className="w-61 h-40" />
-        </div>
+      <div className="flex items-center justify-center min-h-screen bg-surface-50 dark:bg-background p-6 transition-colors duration-300">
 
-        <div className="w-full max-w-md p-8 space-y-6 bg-surface-100 rounded-2xl shadow-xl">
-          <h1 className="text-3xl font-bold text-center text-text-primary">
-            {view === 'login' && 'Iniciar Sesión'}
-            {view === 'register' && 'Crear Cuenta'}
-            {view === 'reset' && 'Restablecer Contraseña'}
-          </h1>
+        <div className="w-full max-w-md bg-surface-100 dark:bg-surface-100 rounded-3xl shadow-2xl p-8 space-y-8 relative overflow-hidden">
 
-          {error && <p className="text-red-500 text-center bg-red-100 dark:bg-red-900/50 p-3 rounded-md">{error}</p>}
-          {message && <p className="text-green-500 text-center bg-green-100 dark:bg-green-900/50 p-3 rounded-md">{message}</p>}
+          {/* Decoración de fondo (círculos difusos) */}
+          <div className="absolute top-[-50px] left-[-50px] w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="absolute bottom-[-50px] right-[-50px] w-32 h-32 bg-secondary/10 rounded-full blur-2xl pointer-events-none"></div>
 
+          {/* Logo y Encabezado */}
+          <div className="flex flex-col items-center space-y-4">
+            <img src={logo} alt="Logo de Estud-IA" className="w-24 h-24 object-contain drop-shadow-md" />
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-text-primary tracking-tight">
+                {view === 'login' && '¡Hola de nuevo!'}
+                {view === 'register' && 'Crea tu cuenta'}
+                {view === 'reset' && 'Recuperar Cuenta'}
+              </h1>
+              <p className="text-text-secondary text-sm mt-1">
+                {view === 'login' && 'Ingresa tus datos para continuar'}
+                {view === 'register' && 'Únete a la comunidad de Estud-IA'}
+                {view === 'reset' && 'Ingresa tu email para restablecer'}
+              </p>
+            </div>
+          </div>
+
+          {/* Mensajes de Error/Éxito */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 p-3 rounded-xl text-sm text-center animate-pulse">
+              {error}
+            </div>
+          )}
+          {message && (
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 p-3 rounded-xl text-sm text-center">
+              {message}
+            </div>
+          )}
+
+          {/* Formularios */}
           {(view === 'login' || view === 'register') && (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <input type="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-              <input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-              
-              {/* --- CORRECCIÓN 2: Checkbox de Términos con mejor estilo --- */}
+            <form onSubmit={handleSubmit} className="space-y-5">
+
+              {/* Input Email */}
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-text-secondary group-focus-within:text-primary transition-colors">
+                  <FaEnvelope />
+                </div>
+                <input
+                  type="email"
+                  placeholder="Correo electrónico"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3.5 bg-surface-50 dark:bg-surface-200 border border-transparent focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl outline-none transition-all text-text-primary placeholder-text-secondary/70"
+                  required
+                />
+              </div>
+
+              {/* Input Password */}
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-text-secondary group-focus-within:text-primary transition-colors">
+                  <FaLock />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-11 pr-11 py-3.5 bg-surface-50 dark:bg-surface-200 border border-transparent focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl outline-none transition-all text-text-primary placeholder-text-secondary/70"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+
+              {/* Checkbox Términos (Registro) */}
               {view === 'register' && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3 px-1">
                   <input
                     id="terms"
                     type="checkbox"
                     checked={acceptedTerms}
                     onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="checkbox checkbox-sm border-gray-400 dark:border-gray-500 checked:bg-primary"
+                    className="checkbox checkbox-sm checkbox-primary rounded-md"
                   />
-                  <label htmlFor="terms" className="text-sm text-text-secondary">
+                  <label htmlFor="terms" className="text-xs text-text-secondary cursor-pointer select-none">
                     Acepto los{' '}
                     <button
                       type="button"
                       onClick={() => setIsTermsModalOpen(true)}
-                      className="font-semibold text-primary hover:underline"
+                      className="font-bold text-primary hover:underline"
                     >
                       Términos y Condiciones
                     </button>
@@ -109,63 +169,93 @@ const LoginPage = () => {
                 </div>
               )}
 
-              {/* --- CORRECCIÓN 1: Botón de Ingresar/Registrarse con estilo sólido --- */}
+              {/* Botón Principal */}
               <button
                 type="submit"
-                className="btn btn-primary bg-primary border-primary text-text-accent hover:bg-secondary hover:border-secondary w-full py-3 h-auto text-base"
+                className="w-full py-3.5 bg-primary hover:bg-secondary text-white font-bold rounded-full shadow-lg shadow-primary/30 transform active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
                 disabled={view === 'register' && !acceptedTerms}
               >
-                {view === 'register' ? 'Registrarse' : 'Ingresar'}
+                <span>{view === 'register' ? 'Crear Cuenta' : 'Iniciar Sesión'}</span>
+                <FaArrowRight className="text-sm" />
               </button>
             </form>
           )}
 
+          {/* Formulario Reset Password */}
           {view === 'reset' && (
-            <form onSubmit={handleResetPassword} className="space-y-6">
-              <p className="text-sm text-center text-gray-600 dark:text-gray-400">Introduce tu correo electrónico y te enviaremos un enlace para recuperar tu cuenta.</p>
-              <input type="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-              <button type="submit" className="w-full px-4 py-3 text-white font-semibold bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">Enviar Correo</button>
+            <form onSubmit={handleResetPassword} className="space-y-5">
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-text-secondary group-focus-within:text-primary transition-colors">
+                  <FaEnvelope />
+                </div>
+                <input
+                  type="email"
+                  placeholder="Correo electrónico"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3.5 bg-surface-50 dark:bg-surface-200 border border-transparent focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl outline-none transition-all text-text-primary placeholder-text-secondary/70"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full py-3.5 bg-primary hover:bg-secondary text-white font-bold rounded-full shadow-lg shadow-primary/30 transform active:scale-[0.98] transition-all duration-200"
+              >
+                Enviar Enlace
+              </button>
             </form>
           )}
 
-          {view === 'login' && (
-            <div className="text-center text-sm">
-              <button onClick={() => setView('reset')} className="font-semibold text-primary hover:underline">
-                ¿Olvidaste tu contraseña?
-              </button>
+          {/* Separador */}
+          {(view === 'login' || view === 'register') && (
+            <div className="relative flex py-2 items-center">
+              <div className="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
+              <span className="flex-shrink mx-4 text-gray-400 text-xs uppercase tracking-wider">O continúa con</span>
+              <div className="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
             </div>
           )}
 
+          {/* Botón Google */}
           {(view === 'login' || view === 'register') && (
-            <>
-              <div className="relative flex items-center"><div className="flex-grow border-t border-gray-300 dark:border-gray-600"></div><span className="flex-shrink mx-4 text-gray-400">o</span><div className="flex-grow border-t border-gray-300 dark:border-gray-600"></div></div>
-              <button onClick={handleGoogleLogin} className="w-full px-4 py-3 border flex justify-center items-center gap-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                <svg className="w-5 h-5" viewBox="0 0 48 48">
-                  <path fill="#4285F4" d="M24 9.5c3.9 0 6.8 1.6 8.4 3.1l6.3-6.3C34.9 2.4 30 .2 24 .2 14.8.2 7.3 5.8 4.2 13.9l7.8 6C13.6 13.5 18.4 9.5 24 9.5z"></path>
-                  <path fill="#34A853" d="M46.2 25.4c0-1.7-.2-3.4-.5-5H24v9.3h12.5c-.5 3-2.1 5.6-4.6 7.3l7.4 5.7c4.3-4 6.9-10 6.9-17.3z"></path>
-                  <path fill="#FBBC05" d="M12 28.3c-.5-1.5-.8-3.1-.8-4.8s.3-3.3.8-4.8l-7.8-6C1.5 16.5.2 20.1.2 24s1.3 7.5 4.2 11.4l7.6-5.9z"></path>
-                  <path fill="#EA4335" d="M24 48c6 0 11.1-2 14.8-5.4l-7.4-5.7c-2 1.3-4.6 2.1-7.4 2.1-5.6 0-10.4-4-12.1-9.5l-7.8 6C7.3 42.2 14.8 48 24 48z"></path>
-                  <path fill="none" d="M0 0h48v48H0z"></path>
-                </svg>
-                <span>Continuar con Google</span>
-              </button>
-            </>
+            <button
+              onClick={handleGoogleLogin}
+              className="w-full py-3.5 bg-white dark:bg-surface-200 border border-gray-200 dark:border-gray-700 rounded-full shadow-sm hover:shadow-md transform active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-3 group"
+            >
+              <FaGoogle className="text-red-500 group-hover:scale-110 transition-transform" />
+              <span className="font-semibold text-gray-700 dark:text-gray-200">Google</span>
+            </button>
           )}
 
-          <p className="text-center text-sm">
-            {view === 'login' && '¿No tienes una cuenta?'}
-            {view === 'register' && '¿Ya tienes una cuenta?'}
-            {view === 'reset' && '¿Ya recordaste tu contraseña?'}
-            <button onClick={() => setView(view === 'login' ? 'register' : 'login')} className="font-semibold text-primary hover:underline ml-1">
-              {view === 'login' && 'Regístrate'}
-              {view === 'register' && 'Inicia sesión'}
-              {view === 'reset' && 'Inicia sesión'}
-            </button>
-          </p>
+          {/* Footer (Switch View) */}
+          <div className="text-center pt-2">
+            <p className="text-sm text-text-secondary">
+              {view === 'login' && '¿No tienes cuenta?'}
+              {view === 'register' && '¿Ya tienes cuenta?'}
+              {view === 'reset' && '¿Ya recordaste tu contraseña?'}
+              <button
+                onClick={() => setView(view === 'login' ? 'register' : 'login')}
+                className="font-bold text-primary hover:text-secondary ml-1 transition-colors"
+              >
+                {view === 'login' && 'Regístrate aquí'}
+                {view === 'register' && 'Inicia sesión'}
+                {view === 'reset' && 'Volver al login'}
+              </button>
+            </p>
+
+            {view === 'login' && (
+              <button
+                onClick={() => setView('reset')}
+                className="mt-4 text-xs font-medium text-text-secondary hover:text-primary transition-colors"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            )}
+          </div>
+
         </div>
       </div>
 
-      {/* --- CORRECCIÓN 3: Modal con scroll y estilos --- */}
+      {/* Modal Términos */}
       <Modal
         isOpen={isTermsModalOpen}
         onClose={() => setIsTermsModalOpen(false)}

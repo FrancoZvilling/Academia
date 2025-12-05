@@ -281,7 +281,7 @@ const CalendarPage = () => {
                 <FullCalendar
                     ref={calendarRef}
                     plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-                    initialView={isMobile ? 'listWeek' : 'dayGridMonth'}
+                    initialView={isMobile ? 'timeGridWeek' : 'dayGridMonth'}
                     headerToolbar={false}
                     footerToolbar={false}
                     events={events}
