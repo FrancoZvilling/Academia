@@ -222,12 +222,13 @@ const functions = getFunctions();
 /**
  * Llama a la Cloud Function 'generateSummary' con el texto proporcionado.
  * @param {string} text - El texto extraído del PDF para resumir.
+ * @param {string} mode - El modo de resumen ('standard', 'explanatory', 'math').
  * @returns {Promise<string>} - Una promesa que resuelve al resumen generado.
  */
-export const callGenerateSummary = async (text) => {
+export const callGenerateSummary = async (text, mode = 'standard') => {
   try {
-    const generateSummaryFunction = httpsCallable(functions, 'generateSummary');
-    const result = await generateSummaryFunction({ text });
+    const generateSummaryFunction = httpsCallable(getFunctions(), 'generateSummary');
+    const result = await generateSummaryFunction({ text, mode });
     return result.data.summary;
   } catch (error) {
     console.error("Error al llamar a la Cloud Function 'generateSummary':", error);
@@ -241,10 +242,10 @@ export const callGenerateSummary = async (text) => {
  * @param {string} text - El texto extraído del PDF para generar el examen.
  * @returns {Promise<string>} - Una promesa que resuelve al string JSON con los datos del examen.
  */
-export const callGenerateExam = async (text) => {
+export const callGenerateExam = async (text, questions = 10) => {
   try {
     const generateExamFunction = httpsCallable(functions, 'generateExam');
-    const result = await generateExamFunction({ text });
+    const result = await generateExamFunction({ text, questions });
     // La Cloud Function devuelve un objeto { examData: '...' }
     return result.data.examData;
   } catch (error) {

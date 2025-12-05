@@ -81,6 +81,8 @@ exports.generateSummary = onCall({ secrets: [geminiApiKey] }, async (request) =>
     }
 
     const textToSummarize = request.data.text;
+    const mode = request.data.mode || 'standard'; // 'standard', 'explanatory', 'math'
+
     if (!textToSummarize || typeof textToSummarize !== "string" || textToSummarize.length === 0) {
         throw new HttpsError("invalid-argument", "La función debe ser llamada con un campo 'text' válido.");
     }
@@ -90,60 +92,82 @@ exports.generateSummary = onCall({ secrets: [geminiApiKey] }, async (request) =>
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
     // --------------------
 
-    const prompt = `
-     *ROL Y OBJETIVO:*
-Eres una herramienta de procesamiento de texto llamada Estud-IA. Tu única función es transformar un texto académico en un formato de resumen estructurado para facilitar el estudio. NO debes actuar como un editor ni omitir información. Tu objetivo es reestructurar y condensar el 100% del contenido original.
+    let prompt = "";
 
-*CONTEXTO DEL EXAMEN:*
-
--El examen es de opción múltiple.
-
--Las preguntas pueden ser muy específicas ("puntillosas") y basarse en frases textuales exactas.
-
--Se evaluarán ideas principales, ideas secundarias y detalles importantes.
-
-*INSTRUCCIONES DE CONTENIDO:*
-
-1-RESUMEN EXTENSO DE IDEAS PRINCIPALES:
--Genera un resumen completo y detallado de todas las ideas y teorías principales presentadas en el texto.
--Organiza el resumen con títulos y subtítulos claros.
--Incluye frases textuales relevantes entre comillas si podrían ser usadas en el examen.
--CITA AUTORES: Si el texto menciona autores de frases o teorías, inclúyelos junto a sus ideas.
-
-2-INCLUSIÓN DE IDEAS SECUNDARIAS:
--Identifica todas las ideas secundarias que apoyan o complementan a las ideas principales.
--Intégralas de forma concisa y lógica dentro del resumen, justo después de la idea principal a la que se refieren.
-
-3-EJEMPLOS PARA IDEAS TERCIARIAS:
--Si encuentras conceptos menores o detalles importantes, resúmelos como ejemplos cortos y simples.
-
-4-DETALLES CLAVE PARA REPASAR (EXTRA):
--Al final del resumen, agrega una sección llamada "📌 Detalles clave para memorizar" con:
-
-*Conceptos importantes.
-
-*Autores y teorías mencionadas.
-
-*Fechas, definiciones y frases textuales relevantes.
-
-5-CRITERIO DE EXTENSIÓN:
--El resumen debe ser lo más largo posible y cubrir el 100% de la información relevante del texto.
--Nunca debe ser un listado breve; debe mantener una longitud mínima equivalente al 40‑50% del texto original o más si es necesario.
-
-6-VALIDACIÓN FINAL:
--Antes de finalizar, verifica si alguna parte del texto no fue incluida en el resumen y agrégala si falta.
-
-*INSTRUCCIONES DE FORMATO (OBLIGATORIO):*
--Usa ## para los títulos principales.
--Usa ### para los subtítulos.
--Usa * para crear listas con viñetas.
--Usa negrita (con **) para resaltar los nombres de autores, conceptos clave y frases importantes.
-
-Aquí está el texto a resumir:
-    ---
-    ${textToSummarize}
-    ---
-  `;
+    if (mode === 'math') {
+        prompt = `
+        *ROL Y OBJETIVO:*
+        Eres un profesor experto en matemáticas y ciencias exactas llamado Estud-IA. Tu función es explicar el contenido del texto proporcionado utilizando ejemplos matemáticos claros, paso a paso y analogías simples.
+        
+        *INSTRUCCIONES:*
+        1. Analiza el texto proporcionado.
+        2. Identifica los conceptos clave.
+        3. Para cada concepto, proporciona una explicación teórica breve seguida de un EJEMPLO MATEMÁTICO o numérico concreto.
+        4. Si el texto no contiene matemáticas explícitas, usa analogías lógicas o numéricas para explicar los conceptos.
+        5. Usa formato Markdown. Usa negritas para conceptos clave y bloques de código para fórmulas o pasos de cálculo.
+        
+        *FORMATO DE SALIDA:*
+        ## [Título del Concepto]
+        **Explicación:** [Breve explicación teórica]
+        **Ejemplo Matemático:**
+        [Ejemplo paso a paso con números o variables]
+        
+        ---
+        
+        *TEXTO A PROCESAR:*
+        ${textToSummarize}
+        `;
+    } else if (mode === 'explanatory') {
+        prompt = `
+        *ROL Y OBJETIVO:*
+        Eres un profesor particular paciente y didáctico llamado Estud-IA. Tu objetivo es explicar el contenido del texto de manera profunda pero fácil de entender, como si le estuvieras enseñando a un estudiante que necesita claridad.
+        
+        *INSTRUCCIONES:*
+        1. No solo resumas, EXPLICA. Desglosa las ideas complejas en partes más simples.
+        2. Usa analogías y ejemplos de la vida real siempre que sea posible.
+        3. Anticipa posibles dudas y acláralas.
+        4. Usa un tono conversacional pero académico y alentador.
+        5. Usa formato Markdown con títulos, subtítulos y listas.
+        
+        *FORMATO DE SALIDA:*
+        ## [Concepto Principal]
+        **¿Qué es?** [Explicación simple]
+        **¿Por qué es importante?** [Contexto y relevancia]
+        **Ejemplo:** [Analogía o caso práctico]
+        
+        ---
+        
+        *TEXTO A PROCESAR:*
+        ${textToSummarize}
+        `;
+    } else {
+        // STANDARD MODE (El original)
+        prompt = `
+        *ROL Y OBJETIVO:*
+        Eres una herramienta de procesamiento de texto llamada Estud-IA. Tu única función es transformar un texto académico en un formato de resumen estructurado para facilitar el estudio. NO debes actuar como un editor ni omitir información. Tu objetivo es reestructurar y condensar el 100% del contenido original.
+        
+        *CONTEXTO DEL EXAMEN:*
+        
+        -El examen es de opción múltiple.
+        
+        *INSTRUCCIONES DE FORMATO:*
+        
+        1.  **Título Principal:** Comienza con el título del tema en H2 (## Título).
+        2.  **Subtítulos:** Usa H3 (### Subtítulo) para dividir las secciones principales.
+        3.  **Puntos Clave:** Usa viñetas (*) para listar la información.
+        4.  **Negritas:** Usa **negritas** para resaltar términos clave, fechas, nombres y definiciones importantes.
+        5.  **Concisión:** Sé directo. Elimina la paja, pero mantén el significado completo.
+        
+        *REGLAS:*
+        
+        *   NO agregues introducciones ni conclusiones (ej: "Aquí tienes el resumen...").
+        *   NO uses frases como "El texto menciona..." o "El autor dice...".
+        *   Mantén el idioma original del texto.
+        
+        *TEXTO A RESUMIR:*
+        ${textToSummarize}
+        `;
+    }
 
     logger.info("Llamando a la API de Gemini...");
     try {
@@ -166,6 +190,8 @@ exports.generateExam = onCall({ secrets: [geminiApiKey] }, async (request) => {
     }
 
     const textForExam = request.data.text;
+    const questionsCount = request.data.questions || 10;
+
     if (!textForExam || typeof textForExam !== "string" || textForExam.length === 0) {
         throw new HttpsError("invalid-argument", "La función debe ser llamada con un campo 'text' válido.");
     }
@@ -177,7 +203,7 @@ exports.generateExam = onCall({ secrets: [geminiApiKey] }, async (request) => {
 
     const prompt = `
     ROL: Eres un experto creador de exámenes universitarios.
-    TAREA: Analiza el siguiente texto de un apunte universitario y genera un examen de opción múltiple (multiple choice) de 10 preguntas.
+    TAREA: Analiza el siguiente texto de un apunte universitario y genera un examen de opción múltiple (multiple choice) de ${questionsCount} preguntas.
 
     INSTRUCCIONES CLAVE:
 -Crea preguntas de comprensión y aplicación del conocimiento, como las que haría un profesor para evaluar si el alumno entendió el contenido.
@@ -197,7 +223,7 @@ Al generar las preguntas de opción múltiple, asegurate de que:
 -Todas las preguntas deben basarse en el contenido del texto, pero redactadas como lo haría un profesor.
 
 CONTROL DE DISTRIBUCIÓN DE RESPUESTAS:
--Al generar las 10 preguntas, asegúrate de que la letra de la respuesta correcta esté distribuida de manera equilibrada entre 'a', 'b', 'c' y 'd'. 
+-Al generar las ${questionsCount} preguntas, asegúrate de que la letra de la respuesta correcta esté distribuida de manera equilibrada entre 'a', 'b', 'c' y 'd'. 
 -No concentres la mayoría de respuestas correctas en una misma opción (ejemplo: no más de 3 respuestas en la misma letra). 
 -Si al terminar detectas que hay un desbalance, reasigna de forma interna las letras de las respuestas correctas hasta lograr una distribución equitativa (aproximadamente 2 o 3 en cada letra). 
 -La reasignación de letras no debe alterar el contenido de las opciones, solo cuál de ellas es considerada la correcta. 
@@ -205,7 +231,7 @@ CONTROL DE DISTRIBUCIÓN DE RESPUESTAS:
 
 REGLAS ESTRICTAS DE SALIDA:
 Tu respuesta debe ser EXCLUSIVAMENTE un string JSON válido, sin ningún texto antes o después.
-El JSON debe ser un array de 10 objetos.
+El JSON debe ser un array de ${questionsCount} objetos.
 Cada objeto debe tener EXACTAMENTE la siguiente estructura:
 { "question": "El texto completo de la pregunta", "options": ["Texto opción A", "Texto opción B", "Texto opción C", "Texto opción D"], "answer": "La letra de la opción correcta en minúscula, ej: 'a', 'b', 'c' o 'd'" }
 
@@ -217,7 +243,7 @@ TEXTO A ANALIZAR:
     ---
   `;
 
-    logger.info("Llamando a la API de Gemini para generar un examen...");
+    logger.info(`Llamando a la API de Gemini para generar un examen de ${questionsCount} preguntas...`);
     try {
         const result = await model.generateContent(prompt);
         const response = result.response;
@@ -260,7 +286,7 @@ exports.createSubscriptionLink = onCall({
         logger.error("FATAL: El secreto MERCADOPAGO_ACCESS_TOKEN no se pudo leer.");
         throw new HttpsError("internal", "Error de configuración del servidor.");
     }
-    logger.info(`Access Token cargado correctamente. Comienza con: ${accessToken.substring(0, 15)}...`);
+    logger.info(`Access Token cargado correctamente.Comienza con: ${accessToken.substring(0, 15)}...`);
 
     // 3. Configurar el cliente de Mercado Pago
     const client = new mercadopago.MercadoPagoConfig({
@@ -302,7 +328,7 @@ exports.createSubscriptionLink = onCall({
         const mpError = error.cause || error;
         logger.error("---- ERROR DETALLADO DE MERCADO PAGO ----", mpError);
         const errorMessage = mpError.message || "No se pudo generar el link de pago.";
-        throw new HttpsError("internal", `Error de Mercado Pago: ${errorMessage}`);
+        throw new HttpsError("internal", `Error de Mercado Pago: ${errorMessage} `);
     }
 });
 
@@ -453,211 +479,48 @@ exports.checkScheduledNotifications = onSchedule({
                 }
 
                 if (message) {
-                    // Lógica de Color y Título
-                    if (isGeneralEvent) {
-                        color = '#f59e0b'; // Dorado para eventos generales
-                    } else if (isSubjectEvent) {
-                        // Para eventos de materia, necesitamos buscar el color de la materia padre
-                        // La estructura es: users/{uid}/years/{yearId}/subjects/{subjectId}/events/{eventId}
+                    // Si es un evento de materia, intentamos buscar el color de la materia
+                    if (isSubjectEvent) {
                         try {
                             const subjectDoc = await eventDoc.ref.parent.parent.get();
-                            const subjectData = subjectDoc.data();
-                            color = subjectData?.color || '#3b82f6'; // Azul por defecto si falla
-
-                            // Si tenemos el nombre de la materia, lo usamos como título
-                            if (subjectData?.name) {
-                                title = subjectData.name;
+                            if (subjectDoc.exists) {
+                                color = subjectDoc.data().color;
                             }
-                        } catch (err) {
-                            logger.error(`Error al obtener datos de materia para evento ${eventDoc.id}`, err);
-                            color = '#3b82f6';
+                        } catch (e) {
+                            logger.warn(`No se pudo obtener el color de la materia para el evento ${eventDoc.id}`, e);
+                        }
+                    } else {
+                        color = eventData.color; // Color directo para eventos generales
+                    }
+
+                    // Enviamos la notificación a TODOS los tokens del usuario
+                    const tokens = user.fcmTokens;
+                    const payload = {
+                        notification: {
+                            title: title,
+                            body: message,
+                        },
+                        data: {
+                            url: "/calendar", // O la URL que quieras abrir
+                            // Puedes agregar más datos aquí si lo necesitas
+                        }
+                    };
+                    // Si tenemos color, lo agregamos al payload (Android lo soporta en 'color')
+                    if (color) {
+                        payload.android = {
+                            notification: {
+                                color: color
+                            }
                         }
                     }
 
-                    // Agregamos la promesa al array, pasando el executionId y el color
-                    notificationPromises.push(sendNotificationToUser(userId, user.fcmTokens, title, message, executionId, color));
-                }
-            });
-        }
-
-        // B. Clases (24 horas antes)
-        const yearsSnap = await db.collection('users').doc(userId).collection('years').get();
-        for (const yearDoc of yearsSnap.docs) {
-            const subjectsSnap = await yearDoc.ref.collection('subjects').get();
-
-            subjectsSnap.forEach(subjectDoc => {
-                const subject = subjectDoc.data();
-                if (!subject.schedule || !subject.startDate) return;
-
-                const targetDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-                const options = { timeZone: 'America/Argentina/Buenos_Aires' };
-                const targetDayName = targetDate.toLocaleDateString('es-AR', { ...options, weekday: 'long' }).toLowerCase();
-
-                const dateParts = new Intl.DateTimeFormat('es-AR', { ...options, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(targetDate);
-                const day = dateParts.find(p => p.type === 'day').value;
-                const month = dateParts.find(p => p.type === 'month').value;
-                const year = dateParts.find(p => p.type === 'year').value;
-                const targetDateString = `${year}-${month}-${day}`;
-
-                if (targetDateString < subject.startDate) return;
-                if (subject.endDate && targetDateString > subject.endDate) return;
-
-                const classToday = subject.schedule.find(slot => slot.day.toLowerCase() === targetDayName);
-
-                if (classToday && classToday.startTime) {
-                    const [classHour, classMinute] = classToday.startTime.split(':').map(Number);
-                    const targetHourStr = targetDate.toLocaleTimeString('es-AR', { ...options, hour: '2-digit', hour12: false });
-                    const targetMinuteStr = targetDate.toLocaleTimeString('es-AR', { ...options, minute: '2-digit' });
-                    const targetHour = parseInt(targetHourStr);
-                    const targetMinute = parseInt(targetMinuteStr);
-
-                    const classTotalMinutes = classHour * 60 + classMinute;
-                    const targetTotalMinutes = targetHour * 60 + targetMinute;
-                    const diff = Math.abs(classTotalMinutes - targetTotalMinutes);
-
-                    if (diff < 55) {
-                        // Pasamos el color de la materia
-                        const color = subject.color || '#3b82f6';
-                        notificationPromises.push(sendNotificationToUser(userId, user.fcmTokens, "Clases", `Mañana tienes clases de ${subject.name} a las ${classToday.startTime} hs.`, executionId, color));
-                    }
+                    logger.info(`Enviando notificación a usuario ${userId}: ${message}`);
+                    notificationPromises.push(admin.messaging().sendToDevice(tokens, payload));
                 }
             });
         }
     }
 
-    // Esperamos a que todas las notificaciones se envíen
     await Promise.all(notificationPromises);
-    logger.info(`[EXEC_ID: ${executionId}] Chequeo finalizado. Total notificaciones enviadas: ${notificationPromises.length}`);
-    return null;
-});
-
-/**
- * Función auxiliar para enviar una notificación a un usuario
- */
-const sendNotificationToUser = async (userId, tokens, title, body, executionId, color = null) => {
-    // 1. Deduplicar tokens
-    const uniqueTokens = [...new Set(tokens)];
-
-    if (uniqueTokens.length === 0) return;
-
-    // LOG DE DEBUG: Ver cuántos tokens hay antes y después
-    logger.info(`[EXEC_ID: ${executionId}] [DEBUG] Enviando a ${userId}. Tokens originales: ${tokens.length} (${JSON.stringify(tokens)}), Únicos: ${uniqueTokens.length} (${JSON.stringify(uniqueTokens)})`);
-
-    const message = {
-        notification: { title, body },
-        data: { click_action: 'https://www.estud-ia.com.ar', icon: '/defaults/default-avatar.png' },
-        tokens: uniqueTokens
-    };
-
-    try {
-        const response = await admin.messaging().sendEachForMulticast(message);
-
-        logger.info(`[EXEC_ID: ${executionId}] Notificación enviada a ${userId}: "${body}" | Success: ${response.successCount} | Failure: ${response.failureCount}`);
-
-        // 2. Limpieza de tokens inválidos
-        if (response.failureCount > 0) {
-            const failedTokens = [];
-            const tokensToRemove = [];
-
-            response.responses.forEach((resp, idx) => {
-                if (!resp.success) {
-                    const error = resp.error;
-                    const failedToken = uniqueTokens[idx];
-                    failedTokens.push(failedToken);
-
-                    // Si el error indica que el token no sirve, lo marcamos para borrar
-                    if (error.code === 'messaging/registration-token-not-registered' ||
-                        error.code === 'messaging/invalid-argument') {
-                        tokensToRemove.push(failedToken);
-                    }
-                }
-            });
-
-            if (tokensToRemove.length > 0) {
-                logger.info(`[EXEC_ID: ${executionId}] Eliminando ${tokensToRemove.length} tokens inválidos para el usuario ${userId}...`);
-                await db.collection('users').doc(userId).update({
-                    fcmTokens: admin.firestore.FieldValue.arrayRemove(...tokensToRemove)
-                });
-            }
-
-            logger.warn(`[EXEC_ID: ${executionId}] Tokens fallidos para ${userId}:`, failedTokens);
-        }
-
-        const notificationsRef = db.collection('users').doc(userId).collection('notifications');
-        const notificationData = {
-            title,
-            body,
-            read: false,
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
-        };
-
-        // Si tenemos color, lo guardamos
-        if (color) {
-            notificationData.color = color;
-        }
-
-        await notificationsRef.add(notificationData);
-
-    } catch (error) {
-        logger.error(`[EXEC_ID: ${executionId}] Error CRÍTICO al enviar notificación a ${userId}:`, error);
-    }
-};
-
-// --- FUNCIÓN DE LIMPIEZA AUTOMÁTICA (DIARIA) ---
-// Se ejecuta todos los días a las 03:00 AM (Hora Argentina)
-exports.cleanupOldNotifications = onSchedule({
-    schedule: "0 3 * * *",
-    region: "southamerica-east1",
-    timeZone: "America/Argentina/Buenos_Aires"
-}, async (event) => {
-    logger.info("Iniciando limpieza de notificaciones antiguas...");
-
-    // 1. Calcular fecha límite (7 días atrás)
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
-
-    // Convertimos a Timestamp de Firestore para la query
-    const thresholdTimestamp = admin.firestore.Timestamp.fromDate(sevenDaysAgo);
-
-    try {
-        // 2. Buscar notificaciones viejas en TODAS las subcolecciones 'notifications'
-        // Nota: Esto requiere un índice de exención o compuesto si hay muchos datos, 
-        // pero para 'createdAt' suele funcionar directo o el log nos dará el link para crearlo.
-        const oldNotificationsSnap = await db.collectionGroup('notifications')
-            .where('createdAt', '<', thresholdTimestamp)
-            .get();
-
-        if (oldNotificationsSnap.empty) {
-            logger.info("No se encontraron notificaciones antiguas para borrar.");
-            return;
-        }
-
-        logger.info(`Se encontraron ${oldNotificationsSnap.size} notificaciones antiguas. Eliminando...`);
-
-        // 3. Eliminar en lotes (Batches de a 500)
-        const batchSize = 500;
-        let batch = db.batch();
-        let operationCounter = 0;
-
-        for (const doc of oldNotificationsSnap.docs) {
-            batch.delete(doc.ref);
-            operationCounter++;
-
-            if (operationCounter >= batchSize) {
-                await batch.commit();
-                batch = db.batch();
-                operationCounter = 0;
-            }
-        }
-
-        // Commit final de los restantes
-        if (operationCounter > 0) {
-            await batch.commit();
-        }
-
-        logger.info("Limpieza de notificaciones completada con éxito.");
-
-    } catch (error) {
-        logger.error("Error durante la limpieza de notificaciones:", error);
-    }
+    logger.info(`[EXEC_ID: ${executionId}] Chequeo de notificaciones finalizado.`);
 });

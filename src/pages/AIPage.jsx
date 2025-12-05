@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { FaFileUpload, FaSpinner, FaFilePdf, FaDownload, FaInfoCircle, FaFileWord, FaCopy, FaStar, FaClipboardList, FaCloudUploadAlt, FaCheckCircle, FaTimesCircle, FaRedo, FaArrowRight } from 'react-icons/fa';
+import { FaFileUpload, FaSpinner, FaFilePdf, FaDownload, FaInfoCircle, FaFileWord, FaCopy, FaStar, FaClipboardList, FaCloudUploadAlt, FaCheckCircle, FaTimesCircle, FaRedo, FaArrowRight, FaMagic } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as pdfjsLib from 'pdfjs-dist';
 import { callGenerateSummary, callGenerateExam } from '../services/firestoreService';
 import { marked } from 'marked';
+import ReactMarkdown from 'react-markdown';
 import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } from 'docx';
 import { saveAs } from 'file-saver';
 import Modal from '../components/ui/Modal';
@@ -23,6 +24,7 @@ const SummarizerTab = () => {
   const [summary, setSummary] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState(false);
+  const [summaryMode, setSummaryMode] = useState('standard'); // 'standard', 'explanatory', 'math'
   const summaryRef = useRef(null);
   const selectedFile = watch('pdfFile');
   const fileName = selectedFile && selectedFile.length > 0 ? selectedFile[0].name : '';
@@ -48,7 +50,7 @@ const SummarizerTab = () => {
         throw new Error("No se pudo extraer texto del PDF. Puede que sea una imagen escaneada.");
       }
       toast.info("Generando resumen... Esto puede tardar un momento.");
-      const generatedSummary = await callGenerateSummary(fullText);
+      const generatedSummary = await callGenerateSummary(fullText, summaryMode);
       setSummary(generatedSummary);
       toast.success("¡Resumen generado con éxito!");
     } catch (error) {
@@ -177,6 +179,46 @@ const SummarizerTab = () => {
         <p className="text-text-secondary max-w-xl mx-auto text-lg mb-4">
           Transforma tus apuntes PDF en resúmenes estructurados y listos para estudiar en segundos.
         </p>
+
+        {/* Sub-menú de Modelos */}
+        <div className="flex justify-center mt-6 mb-6">
+          <div className="bg-surface-100 dark:bg-surface-200 p-1 rounded-xl inline-flex shadow-sm border border-surface-200 dark:border-surface-300">
+            <button
+              onClick={() => setSummaryMode('standard')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${summaryMode === 'standard' ? 'bg-primary text-white shadow-md' : 'text-text-secondary hover:bg-surface-200 dark:hover:bg-surface-300'}`}
+            >
+              Resumen
+            </button>
+            <button
+              onClick={() => setSummaryMode('explanatory')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${summaryMode === 'explanatory' ? 'bg-primary text-white shadow-md' : 'text-text-secondary hover:bg-surface-200 dark:hover:bg-surface-300'}`}
+            >
+              Explicativo
+            </button>
+            <button
+              onClick={() => setSummaryMode('math')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${summaryMode === 'math' ? 'bg-primary text-white shadow-md' : 'text-text-secondary hover:bg-surface-200 dark:hover:bg-surface-300'}`}
+            >
+              Matemático
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6 flex items-start gap-3 text-left max-w-xl mx-auto">
+          <FaInfoCircle className="text-blue-500 mt-1 flex-shrink-0" />
+          <div>
+            <h4 className="font-bold text-blue-700 dark:text-blue-300 text-sm">
+              {summaryMode === 'standard' && 'Modelo de Resumen'}
+              {summaryMode === 'explanatory' && 'Modelo Explicativo'}
+              {summaryMode === 'math' && 'Modelo Matemático'}
+            </h4>
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+              {summaryMode === 'standard' && 'Genera un resumen conciso y estructurado de tu documento.'}
+              {summaryMode === 'explanatory' && 'Explica el contenido de forma didáctica y fácil de entender.'}
+              {summaryMode === 'math' && 'Explica conceptos utilizando ejemplos matemáticos paso a paso.'}
+            </p>
+          </div>
+        </div>
         <button
           onClick={() => setIsInstructionsModalOpen(true)}
           className="btn btn-ghost btn-sm text-primary hover:bg-primary/10 font-medium"
@@ -227,14 +269,52 @@ const SummarizerTab = () => {
         </button>
       </form>
 
-      {isLoading && (<div className="text-center p-8"><FaSpinner className="animate-spin text-primary mx-auto" size={48} /><div className="mt-4 text-text-secondary flex flex-wrap items-center justify-center gap-1 w-full max-w-full px-4"><span>Analizando</span><span className="font-semibold truncate max-w-[15rem] sm:max-w-md" title={fileName}>"{fileName}"</span><span>y resumiendo... Por favor, espera.</span></div></div>)}
+      {/* --- RESULTADO DEL RESUMEN --- */}
       {summary && (
-        <div className="mt-8 animate-fade-in">
-          <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
-            <h2 className="text-2xl font-bold">Tu Resumen:</h2>
-            <div className="flex items-center gap-2"><button onClick={handleCopyText} className="btn btn-ghost btn-sm" title="Copiar Texto"><FaCopy className="mr-2" />Copiar</button><button onClick={handleDownloadDOCX} className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary" title="Descargar como Word"><FaFileWord className="mr-2" />Descargar .docx</button></div>
+        <div className="animate-fade-in-up" ref={summaryRef}>
+          <div className="bg-surface-50 dark:bg-surface-100 rounded-2xl p-6 sm:p-8 shadow-lg border border-surface-200 dark:border-surface-200 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
+
+            <div className="flex justify-between items-center mb-6 border-b border-surface-200 dark:border-surface-300 pb-4">
+              <h3 className="text-2xl font-bold text-text-primary flex items-center">
+                <FaMagic className="mr-3 text-secondary" />
+                Resumen Generado
+              </h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCopyText}
+                  className="btn btn-ghost btn-sm text-text-secondary hover:text-primary tooltip"
+                  data-tip="Copiar texto"
+                >
+                  <FaCopy className="text-lg" />
+                </button>
+                <button
+                  onClick={handleDownloadDOCX}
+                  className="btn btn-ghost btn-sm text-text-secondary hover:text-primary tooltip"
+                  data-tip="Descargar .docx"
+                >
+                  <FaDownload className="text-lg" />
+                </button>
+              </div>
+            </div>
+
+            <div className="prose prose-lg dark:prose-invert max-w-none text-text-primary leading-relaxed">
+              <ReactMarkdown>{summary}</ReactMarkdown>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-surface-200 dark:border-surface-300 flex justify-center">
+              <button
+                onClick={() => {
+                  setSummary('');
+                  reset();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="btn btn-outline btn-primary rounded-xl px-8"
+              >
+                Generar Nuevo Resumen
+              </button>
+            </div>
           </div>
-          <div ref={summaryRef} className="p-6 bg-surface-100 rounded-lg shadow-md"><div className="prose dark:prose-invert max-w-none [&_*]:!text-text-primary dark:[&_*]:!text-text-prim" dangerouslySetInnerHTML={{ __html: marked.parse(summary) }} /></div>
         </div>
       )}
       <Modal isOpen={isInstructionsModalOpen} onClose={() => setIsInstructionsModalOpen(false)} title="Guía de Uso de la IA"><div className="max-h-[60vh] overflow-y-auto p-1 pr-4"><AIInstructions /></div></Modal>
@@ -251,6 +331,7 @@ const ExamGeneratorTab = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCorrected, setIsCorrected] = useState(false);
   const [score, setScore] = useState(0);
+  const [questionCount, setQuestionCount] = useState(10); // Default 10 questions
 
   const selectedFile = watchFile('pdfFile');
   const fileName = selectedFile && selectedFile.length > 0 ? selectedFile[0].name : '';
@@ -281,8 +362,8 @@ const ExamGeneratorTab = () => {
         fullText += textContent.items.map(item => item.str).join(' ');
       }
 
-      toast.info("La IA está generando tu examen...");
-      const rawResponse = await callGenerateExam(fullText);
+      toast.info(`La IA está generando tu examen de ${questionCount} preguntas...`);
+      const rawResponse = await callGenerateExam(fullText, questionCount);
 
       const firstBracket = rawResponse.indexOf('[');
       const lastBracket = rawResponse.lastIndexOf(']');
@@ -387,45 +468,64 @@ const ExamGeneratorTab = () => {
 
       {/* --- FORMULARIO REDISEÑADO (UPLOAD ZONE) --- */}
       {!questions.length && (
-        <form onSubmit={handleSubmitFile(onGenerateExam)} className="mb-8 animate-fade-in">
-          <div className="mb-6">
-            <label
-              className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-300 ${fileName ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary hover:bg-gray-50 dark:border-gray-600 dark:hover:border-primary dark:hover:bg-gray-800'}`}
-            >
-              <div className="flex flex-col items-center justify-center pt-5 pb-6 w-full max-w-full">
-                {fileName ? (
-                  <>
-                    <FaFilePdf className="text-5xl text-red-500 mb-3 animate-bounce-short" />
-                    <p className="mb-2 text-lg font-semibold text-text-primary truncate max-w-[15rem] sm:max-w-md px-4 text-center" title={fileName}>{fileName}</p>
-                    <p className="text-sm text-text-secondary">Clic para cambiar archivo</p>
-                  </>
-                ) : (
-                  <>
-                    <FaCloudUploadAlt className="text-5xl text-gray-400 mb-3" />
-                    <p className="mb-2 text-lg font-semibold text-text-primary">Haz clic para subir tu PDF</p>
-                    <p className="text-xs text-text-secondary">Soporta archivos PDF</p>
-                  </>
-                )}
-              </div>
-              <input type="file" {...registerFile("pdfFile")} accept="application/pdf" className="hidden" />
-            </label>
+        <>
+          <div className="flex justify-center mb-6">
+            <div className="bg-surface-100 dark:bg-surface-200 p-1 rounded-xl inline-flex shadow-sm border border-surface-200 dark:border-surface-300">
+              {[10, 20, 30].map((count) => (
+                <button
+                  key={count}
+                  onClick={() => setQuestionCount(count)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${questionCount === count
+                    ? 'bg-primary text-white shadow-md'
+                    : 'text-text-secondary hover:bg-surface-200 dark:hover:bg-surface-300'
+                    }`}
+                >
+                  {count} Preguntas
+                </button>
+              ))}
+            </div>
           </div>
 
-          <button
-            type="submit"
-            className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary w-full btn-lg text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 rounded-xl"
-            disabled={isLoading || !fileName}
-          >
-            {isLoading ? (
-              <>
-                <span className="loading loading-spinner"></span>
-                <span className="ml-2">Creando Examen...</span>
-              </>
-            ) : (
-              'Generar Examen'
-            )}
-          </button>
-        </form>
+          <form onSubmit={handleSubmitFile(onGenerateExam)} className="mb-8 animate-fade-in">
+            <div className="mb-6">
+              <label
+                className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-300 ${fileName ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary hover:bg-gray-50 dark:border-gray-600 dark:hover:border-primary dark:hover:bg-gray-800'}`}
+              >
+                <div className="flex flex-col items-center justify-center pt-5 pb-6 w-full max-w-full">
+                  {fileName ? (
+                    <>
+                      <FaFilePdf className="text-5xl text-red-500 mb-3 animate-bounce-short" />
+                      <p className="mb-2 text-lg font-semibold text-text-primary truncate max-w-[15rem] sm:max-w-md px-4 text-center" title={fileName}>{fileName}</p>
+                      <p className="text-sm text-text-secondary">Clic para cambiar archivo</p>
+                    </>
+                  ) : (
+                    <>
+                      <FaCloudUploadAlt className="text-5xl text-gray-400 mb-3" />
+                      <p className="mb-2 text-lg font-semibold text-text-primary">Haz clic para subir tu PDF</p>
+                      <p className="text-xs text-text-secondary">Soporta archivos PDF</p>
+                    </>
+                  )}
+                </div>
+                <input type="file" {...registerFile("pdfFile")} accept="application/pdf" className="hidden" />
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-secondary bg-secondary border-secondary text-text-accent hover:bg-primary w-full btn-lg text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 rounded-xl"
+              disabled={isLoading || !fileName}
+            >
+              {isLoading ? (
+                <>
+                  <span className="loading loading-spinner"></span>
+                  <span className="ml-2">Creando Examen...</span>
+                </>
+              ) : (
+                'Generar Examen'
+              )}
+            </button>
+          </form>
+        </>
       )}
 
       {isLoading && (<div className="text-center p-8"><FaSpinner className="animate-spin text-primary mx-auto" size={48} /><div className="mt-4 text-text-secondary flex flex-wrap items-center justify-center gap-1 w-full max-w-full px-4"><span>Generando un nuevo examen con</span><span className="font-semibold truncate max-w-[15rem] sm:max-w-md" title={fileName}>"{fileName}"</span><span>...</span></div></div>)}
