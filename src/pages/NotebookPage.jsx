@@ -42,6 +42,7 @@ const NotebookPage = () => {
                     groups[yearName] = {
                         id: grade.yearId || yearName, 
                         name: yearName,
+                        createdAt: grade.yearCreatedAt || null, // Guardamos la fecha de creación para ordenar
                         subjectsMap: {}
                     };
                 }
@@ -78,7 +79,14 @@ const NotebookPage = () => {
                         subjects: subjects.sort((a, b) => a.name.localeCompare(b.name))
                     };
                 })
-                .sort((a, b) => b.name.localeCompare(a.name)); // Ordenar años descendente
+                .sort((a, b) => {
+                    // Ordenar por fecha de creación (de más antiguo a más nuevo)
+                    if (a.createdAt && b.createdAt) {
+                        return a.createdAt.seconds - b.createdAt.seconds;
+                    }
+                    // Fallback por nombre si no hay fecha
+                    return a.name.localeCompare(b.name);
+                });
 
             setYearsData(formattedYears);
         } catch (error) {

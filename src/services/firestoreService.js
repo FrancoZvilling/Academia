@@ -99,7 +99,8 @@ export const getSubjectById = async (userId, subjectId) => {
         ...subjectDoc.data(),
         // Siempre aseguramos que tenga el contexto del año, inyectándolo desde el padre si no está
         yearId: yearDoc.id,
-        yearName: yearData.name 
+        yearName: yearData.name,
+        yearCreatedAt: yearData.createdAt // <--- Nueva información para el orden
       }; 
     }
   }

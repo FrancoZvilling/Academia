@@ -144,6 +144,7 @@ const GradesManager = ({ subject, grades, onAddGrade, onDeleteGrade }) => {
             subjectColor: subject.color || defaultSubjectColor, 
             yearId: subject.yearId,
             yearName: subject.yearName || "Académico", // Nombre del año (inyectado desde el tablero)
+            yearCreatedAt: subject.yearCreatedAt || null, // Guardamos la fecha para el orden cronológico
             title: data.gradeTitle, 
             score: parseFloat(data.gradeScore) 
         };
