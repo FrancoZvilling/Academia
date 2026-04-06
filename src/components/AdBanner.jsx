@@ -9,11 +9,11 @@ const AdBanner = ({ position = BannerAdPosition.BOTTOM_CENTER }) => {
 
       try {
         const options = {
-          adId: 'ca-app-pub-3940256099942544/6300978111', // TEST ID oficial de Android
+          adId: 'ca-app-pub-7209269456826816/4101717836', // ID Real de Banner
           adSize: BannerAdSize.ADAPTIVE_BANNER,
           position: position,
           margin: 0,
-          isTesting: true
+          isTesting: false
         };
 
         await AdMob.showBanner(options);

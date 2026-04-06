@@ -16,55 +16,71 @@ const NotebookPage = () => {
         if (!currentUser) return;
         setLoading(true);
         try {
-            // 1. Obtener todas las notas (para tenerlas listas)
+            // 1. Obtener todas las notas del usuario (Mi Libreta)
             const gradesSnapshot = await getNotebookGrades(currentUser.uid);
             const allGrades = gradesSnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
 
-            // 2. Obtener Años
-            const yearsSnapshot = await getYearsForUser(currentUser.uid);
+            if (allGrades.length === 0) {
+                setYearsData([]);
+                setLoading(false);
+                return;
+            }
 
-            // 3. Procesar cada año para obtener sus materias y vincular notas
-            const yearsWithSubjects = await Promise.all(yearsSnapshot.docs.map(async (yearDoc) => {
-                const yearData = { id: yearDoc.id, ...yearDoc.data() };
+            // 2. Agrupar por nombre de año (para que persista aunque se borre el documento del año)
+            const groups = {};
 
-                // Obtener materias del año
-                const subjectsSnapshot = await getSubjectsForYear(currentUser.uid, yearDoc.id);
+            allGrades.forEach(grade => {
+                // Fallbacks para datos antiguos o borrados
+                const yearName = grade.yearName || "Académico / General";
+                const subjectName = grade.subjectName || "Materia Desconocida";
+                const subjectId = grade.subjectId; 
 
-                const subjects = subjectsSnapshot.docs.map(subjectDoc => {
-                    const subject = { id: subjectDoc.id, ...subjectDoc.data() };
+                if (!groups[yearName]) {
+                    groups[yearName] = {
+                        id: grade.yearId || yearName, 
+                        name: yearName,
+                        subjectsMap: {}
+                    };
+                }
 
-                    // Filtrar notas para esta materia
-                    // Usamos subjectId para vincular. 
-                    // Nota: Las notas guardadas tienen subjectId.
-                    const subjectGrades = allGrades.filter(g => g.subjectId === subject.id);
+                if (!groups[yearName].subjectsMap[subjectName]) {
+                    groups[yearName].subjectsMap[subjectName] = {
+                        id: subjectId || subjectName, 
+                        name: subjectName,
+                        color: grade.subjectColor || '#6b7280',
+                        grades: []
+                    };
+                }
 
-                    // Calcular promedio
-                    const sum = subjectGrades.reduce((a, b) => a + b.score, 0);
-                    const average = subjectGrades.length > 0 ? (sum / subjectGrades.length).toFixed(2) : '0.00';
+                groups[yearName].subjectsMap[subjectName].grades.push(grade);
+            });
+
+            // 3. Formatear para el componente (Array de años -> Array de materias)
+            const formattedYears = Object.values(groups)
+                .map(year => {
+                    const subjects = Object.values(year.subjectsMap).map(sub => {
+                        const sum = sub.grades.reduce((a, b) => a + b.score, 0);
+                        const average = sub.grades.length > 0 ? (sum / sub.grades.length).toFixed(2) : '0.00';
+                        
+                        return {
+                            ...sub,
+                            average,
+                            grades: sub.grades.sort((a, b) => a.score - b.score)
+                        };
+                    });
 
                     return {
-                        ...subject,
-                        grades: subjectGrades.sort((a, b) => a.score - b.score), // Ordenar por nota ascendente
-                        average
+                        id: year.id,
+                        name: year.name,
+                        subjects: subjects.sort((a, b) => a.name.localeCompare(b.name))
                     };
-                });
+                })
+                .sort((a, b) => b.name.localeCompare(a.name)); // Ordenar años descendente
 
-                // Solo nos interesan las materias que tienen notas para mostrar en la libreta
-                const activeSubjects = subjects.filter(s => s.grades.length > 0);
-
-                return {
-                    ...yearData,
-                    subjects: activeSubjects
-                };
-            }));
-
-            // Filtrar años que no tienen materias con notas
-            const activeYears = yearsWithSubjects.filter(y => y.subjects.length > 0);
-
-            setYearsData(activeYears);
+            setYearsData(formattedYears);
         } catch (error) {
             console.error("Error al cargar la libreta:", error);
             toast.error("No se pudieron cargar los datos de la libreta.");

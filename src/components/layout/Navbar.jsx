@@ -4,16 +4,22 @@ import NotificationBell from '../ui/NotificationBell'; // Importamos el nuevo co
 import AdBanner from '../AdBanner'; // Importamos el componente de Banner
 import { BannerAdPosition } from '@capacitor-community/admob'; // Importamos la posición
 
+import { useSubscription } from '../../contexts/SubscriptionContext'; // Importar Contexto
+
 const Navbar = ({ onMenuClick }) => {
+  const { isPremium } = useSubscription();
+
   return (
     // Esta barra solo será visible en pantallas pequeñas (lg:hidden)
     <header className="lg:hidden bg-surface-100 shadow-md sticky top-0 z-10 flex flex-col">
 
-      {/* 1. FILA SUPERIOR: Espacio reservado para el Banner (50px de alto mínimo) */}
-      <div className="w-full h-[50px] flex justify-center items-center bg-gray-50 dark:bg-gray-800/50">
-        {/* El componente AdBanner no renderiza nada visual aquí, pero el plugin nativo usará este espacio */}
-        <AdBanner position={BannerAdPosition.TOP_CENTER} />
-      </div>
+      {/* 1. FILA SUPERIOR: Espacio reservado para el Banner (50px de alto mínimo) - SOLO NO PREMIUM */}
+      {!isPremium && (
+        <div className="w-full h-[50px] flex justify-center items-center bg-gray-50 dark:bg-gray-800/50">
+          {/* El componente AdBanner no renderiza nada visual aquí, pero el plugin nativo usará este espacio */}
+          <AdBanner position={BannerAdPosition.TOP_CENTER} />
+        </div>
+      )}
 
       {/* 2. FILA INFERIOR: Controles de Navegación */}
       <div className="flex items-center justify-between p-2">

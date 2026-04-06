@@ -13,16 +13,36 @@ const NotificationsPage = () => {
     useEffect(() => {
         if (!currentUser) return;
 
+        // 1. Obtener lista visible (ordenada por createdAt)
         getNotifications(currentUser.uid).then(snapshot => {
             const notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setNotifications(notifs);
-
-            // Marcamos las notificaciones como leídas
-            const unreadIds = notifs.filter(n => !n.read).map(n => n.id);
-            if (unreadIds.length > 0) {
-                markNotificationsAsRead(currentUser.uid, unreadIds);
-            }
         }).finally(() => setLoading(false));
+
+        // 2. LIMPIEZA DE FANTASMAS: Marcar como leídas TODAS las notificaciones pendientes,
+        // incluso aquellas que no tengan 'createdAt' (causadas por el bug anterior) y por ende no salen en la query 1.
+        // Esto sincroniza el puntito rojo (NotificationBell) con la realidad.
+        const cleanupUnread = async () => {
+            try {
+                // Importamos db/collection/query/where/getDocs desde firestoreService (o firebase-config/firestore)
+                // Para mantenerlo simple, usaremos una función auxiliar en service si es posible, 
+                // pero aquí lo hago directo o llamo a markNotificationsAsRead con una query especial.
+                // Como no puedo importar db aquí fácil sin romper patrones, asumiré que getUnreadNotifications existe
+                // O mejor, agregaré getUnreadNotifications en firestoreService.
+            } catch (e) {
+                console.error("Error cleaning ghost notifications", e);
+            }
+        };
+
+        // Estrategia más limpia: Agregar una función en firestoreService que traiga *todos* los IDs no leídos
+        // y usarlos.
+        import('../services/firestoreService').then(service => {
+            service.getAllUnreadNotificationIds(currentUser.uid).then(ids => {
+                if (ids.length > 0) {
+                    service.markNotificationsAsRead(currentUser.uid, ids);
+                }
+            });
+        });
 
     }, [currentUser]);
 

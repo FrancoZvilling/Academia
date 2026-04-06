@@ -196,12 +196,14 @@ const DashboardPage = () => {
     const handleOpenAddSubjectModal = (yearId) => { setCurrentYearId(yearId); setIsModalOpen(true); };
 
     const handleAddSubject = async (subjectData) => {
-        if (!currentYearId) { toast.warn("Error: No se ha seleccionado un año."); return; }
+        const selectedYear = years.find(y => y.id === currentYearId);
+        const yearName = selectedYear ? selectedYear.name : "Desconocido";
+
         const existingSubjectsCount = subjects[currentYearId]?.length || 0;
         const colorIndex = existingSubjectsCount % subjectColors.length;
         const finalSubjectData = { ...subjectData, color: subjectColors[colorIndex].value };
         try {
-            await addSubjectToYear(currentUser.uid, currentYearId, finalSubjectData);
+            await addSubjectToYear(currentUser.uid, currentYearId, yearName, finalSubjectData);
             toast.success(`Materia "${subjectData.name}" añadida.`);
             fetchYearsAndSubjects();
             setIsModalOpen(false);

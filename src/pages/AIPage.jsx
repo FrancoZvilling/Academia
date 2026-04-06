@@ -14,6 +14,10 @@ import AIInstructions from '../components/ui/AIInstructions';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { shuffleExam } from '../utils/examUtils';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { useSubscription } from '../contexts/SubscriptionContext';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.mjs`;
 
@@ -29,7 +33,13 @@ const SummarizerTab = () => {
   const selectedFile = watch('pdfFile');
   const fileName = selectedFile && selectedFile.length > 0 ? selectedFile[0].name : '';
 
+  const { isPremium } = useSubscription();
+
   const onSubmit = async (data) => {
+    if (!isPremium) {
+      toast.error("Esta función es exclusiva para usuarios Premium.");
+      return;
+    }
     const file = data.pdfFile[0];
     if (!file) {
       toast.warn("Por favor, selecciona un archivo PDF.");
@@ -151,9 +161,49 @@ const SummarizerTab = () => {
       }],
     });
 
-    Packer.toBlob(doc).then(blob => {
-      saveAs(blob, `Resumen - ${fileName.replace('.pdf', '') || 'Estud-IA'}.docx`);
-      toast.success(".docx descargado.");
+    Packer.toBlob(doc).then(async (blob) => {
+      const fileNameStr = `Resumen - ${fileName.replace('.pdf', '') || 'Estud-IA'}.docx`;
+
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const base64Data = await blobToBase64(blob);
+          const result = await Filesystem.writeFile({
+            path: fileNameStr,
+            data: base64Data,
+            directory: Directory.Cache, // Guardamos en caché para compartir
+          });
+
+          await Share.share({
+            title: fileNameStr,
+            url: result.uri,
+            dialogTitle: 'Guardar resumen',
+          });
+
+        } catch (e) {
+          console.error("Error al compartir/guardar:", e);
+          // Si el usuario cancela el share, no es necesariamente un error crítico, pero podemos loguearlo
+          if (e.message !== "Create chooser cancelled") {
+            toast.error("No se pudo abrir el menú de guardar.");
+          }
+        }
+      } else {
+        // Lógica web
+        saveAs(blob, fileNameStr);
+        toast.success(".docx descargado.");
+      }
+    });
+  };
+
+  // Helper para convertir Blob a Base64
+  const blobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result.replace('data:', '').replace(/^.+,/, '');
+        resolve(base64String);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
     });
   };
 
@@ -195,12 +245,6 @@ const SummarizerTab = () => {
             >
               Explicativo
             </button>
-            <button
-              onClick={() => setSummaryMode('math')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${summaryMode === 'math' ? 'bg-primary text-white shadow-md' : 'text-text-secondary hover:bg-surface-200 dark:hover:bg-surface-300'}`}
-            >
-              Matemático
-            </button>
           </div>
         </div>
 
@@ -210,12 +254,10 @@ const SummarizerTab = () => {
             <h4 className="font-bold text-blue-700 dark:text-blue-300 text-sm">
               {summaryMode === 'standard' && 'Modelo de Resumen'}
               {summaryMode === 'explanatory' && 'Modelo Explicativo'}
-              {summaryMode === 'math' && 'Modelo Matemático'}
             </h4>
             <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
               {summaryMode === 'standard' && 'Genera un resumen conciso y estructurado de tu documento.'}
               {summaryMode === 'explanatory' && 'Explica el contenido de forma didáctica y fácil de entender.'}
-              {summaryMode === 'math' && 'Explica conceptos utilizando ejemplos matemáticos paso a paso.'}
             </p>
           </div>
         </div>
@@ -324,6 +366,7 @@ const SummarizerTab = () => {
 
 // --- Sub-componente para la pestaña de MODELOS DE PARCIAL ---
 const ExamGeneratorTab = () => {
+  const { isPremium } = useSubscription();
   const { register: registerFile, handleSubmit: handleSubmitFile, watch: watchFile, reset: resetFile } = useForm();
   const { register: registerExam, handleSubmit: handleSubmitExam, getValues, reset: resetExam, watch: watchExam } = useForm();
 
@@ -340,6 +383,10 @@ const ExamGeneratorTab = () => {
   const userAnswers = watchExam();
 
   const onGenerateExam = async (data) => {
+    if (!isPremium) {
+      toast.error("Esta función es exclusiva para usuarios Premium.");
+      return;
+    }
     const file = data.pdfFile[0];
     if (!file) {
       toast.warn("Por favor, selecciona un archivo PDF.");

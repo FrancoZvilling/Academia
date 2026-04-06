@@ -9,20 +9,19 @@ import emailjs from '@emailjs/browser';
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { motion } from 'framer-motion';
 
+import { useSubscription } from '../contexts/SubscriptionContext';
+
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA ---
 const PremiumPage = () => {
-    const [isLoading, setIsLoading] = useState(false);
+    const { purchasePremium, loading } = useSubscription();
+    // Usamos el loading del contexto o local si necesitamos UI específica
+    const [localLoading, setLocalLoading] = useState(false);
 
     const handleSubscribeClick = async () => {
-        setIsLoading(true);
-        // TODO: Implementar lógica de suscripción con Google Play
-        console.log("Iniciando flujo de suscripción con Google Play...");
-
-        // Simulación temporal
-        setTimeout(() => {
-            setIsLoading(false);
-            toast.info("La integración con Google Play estará disponible pronto.");
-        }, 1000);
+        setLocalLoading(true);
+        console.log("Iniciando flujo de suscripción con RevenueCat...");
+        await purchasePremium();
+        setLocalLoading(false);
     };
 
     const benefits = [
@@ -106,9 +105,9 @@ const PremiumPage = () => {
                             <button
                                 onClick={handleSubscribeClick}
                                 className="btn w-full bg-gradient-to-r from-primary to-secondary border-none text-white shadow-lg hover:shadow-primary/25 hover:scale-[1.02] transition-all duration-300 py-4 h-auto text-lg font-bold rounded-xl"
-                                disabled={isLoading}
+                                disabled={localLoading}
                             >
-                                {isLoading ? <span className="loading loading-spinner"></span> : 'Obtener Premium'}
+                                {localLoading ? <span className="loading loading-spinner"></span> : 'Obtener Premium'}
                             </button>
 
                             <p className="text-center text-xs text-text-secondary mt-4">

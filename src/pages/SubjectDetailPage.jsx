@@ -138,7 +138,15 @@ const EventList = ({ events, onEventDeleted }) => (
 const GradesManager = ({ subject, grades, onAddGrade, onDeleteGrade }) => {
     const { register, handleSubmit, reset } = useForm();
     const handleFormSubmit = (data) => {
-        const newGradeData = { subjectId: subject.id, subjectName: subject.name, subjectColor: subject.color || defaultSubjectColor, title: data.gradeTitle, score: parseFloat(data.gradeScore) };
+        const newGradeData = { 
+            subjectId: subject.id, 
+            subjectName: subject.name, 
+            subjectColor: subject.color || defaultSubjectColor, 
+            yearId: subject.yearId,
+            yearName: subject.yearName || "Académico", // Nombre del año (guardado para persistencia histórica)
+            title: data.gradeTitle, 
+            score: parseFloat(data.gradeScore) 
+        };
         if (isNaN(newGradeData.score)) { toast.warn("Por favor, introduce una nota numérica válida."); return; }
         onAddGrade(newGradeData);
         reset();

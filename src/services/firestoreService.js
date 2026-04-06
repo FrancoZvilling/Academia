@@ -78,9 +78,9 @@ export const updateYearName = (userId, yearId, newName) => {
 };
 
 // --- GESTIÓN DE MATERIAS ---
-export const addSubjectToYear = (userId, yearId, subjectData) => {
+export const addSubjectToYear = (userId, yearId, yearName, subjectData) => {
   const subjectsCollectionRef = collection(db, 'users', userId, 'years', yearId, 'subjects');
-  return addDoc(subjectsCollectionRef, { ...subjectData, yearId, createdAt: serverTimestamp() });
+  return addDoc(subjectsCollectionRef, { ...subjectData, yearId, yearName, createdAt: serverTimestamp() });
 };
 export const getSubjectsForYear = (userId, yearId) => {
   const subjectsCollectionRef = collection(db, 'users', userId, 'years', yearId, 'subjects');
@@ -169,6 +169,7 @@ export const deleteGeneralEvent = (userId, eventId) => {
 // --- GESTIÓN DE NOTAS (PARA "MI LIBRETA") ---
 export const addGradeToNotebook = (userId, gradeData) => {
   const gradesRef = collection(db, 'users', userId, 'notebook');
+  // gradeData ahora debería incluir subjectId, subjectName, yearId, yearName, score, title, subjectColor
   return addDoc(gradesRef, { ...gradeData, date: Timestamp.now() });
 };
 export const getNotebookGrades = (userId) => {
@@ -349,4 +350,17 @@ export const deleteReadNotifications = async (userId) => {
   });
 
   return batch.commit();
+};
+
+/**
+ * [NUEVA FUNCIÓN] Obtiene TODOS los IDs de notificaciones no leídas, sin importar fecha.
+ * Útil para limpiar "fantasmas" o sincronizar el badge.
+ * @param {string} userId
+ */
+export const getAllUnreadNotificationIds = async (userId) => {
+  const notificationsRef = collection(db, 'users', userId, 'notifications');
+  // Query SIN ordenamiento, solo filtramos por estado
+  const q = query(notificationsRef, where('read', '==', false));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => doc.id);
 };

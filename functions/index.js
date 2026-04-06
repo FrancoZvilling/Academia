@@ -154,9 +154,21 @@ exports.generateSummary = onCall({ secrets: [geminiApiKey] }, async (request) =>
         
         1.  **Título Principal:** Comienza con el título del tema en H2 (## Título).
         2.  **Subtítulos:** Usa H3 (### Subtítulo) para dividir las secciones principales.
-        3.  **Puntos Clave:** Usa viñetas (*) para listar la información.
-        4.  **Negritas:** Usa **negritas** para resaltar términos clave, fechas, nombres y definiciones importantes.
-        5.  **Concisión:** Sé directo. Elimina la paja, pero mantén el significado completo.
+        3.  **Estilo de Redacción:** Redacta las explicaciones generales en prosa y párrafos. Conecta las ideas gramaticalmente.
+        4.  **Uso de Viñetas:** Usa viñetas (*) SOLO para distinguir clasificaciones, tipos, categorías o listados de características (como en el ejemplo de tipos de células). No uses viñetas para narrar hechos secuenciales ni para el texto general.
+        5.  **Negritas:** Usa **negritas** para resaltar términos clave, fechas, nombres y definiciones importantes.
+        6.  **Concisión:** Sé directo. Elimina la paja, pero mantén el significado completo.
+        
+        EJEMPLOS DE ESTILO (FEW-SHOT):
+
+        Ejemplo 1: Texto Narrativo (Formato Prosa) Input: "La Revolución Industrial marcó un punto de inflexión en la historia, modificando todos los aspectos de la vida cotidiana de una u otra manera. Comenzó en Gran Bretaña a mediados del siglo XVIII y se caracterizó por el paso de una economía agraria y artesanal a otra dominada por la industria y la fabricación con maquinaria. El invento fundamental que impulsó este cambio fue la máquina de vapor de James Watt, que permitió aumentar la producción exponencialmente." Output: "La Revolución Industrial representó una transformación radical que inició en Gran Bretaña a mediados del siglo XVIII. Este proceso marcó la transición de una economía agraria a una dominada por la industria y la manufactura mecanizada. El avance tecnológico determinante fue la máquina de vapor perfeccionada por James Watt, la cual permitió escalar la producción de manera exponencial."
+
+        Ejemplo 2: Texto de Clasificación (Formato Híbrido) Input: "Dentro de los ácidos nucleicos encontramos dos variedades fundamentales que portan la información genética. Primero está el Ácido Desoxirribonucleico (ADN), que se encuentra en el núcleo y contiene las instrucciones genéticas usadas en el desarrollo y funcionamiento de todos los organismos vivos; su estructura es de doble hélice. Por otro lado está el Ácido Ribonucleico (ARN), que es el encargado de trasladar esa información para sintetizar proteínas; a diferencia del anterior, este es de cadena sencilla." Output: "Los ácidos nucleicos son las macromoléculas encargadas de almacenar y transmitir la información genética. Se clasifican en dos tipos principales:
+
+        * ADN (Ácido Desoxirribonucleico): Ubicado en el núcleo, posee una estructura de doble hélice y contiene las instrucciones para el desarrollo y funcionamiento de los organismos.
+
+        * ARN (Ácido Ribonucleico): Presenta una estructura de cadena sencilla y su función principal es transportar la información genética para la síntesis de proteínas."
+
         
         *REGLAS:*
         
@@ -457,6 +469,9 @@ exports.checkScheduledNotifications = onSchedule({
 
                 const hoursUntil = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
 
+                // LOG DE DEBUG DETALLADO
+                logger.debug(`Evento: ${eventData.title} | Inicio: ${dateString} | Horas hasta inicio: ${hoursUntil.toFixed(2)}`);
+
                 let message = null;
                 let title = "Recordatorio de Evento";
                 let color = null; // Variable para el color
@@ -464,22 +479,50 @@ exports.checkScheduledNotifications = onSchedule({
                 const isSubjectEvent = coll === 'events';
                 const isGeneralEvent = coll === 'generalEvents';
 
-                if (hoursUntil > 23.5 && hoursUntil <= 24.5) {
+                // Definimos ventanas más amplias (±1 hora) para asegurar que no se pierdan si el cron se retrasa
+                // 24 horas: 22.5h - 24.5h (Ventana de 2 horas)
+                // 3 días: 70.5h - 72.5h
+                // 1 semana: 166.5h - 168.5h
+                // 12 horas (General): 10.5h - 12.5h
+
+                let notificationSubtype = null;
+
+                if (hoursUntil > 22.5 && hoursUntil <= 24.5) {
                     message = `Mañana tienes "${eventData.title}"`;
                     title = isSubjectEvent ? "Examen / Entrega" : "Evento General";
-                } else if (isSubjectEvent && hoursUntil > 71.5 && hoursUntil <= 72.5) {
+                    notificationSubtype = '24h';
+                } else if (isSubjectEvent && hoursUntil > 70.5 && hoursUntil <= 72.5) {
                     message = `En 3 días tienes "${eventData.title}"`;
                     title = "Examen / Entrega";
-                } else if (isSubjectEvent && hoursUntil > 167.5 && hoursUntil <= 168.5) {
+                    notificationSubtype = '72h';
+                } else if (isSubjectEvent && hoursUntil > 166.5 && hoursUntil <= 168.5) {
                     message = `En una semana tienes "${eventData.title}"`;
                     title = "Examen / Entrega";
-                } else if (isGeneralEvent && hoursUntil > 11.5 && hoursUntil <= 12.5) {
+                    notificationSubtype = '168h';
+                } else if (isGeneralEvent && hoursUntil > 10.5 && hoursUntil <= 12.5) {
                     message = `En 12 horas: "${eventData.title}"`;
                     title = "Evento General";
+                    notificationSubtype = '12h';
                 }
 
-                if (message) {
-                    // Si es un evento de materia, intentamos buscar el color de la materia
+                if (message && notificationSubtype) {
+                    // DEDUPLICACIÓN: Verificar si ya enviamos esta notificación recientemente
+                    // Consultamos si existe una notificación para este evento, de este subtipo, creada hace menos de 20 horas
+                    // para evitar duplicados si el cron corre varias veces dentro de la ventana ampliada.
+
+                    const notifRef = db.collection('users').doc(userId).collection('notifications');
+                    const recentSnapshot = await notifRef
+                        .where('eventId', '==', eventDoc.id)
+                        .where('subtype', '==', notificationSubtype)
+                        .limit(1)
+                        .get();
+
+                    if (!recentSnapshot.empty) {
+                        logger.debug(`Notificación duplicada evitada para evento ${eventDoc.id} (${notificationSubtype})`);
+                        return; // Salimos de este evento, ya fue notificado
+                    }
+
+                    // ... (Lógica de color original)
                     if (isSubjectEvent) {
                         try {
                             const subjectDoc = await eventDoc.ref.parent.parent.get();
@@ -487,35 +530,39 @@ exports.checkScheduledNotifications = onSchedule({
                                 color = subjectDoc.data().color;
                             }
                         } catch (e) {
-                            logger.warn(`No se pudo obtener el color de la materia para el evento ${eventDoc.id}`, e);
+                            logger.warn(`No se pudo obtener el color para ${eventDoc.id}`, e);
                         }
                     } else {
-                        color = eventData.color; // Color directo para eventos generales
+                        color = eventData.color;
                     }
 
-                    // Enviamos la notificación a TODOS los tokens del usuario
+                    // Enviamos Push
                     const tokens = user.fcmTokens;
-                    const payload = {
-                        notification: {
-                            title: title,
-                            body: message,
-                        },
-                        data: {
-                            url: "/calendar", // O la URL que quieras abrir
-                            // Puedes agregar más datos aquí si lo necesitas
-                        }
-                    };
-                    // Si tenemos color, lo agregamos al payload (Android lo soporta en 'color')
-                    if (color) {
-                        payload.android = {
-                            notification: {
-                                color: color
-                            }
-                        }
+
+                    if (tokens && tokens.length > 0) {
+                        const messagePayload = {
+                            tokens: tokens,
+                            notification: { title, body: message },
+                            data: { url: "/calendar" },
+                            android: { notification: { color: color || undefined } }
+                        };
+                        logger.info(`Enviando notificación (${notificationSubtype}) a usuario ${userId}: ${message}`);
+                        notificationPromises.push(admin.messaging().sendEachForMulticast(messagePayload));
                     }
 
-                    logger.info(`Enviando notificación a usuario ${userId}: ${message}`);
-                    notificationPromises.push(admin.messaging().sendToDevice(tokens, payload));
+                    // Guardamos en Firestore con el subtipo para la deduplicación futura
+                    const notificationDoc = notifRef.doc();
+                    notificationPromises.push(notificationDoc.set({
+                        title: title,
+                        body: message,
+                        read: false,
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                        type: isSubjectEvent ? 'event' : 'general',
+                        subtype: notificationSubtype, // Nuevo campo clave para deduplicación
+                        color: color || '#2563EB',
+                        eventId: eventDoc.id,
+                        url: "/calendar"
+                    }));
                 }
             });
         }
@@ -523,4 +570,80 @@ exports.checkScheduledNotifications = onSchedule({
 
     await Promise.all(notificationPromises);
     logger.info(`[EXEC_ID: ${executionId}] Chequeo de notificaciones finalizado.`);
+});
+
+// --- FUNCIÓN DE DEBUG: Enviar Notificación de Prueba ---
+const { onRequest } = require("firebase-functions/v2/https");
+
+exports.testNotification = onRequest(async (req, res) => {
+    // 1. Obtener el token del query param ?token=XYZ
+    const token = req.query.token;
+
+    if (!token) {
+        res.status(400).send("Falta el parámetro 'token'.");
+        return;
+    }
+
+    const message = {
+        token: token,
+        notification: {
+            title: "Prueba de Notificación",
+            body: "Si lees esto, el sistema de notificaciones funciona correctamente. 🚀",
+        },
+        android: {
+            notification: {
+            }
+        }
+    };
+
+    const debugResult = {
+        tokenReceived: token,
+        fcmStatus: "PENDING",
+        userLookup: "PENDING",
+        firestoreWrite: "PENDING",
+        errors: []
+    };
+
+    // 1. Intentar enviar Push a FCM
+    try {
+        await admin.messaging().send(message);
+        debugResult.fcmStatus = "SUCCESS";
+    } catch (error) {
+        debugResult.fcmStatus = "FAILED";
+        debugResult.errors.push(`FCM Error: ${error.message}`);
+        logger.error("Error enviando notificación de prueba:", error);
+    }
+
+    // 2. Persistencia en Firestore
+    try {
+        const usersRef = admin.firestore().collection('users');
+        const snapshot = await usersRef.where('fcmTokens', 'array-contains', token).get();
+
+        if (!snapshot.empty) {
+            const userDoc = snapshot.docs[0];
+            debugResult.userLookup = `FOUND (User ID: ${userDoc.id})`;
+
+            await userDoc.ref.collection('notifications').add({
+                title: "Prueba de Notificación",
+                body: "Si lees esto, el sistema de notificaciones funciona correctamente. 🚀",
+                read: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                type: 'system',
+                color: '#10B981',
+            });
+            debugResult.firestoreWrite = "SUCCESS";
+            logger.info(`Notificación de prueba guardada para usuario ${userDoc.id}`);
+        } else {
+            debugResult.userLookup = "NOT FOUND (Token not associated with any user)";
+            debugResult.firestoreWrite = "SKIPPED";
+            logger.warn("No se encontró usuario para el token de prueba.");
+        }
+    } catch (dbError) {
+        debugResult.firestoreWrite = "FAILED";
+        debugResult.errors.push(`Firestore Error: ${dbError.message}`);
+        logger.error("Error guardando en Firestore (Test):", dbError);
+    }
+
+    // Devolver resultado detallado
+    res.status(200).send(`<pre>${JSON.stringify(debugResult, null, 2)}</pre>`);
 });

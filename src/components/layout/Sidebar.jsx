@@ -81,7 +81,7 @@ const Sidebar = ({ onClose, onConfirmLogout }) => {
         </NavLink>
       </nav>
 
-      <div className="mt-auto space-y-4">
+      <div className="mt-auto space-y-4 pb-16 lg:pb-0">
         <ThemeSwitcher />
       </div>
     </aside>
