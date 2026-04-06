@@ -215,18 +215,12 @@ const DashboardPage = () => {
     };
 
     const handleDeleteSubject = async (yearId, subject) => {
-        const result = await confirm(
-            `Eliminar "${subject.name}"`, 
-            `¿Estás seguro de que quieres eliminar esta materia? Al hacerlo, se eliminarán también todas las calificaciones asociadas en "Mi Libreta".`
-        );
+        const result = await confirm(`Eliminar "${subject.name}"`, `¿Estás seguro de que quieres eliminar esta materia?`);
         if (result) {
             try {
-                // Usamos la función que borra la materia Y sus notas
-                await deleteSubjectAndItsGrades(currentUser.uid, subject.id);
-                // También borramos el documento de la materia en sí
+                // Ahora como la libreta es independiente, simplemente borramos el documento de la materia en el dashboard
                 await deleteSubject(currentUser.uid, yearId, subject.id);
-                
-                toast.info(`La materia "${subject.name}" y sus notas han sido eliminadas.`);
+                toast.info(`La materia "${subject.name}" ha sido eliminada del tablero.`);
                 fetchYearsAndSubjects();
             } catch (error) {
                 toast.error("No se pudo eliminar la materia.");

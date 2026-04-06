@@ -34,7 +34,7 @@ const NotebookPage = () => {
 
             allGrades.forEach(grade => {
                 // Fallbacks para datos antiguos o borrados
-                const yearName = grade.yearName || "Académico / General";
+                const yearName = grade.yearName || "Académico";
                 const subjectName = grade.subjectName || "Materia Desconocida";
                 const subjectId = grade.subjectId; 
 

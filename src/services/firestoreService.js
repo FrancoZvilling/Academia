@@ -90,9 +90,18 @@ export const getSubjectsForYear = (userId, yearId) => {
 export const getSubjectById = async (userId, subjectId) => {
   const yearsSnapshot = await getYearsForUser(userId);
   for (const yearDoc of yearsSnapshot.docs) {
+    const yearData = yearDoc.data();
     const subjectDocRef = doc(db, 'users', userId, 'years', yearDoc.id, 'subjects', subjectId);
     const subjectDoc = await getDoc(subjectDocRef);
-    if (subjectDoc.exists()) { return { id: subjectDoc.id, ...subjectDoc.data() }; }
+    if (subjectDoc.exists()) { 
+      return { 
+        id: subjectDoc.id, 
+        ...subjectDoc.data(),
+        // Siempre aseguramos que tenga el contexto del año, inyectándolo desde el padre si no está
+        yearId: yearDoc.id,
+        yearName: yearData.name 
+      }; 
+    }
   }
   return null;
 };
