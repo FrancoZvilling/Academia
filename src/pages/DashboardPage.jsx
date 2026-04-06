@@ -8,6 +8,7 @@ import {
     addSubjectToYear,
     getSubjectsForYear,
     deleteSubject,
+    deleteSubjectAndItsGrades,
     updateYearName
 } from '../services/firestoreService';
 import { subjectColors } from '../config/colors';
@@ -214,11 +215,18 @@ const DashboardPage = () => {
     };
 
     const handleDeleteSubject = async (yearId, subject) => {
-        const result = await confirm(`Eliminar "${subject.name}"`, `¿Estás seguro de que quieres eliminar esta materia?`);
+        const result = await confirm(
+            `Eliminar "${subject.name}"`, 
+            `¿Estás seguro de que quieres eliminar esta materia? Al hacerlo, se eliminarán también todas las calificaciones asociadas en "Mi Libreta".`
+        );
         if (result) {
             try {
+                // Usamos la función que borra la materia Y sus notas
+                await deleteSubjectAndItsGrades(currentUser.uid, subject.id);
+                // También borramos el documento de la materia en sí
                 await deleteSubject(currentUser.uid, yearId, subject.id);
-                toast.info(`La materia "${subject.name}" ha sido eliminada.`);
+                
+                toast.info(`La materia "${subject.name}" y sus notas han sido eliminadas.`);
                 fetchYearsAndSubjects();
             } catch (error) {
                 toast.error("No se pudo eliminar la materia.");
@@ -252,7 +260,7 @@ const DashboardPage = () => {
                         <div key={year.id} className="bg-surface-50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                             <AccordionItem
                                 title={year.name}
-                                defaultOpen={true}
+                                defaultOpen={false}
                                 actions={
                                     <>
                                         <button

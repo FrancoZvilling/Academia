@@ -151,7 +151,7 @@ const NotebookPage = () => {
                 {yearsData.length > 0 ? (
                     yearsData.map(year => (
                         <div key={year.id} className="bg-surface-50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                            <AccordionItem title={year.name} icon={FaCalendarAlt} defaultOpen={true}>
+                            <AccordionItem title={year.name} icon={FaCalendarAlt} defaultOpen={false}>
                                 <div className="space-y-4 pt-2">
                                     {year.subjects.map(subject => (
                                         <div key={subject.id} className="bg-surface-100 rounded-lg shadow-md overflow-hidden border-l-8" style={{ borderColor: subject.color || '#6b7280' }}>
